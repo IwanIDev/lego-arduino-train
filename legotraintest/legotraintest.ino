@@ -3,18 +3,23 @@
  * Iwan I
  * 2025-07-03
  */
-
+#include <Ultrasonic.h>
 #include "Lpf2Hub.h"
 
 // create a hub instance
 Lpf2Hub trainHub;
 byte port = (byte)PoweredUpHubPort::B;
 
+Ultrasonic ultrasonic(7); // DIN 7
+
 enum SPEED {
   FAST,
   SLOW,
   STOPPED
 };
+
+const int SLOW_SPEED = 15;
+const int FAST_SPEED = 30;
 
 const int fastButton = 2;
 const int slowButton = 4;
@@ -57,12 +62,10 @@ void setState() {
 */
 int getSpeed(SPEED state) {
   switch(state) {
-    case SLOW:
-      return 15;
-    case FAST:
-      return 30;
-    case STOPPED:
-      return 0;
+    case SLOW: return SLOW_SPEED;
+    case FAST: return FAST_SPEED;
+    case STOPPED: return 0;
+    default: return 0;
   }
 }
 
@@ -115,6 +118,27 @@ void handleInput() {
   if (recievedData.equals(FAST_COMMAND)) trainState = FAST;
 }
 
+/*
+* Check current train distance to sensor
+*/
+long checkDistance() {
+  return ultrasonic.MeasureInCentimeters();
+}
+
+void applyStopAtDistance(long distance, long threshold) {
+  if (distance >= threshold) return;
+  if (distance <= 2) return;
+
+  trainState = STOPPED;
+}
+
+void applySlowAtDistance(long distance, long threshold) {
+  if (distance >= threshold) return;
+  if (distance <= 2) return;
+
+  if (trainState == FAST) trainState = SLOW; 
+}
+
 void loop() {
   unsigned long currentMillis = millis();
   unsigned long deltaT = currentMillis - previousMillis; // Time elapsed between last speed change and now.
@@ -124,6 +148,14 @@ void loop() {
   if (deltaT < speedSwitchInterval) { // If we haven't reached the interval to change speed we should not change the speed.
     return;
   }
+
+  int value = analogRead(A0);
+  Serial.printf("Light value: %d\n", value);
+
+
+  long currentDistance = checkDistance();
+  applySlowAtDistance(currentDistance, 30);
+  applyStopAtDistance(currentDistance, 10);
 
   previousMillis = currentMillis;
 
@@ -147,6 +179,9 @@ void loop() {
 
   Serial.write("Speed: ");
   Serial.println(speed, DEC);
+
+  Serial.write("Current distance: ");
+  Serial.println(currentDistance, DEC);
 
   trainHub.setBasicMotorSpeed(port, speed);
 }

@@ -1,25 +1,24 @@
 /**
  * Basic train motor controls
  * Iwan I
- * 2025-07-03
+ * 2025-07-15
  */
 #include <Ultrasonic.h>
 #include "Lpf2Hub.h"
 
-// create a hub instance
 Lpf2Hub trainHub;
 byte port = (byte)PoweredUpHubPort::B;
 
 Ultrasonic ultrasonic(7); // DIN 7
 
+// ---------------------------
+// --- Train Speed Control ---
+// ---------------------------
 enum SPEED {
-  STOPPED,
-  FAST,
-  SLOW
+  STOPPED = 0,
+  FAST = 30,
+  SLOW = 15
 };
-
-const int SLOW_SPEED = 15;
-const int FAST_SPEED = 30;
 
 const int fastButton = 2;
 const int slowButton = 4;
@@ -29,10 +28,15 @@ SPEED trainState = STOPPED;
 unsigned long previousMillis = 0;
 const long speedSwitchInterval = 100;
 
+// ------------------------------------
+// --- Light Sensor Train Detection ---
+// ------------------------------------
 bool trainDetected = false;
-const int LIGHT_SENSOR_PIN = A0;
-const int LIGHT_SENSOR_THRESHOLD = 750;
+const int LIGHT_SENSOR_PIN = A0; // Analogue pin 0
+const int LIGHT_SENSOR_THRESHOLD = 500;
 int lastLightSensorReading = 0;
+int lightSensorTimeout = 0;
+const int LIGHT_SENSOR_TIMEOUT_THRESHOLD = 500;
 
 void setup() {
     Serial.begin(115200);
@@ -64,8 +68,8 @@ void setState() {
 */
 int getSpeed(SPEED state) {
   switch(state) {
-    case SLOW: return SLOW_SPEED;
-    case FAST: return FAST_SPEED;
+    case SLOW: return (int) SLOW;
+    case FAST: return (int) FAST;
     case STOPPED: return 0;
     default: return 0;
   }
@@ -108,9 +112,7 @@ void handleInput() {
 
   String recievedData = "";
   
-  if (Serial.available() <= 0) {
-    return;
-  }
+  if (Serial.available() <= 0) return;
 
   recievedData = Serial.readStringUntil('\n');
   recievedData.trim();
@@ -153,26 +155,39 @@ bool detectPassingTrain() {
   int currentLightReading = readLightSensorLevel(LIGHT_SENSOR_PIN);
   bool trainPassing = isTrainPassingOver(currentLightReading);
 
+  // If the timeout hasn't been reached, we do not detect a train, irrespective of
+  // if the light sensor is triggered or not.
+  if (millis() - lightSensorTimeout <= LIGHT_SENSOR_TIMEOUT_THRESHOLD) {
+    return false;
+  } else if (lightSensorTimeout != 0) {
+    lightSensorTimeout = 0;
+  }
+
   // Condition 1: If train is currently passing over and has not been detected before,
   // we set detected to true.
   if (trainPassing && !trainDetected) {
     Serial.println("--- TRAIN DETECTED! ---");
     trainDetected = true;
-    return true;
+    lightSensorTimeout = millis();
   } 
   // Condition 2: If train has passed over and has been detected before,
   // we reset the condition assuming the train has cleared the sensor.
   else if (!trainPassing && trainDetected) {
     Serial.println("--- TRAIN CLEARED! ---");
     trainDetected = false;
+    lightSensorTimeout = millis();
   }
-  return false;
+
+  return trainDetected;
 }
 
 void loop() {
   unsigned long currentMillis = millis();
   unsigned long deltaT = currentMillis - previousMillis; // Time elapsed between last speed change and now.
 
+  // ---------------------------
+  // --- Set the train state ---
+  // ---------------------------
   setState();
   handleInput();
 
@@ -184,6 +199,9 @@ void loop() {
   // applySlowAtDistance(currentDistance, 30);
   // applyStopAtDistance(currentDistance, 10);
 
+  // ------------------------------------
+  // --- Connect to train hub via BLE ---
+  // ------------------------------------
   if (!connect()) {
     // Serial.println("Train hub is disconnected");
     return;
@@ -197,20 +215,27 @@ void loop() {
   if (deltaT < speedSwitchInterval) { // If we haven't reached the interval to change speed we should not change the speed.
     return;
   }
+
   previousMillis = currentMillis;
 
+  // ---------------------------------------------
+  // --- Output system state to serial console ---
+  // ---------------------------------------------
   Serial.write("Train state: ");
   Serial.print((int)trainState, DEC);
   
   char hubName[] = "trainHub";
   trainHub.setHubName(hubName);
 
-  int speed = getSpeed(trainState);
+  int speed = (int) trainState;
 
   Serial.write(" Speed: ");
   Serial.print(speed, DEC);
 
   Serial.println();
 
+  // --------------------------------
+  // --- Set speed based on state ---
+  // --------------------------------
   trainHub.setBasicMotorSpeed(port, speed);
 }

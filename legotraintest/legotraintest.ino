@@ -13,9 +13,9 @@ byte port = (byte)PoweredUpHubPort::B;
 Ultrasonic ultrasonic(7); // DIN 7
 
 enum SPEED {
+  STOPPED,
   FAST,
-  SLOW,
-  STOPPED
+  SLOW
 };
 
 const int SLOW_SPEED = 15;
@@ -27,7 +27,12 @@ const int slowButton = 4;
 SPEED trainState = STOPPED;
 
 unsigned long previousMillis = 0;
-const long speedSwitchInterval = 250;
+const long speedSwitchInterval = 100;
+
+bool trainDetected = false;
+const int LIGHT_SENSOR_PIN = A0;
+const int LIGHT_SENSOR_THRESHOLD = 750;
+int lastLightSensorReading = 0;
 
 void setup() {
     Serial.begin(115200);
@@ -45,14 +50,11 @@ void setState() {
 
   if (fastButtonState == LOW && slowButtonState == LOW) {
     trainState = STOPPED;
-    Serial.println("STOPPED selected");
     delay(100);
   } else if (fastButtonState == LOW) {  // button pressed
     trainState = FAST;
-    Serial.println("FAST selected");
   } else if (slowButtonState == LOW) {  // button pressed
     trainState = SLOW;
-    Serial.println("SLOW selected");
   }
 }
 
@@ -139,25 +141,48 @@ void applySlowAtDistance(long distance, long threshold) {
   if (trainState == FAST) trainState = SLOW; 
 }
 
+int readLightSensorLevel(const int pin) {
+  return analogRead(pin);
+}
+
+bool isTrainPassingOver(const int lightReading) {
+  return lightReading < LIGHT_SENSOR_THRESHOLD;
+}
+
+bool detectPassingTrain() {
+  int currentLightReading = readLightSensorLevel(LIGHT_SENSOR_PIN);
+  bool trainPassing = isTrainPassingOver(currentLightReading);
+
+  // Condition 1: If train is currently passing over and has not been detected before,
+  // we set detected to true.
+  if (trainPassing && !trainDetected) {
+    Serial.println("--- TRAIN DETECTED! ---");
+    trainDetected = true;
+    return true;
+  } 
+  // Condition 2: If train has passed over and has been detected before,
+  // we reset the condition assuming the train has cleared the sensor.
+  else if (!trainPassing && trainDetected) {
+    Serial.println("--- TRAIN CLEARED! ---");
+    trainDetected = false;
+  }
+  return false;
+}
+
 void loop() {
   unsigned long currentMillis = millis();
   unsigned long deltaT = currentMillis - previousMillis; // Time elapsed between last speed change and now.
+
   setState();
   handleInput();
 
-  if (deltaT < speedSwitchInterval) { // If we haven't reached the interval to change speed we should not change the speed.
-    return;
+  if (detectPassingTrain()) {
+    trainState = STOPPED;
   }
 
-  int value = analogRead(A0);
-  Serial.printf("Light value: %d\n", value);
-
-
-  long currentDistance = checkDistance();
-  applySlowAtDistance(currentDistance, 30);
-  applyStopAtDistance(currentDistance, 10);
-
-  previousMillis = currentMillis;
+  // long currentDistance = checkDistance();
+  // applySlowAtDistance(currentDistance, 30);
+  // applyStopAtDistance(currentDistance, 10);
 
   if (!connect()) {
     // Serial.println("Train hub is disconnected");
@@ -169,19 +194,23 @@ void loop() {
     return;
   }
 
+  if (deltaT < speedSwitchInterval) { // If we haven't reached the interval to change speed we should not change the speed.
+    return;
+  }
+  previousMillis = currentMillis;
+
   Serial.write("Train state: ");
-  Serial.println((int)trainState, DEC);
+  Serial.print((int)trainState, DEC);
   
   char hubName[] = "trainHub";
   trainHub.setHubName(hubName);
 
   int speed = getSpeed(trainState);
 
-  Serial.write("Speed: ");
-  Serial.println(speed, DEC);
+  Serial.write(" Speed: ");
+  Serial.print(speed, DEC);
 
-  Serial.write("Current distance: ");
-  Serial.println(currentDistance, DEC);
+  Serial.println();
 
   trainHub.setBasicMotorSpeed(port, speed);
 }

@@ -25,6 +25,8 @@ const int slowButton = 4;
 
 SPEED trainState = STOPPED;
 
+bool stateChanged = true;
+
 unsigned long previousMillis = 0;
 const long speedSwitchInterval = 100;
 
@@ -52,6 +54,8 @@ void setState() {
   int fastButtonState = digitalRead(fastButton);
   int slowButtonState = digitalRead(slowButton);
 
+  SPEED oldState = trainState;
+
   if (fastButtonState == LOW && slowButtonState == LOW) {
     trainState = STOPPED;
     delay(100);
@@ -60,6 +64,8 @@ void setState() {
   } else if (slowButtonState == LOW) {  // button pressed
     trainState = SLOW;
   }
+
+  stateChanged = (oldState != trainState);
 }
 
 /*
@@ -104,29 +110,6 @@ bool connect() {
 
   return true;
 }
-
-// bool connect() {
-//   if (!trainHub.isConnected() && !trainHub.isConnecting()) {
-//     trainHub.init(); // initalize the PoweredUpHub instance
-//     //trainHub.init("90:84:2b:03:19:7f"); //example of initializing an hub with a specific address
-//   }
-
-//   // connect flow. Search for BLE services and try to connect if the uuid of the hub is found
-//   if (trainHub.isConnecting()) {
-//     trainHub.connectHub();
-//     if (trainHub.isConnected()) {
-//       Serial.println("Connected to HUB");
-//       Serial.print("Hub address: ");
-//       Serial.println(trainHub.getHubAddress().toString().c_str());
-//       Serial.print("Hub name: ");
-//       Serial.println(trainHub.getHubName().c_str());
-//     } else {
-//       Serial.println("Failed to connect to HUB");
-//       return false;
-//     }
-//   }
-//   return true;
-// }
 
 void handleInput() {
   const char STOP_COMMAND[] = "stop";
@@ -247,18 +230,27 @@ void loop() {
   // ---------------------------------------------
   // --- Output system state to serial console ---
   // ---------------------------------------------
-  Serial.write("Train state: ");
-  Serial.print((int)trainState, DEC);
   
   char hubName[] = "trainHub";
   trainHub.setHubName(hubName);
 
   int speed = (int) trainState;
 
-  Serial.write(" Speed: ");
-  Serial.print(speed, DEC);
-
-  Serial.println();
+  Serial.print("Train state: ");
+  switch (trainState) {
+    case STOPPED:
+      Serial.println("STOPPED");
+      break;
+    case FAST:
+      Serial.println("FAST");
+      break;
+    case SLOW:
+      Serial.println("SLOW");
+      break;
+    default:
+      Serial.println("UNKNOWN");
+      break;
+  }
 
   // --------------------------------
   // --- Set speed based on state ---

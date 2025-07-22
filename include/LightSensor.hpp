@@ -11,8 +11,10 @@ private:
   int lightBuffer[BUFFER_SIZE];
   int lightBufferIndex;
   bool bufferFull;
+  int lastAverage;
 
   int getAverageLightLevel();
+  int getDynamicThreshold(int average);
 
 public:
   LightSensor(int sensorPin, int detectionThreshold);

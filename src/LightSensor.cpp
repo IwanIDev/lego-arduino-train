@@ -8,9 +8,14 @@ LightSensor::LightSensor(int sensorPin, int detectionThreshold)
   lastReading(0),
   trainDetected(false),
   timeout(0),
-  timeoutThreshold(500) // Default timeout threshold of 500 milliseconds
+  timeoutThreshold(500), // Default timeout threshold of 500 milliseconds
+  lastAverage(0)
 {
   pinMode(pin, INPUT);
+}
+
+int LightSensor::getDynamicThreshold(int average) {
+  return average * (1 - (threshold / 100.0));
 }
 
 /**
@@ -18,24 +23,33 @@ LightSensor::LightSensor(int sensorPin, int detectionThreshold)
  * @return The light level as an integer.
  */
 int LightSensor::readLevel() {
-  lastReading = analogRead(pin);
-  lightBuffer[lightBufferIndex] = lastReading;
-  lightBufferIndex = (lightBufferIndex + 1) % BUFFER_SIZE;
-  if (lightBufferIndex == 0) {
-    bufferFull = true;
+  // Always read the latest value
+  int newReading = analogRead(pin);
+
+  // Calculate average and threshold BEFORE updating buffer
+  int average = getAverageLightLevel();
+  int dynamicThreshold = getDynamicThreshold(average);
+  bool trainPassing = newReading < dynamicThreshold;
+
+  // Only update buffer if not passing (i.e., normal light)
+  if (!trainPassing) {
+    lightBuffer[lightBufferIndex] = newReading;
+    lightBufferIndex = (lightBufferIndex + 1) % BUFFER_SIZE;
+    if (lightBufferIndex == 0) bufferFull = true;
   }
-  return lastReading;
+
+  return newReading; // Return the latest reading
 }
 
 bool LightSensor::isTrainPassingOver(int lightReading) {
   int average = getAverageLightLevel();
-  int dynamicThreshold = average * (1 - (threshold / 100.0)); // Adjust threshold based on average light level
-  return lightReading < dynamicThreshold;
+  int dynamicThreshold = getDynamicThreshold(average); // Adjust threshold based on average light level
+  bool isPassing = lightReading < dynamicThreshold;
+  return isPassing;
 }
 
 bool LightSensor::detectPassingTrain() {
-  int currentLightReading = readLevel();
-  bool trainPassing = isTrainPassingOver(currentLightReading);
+  bool trainPassing = isTrainPassingOver(readLevel());
 
   // If the timeout hasn't been reached, we do not detect a train, irrespective of
   // if the light sensor is triggered or not.

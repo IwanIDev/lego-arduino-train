@@ -6,10 +6,12 @@
 #include "Lpf2Hub.h"
 #include "TrainController.hpp"
 #include "LightSensor.hpp"
+#include "BluetoothController.hpp"
 
 Lpf2Hub trainHub;
 const byte MOTOR_PORT = (byte)PoweredUpHubPort::B;
 
+BluetoothController bluetoothController(&trainHub);
 TrainController trainController(MOTOR_PORT);
 
 // ---------------------------
@@ -38,32 +40,6 @@ void setup() {
     pinMode(slowButton, INPUT_PULLUP);
 }
 
-/*
-* Establish a connection to the train via BLE.
-* Returns true if successful, false otherwise.
-*/
-bool connect() {
-  if (!trainHub.isConnected() && !trainHub.isConnecting()) {
-    trainHub.init(); // initalize the PoweredUpHub instance
-    //trainHub.init("90:84:2b:03:19:7f"); //example of initializing an hub with a specific address
-  }
-
-  // connect flow. Search for BLE services and try to connect if the uuid of the hub is found
-  if (trainHub.isConnecting()) {
-    trainHub.connectHub();
-    if (trainHub.isConnected()) {
-      Serial.println("Connected to HUB");
-      Serial.print("Hub address: ");
-      Serial.println(trainHub.getHubAddress().toString().c_str());
-      Serial.print("Hub name: ");
-      Serial.println(trainHub.getHubName().c_str());
-    } else {
-      Serial.println("Failed to connect to HUB");
-      return false;
-    }
-  }
-  return true;
-}
 
 void handleInput() {
   const char STOP_COMMAND[] = "stop";
@@ -103,12 +79,12 @@ void loop() {
   // ------------------------------------
   // --- Connect to train hub via BLE ---
   // ------------------------------------
-  if (!connect()) {
+  if (!bluetoothController.connect()) {
     // Serial.println("Train hub is disconnected");
     return;
   }
-    
-  if (!trainHub.isConnected()) {
+
+  if (!bluetoothController.isConnected()) {
     // Serial.println("Train hub is disconnected");
     return;
   }
@@ -137,5 +113,5 @@ void loop() {
   // --------------------------------
   // --- Set speed based on state ---
   // --------------------------------
-  trainHub.setBasicMotorSpeed(MOTOR_PORT, speed);
+  bluetoothController.setMotorSpeed(MOTOR_PORT, speed);
 }

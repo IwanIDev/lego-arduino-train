@@ -7,6 +7,7 @@
 #include "TrainController.hpp"
 #include "LightSensor.hpp"
 #include "BluetoothController.hpp"
+#include "InputController.hpp"
 
 Lpf2Hub trainHub;
 const byte MOTOR_PORT = (byte)PoweredUpHubPort::B;
@@ -20,6 +21,8 @@ TrainController trainController(MOTOR_PORT);
 
 const int fastButton = 2;
 const int slowButton = 4;
+
+InputController inputController(trainController, fastButton, slowButton);
 
 unsigned long previousMillis = 0;
 const long speedSwitchInterval = 100;
@@ -35,45 +38,7 @@ LightSensor lightSensor(LIGHT_SENSOR_PIN, LIGHT_SENSOR_THRESHOLD);
 
 void setup() {
     Serial.begin(115200);
-
-    pinMode(fastButton, INPUT_PULLUP);
-    pinMode(slowButton, INPUT_PULLUP);
 }
-
-void handleButtonInput(TrainController& controller) {
-  int fastButtonState = digitalRead(fastButton);
-  int slowButtonState = digitalRead(slowButton);
-
-  if (fastButtonState == LOW && slowButtonState == LOW) {
-    controller.setState(STOPPED);
-    delay(100);
-  } else if (fastButtonState == LOW) {  // button pressed
-    controller.setState(FAST);
-  } else if (slowButtonState == LOW) {  // button pressed
-    controller.setState(SLOW);
-  }
-}
-
-void handleInput() {
-  const char STOP_COMMAND[] = "stop";
-  const int STOP_COMMAND_LENGTH = sizeof(STOP_COMMAND) - 1;
-  const char SLOW_COMMAND[] = "slow";
-  const int SLOW_COMMAND_LENGTH = sizeof(STOP_COMMAND) - 1;
-  const char FAST_COMMAND[] = "fast";
-  const int FAST_COMMAND_LENGTH = sizeof(STOP_COMMAND) - 1;
-
-  String recievedData = "";
-  
-  if (Serial.available() <= 0) return;
-
-  recievedData = Serial.readStringUntil('\n');
-  recievedData.trim();
-
-  if (recievedData.equals(STOP_COMMAND)) trainController.setState(STOPPED);
-  if (recievedData.equals(SLOW_COMMAND)) trainController.setState(SLOW);
-  if (recievedData.equals(FAST_COMMAND)) trainController.setState(FAST);
-}
-
 
 void loop() {
   unsigned long currentMillis = millis();
@@ -83,11 +48,11 @@ void loop() {
   // --- Set the train state ---
   // ---------------------------
   trainController.updateSpeedTimer();
-  handleInput();
-  handleButtonInput(trainController);
+  inputController.handleSerialInput();
+  inputController.handleButtonInput();
 
   if (lightSensor.detectPassingTrain()) {
-    trainController.setState(STOPPED);
+    trainController.setState(SPEED::STOPPED);
   }
 
   // ------------------------------------

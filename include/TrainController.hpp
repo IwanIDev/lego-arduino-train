@@ -1,10 +1,16 @@
+#ifndef TRAINCONTROLLER_HPP
+#define TRAINCONTROLLER_HPP
+
 #include "Lpf2Hub.h"
 
+#ifndef SPEED_ENUM_DEFINED
+#define SPEED_ENUM_DEFINED
 enum SPEED {
   STOPPED = 0,
   FAST = 30,
   SLOW = 15
 };
+#endif // SPEED_ENUM_DEFINED
 
 class TrainController {
 private:
@@ -28,3 +34,5 @@ public:
   
   void printState();
 };
+
+#endif // TRAINCONTROLLER_HPP

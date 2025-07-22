@@ -8,6 +8,7 @@
 #include "LightSensor.hpp"
 #include "BluetoothController.hpp"
 #include "InputController.hpp"
+#include <Arduino.h>
 
 Lpf2Hub trainHub;
 const byte MOTOR_PORT = (byte)PoweredUpHubPort::B;
@@ -19,10 +20,10 @@ TrainController trainController(MOTOR_PORT);
 // --- Train Speed Control ---
 // ---------------------------
 
-const int fastButton = 2;
-const int slowButton = 4;
+const int fastButton = D2;
+const int slowButton = D4;
 
-InputController inputController(trainController, fastButton, slowButton);
+InputController inputController(&trainController, fastButton, slowButton);
 
 unsigned long previousMillis = 0;
 const long speedSwitchInterval = 100;
@@ -37,16 +38,13 @@ const int LIGHT_SENSOR_TIMEOUT_THRESHOLD = 500;
 LightSensor lightSensor(LIGHT_SENSOR_PIN, LIGHT_SENSOR_THRESHOLD);
 
 void setup() {
-    Serial.begin(115200);
+  Serial.begin(115200);
 }
 
 void loop() {
   unsigned long currentMillis = millis();
   unsigned long deltaT = currentMillis - previousMillis; // Time elapsed between last speed change and now.
 
-  // ---------------------------
-  // --- Set the train state ---
-  // ---------------------------
   trainController.updateSpeedTimer();
   inputController.handleSerialInput();
   inputController.handleButtonInput();
@@ -55,16 +53,11 @@ void loop() {
     trainController.setState(SPEED::STOPPED);
   }
 
-  // ------------------------------------
-  // --- Connect to train hub via BLE ---
-  // ------------------------------------
   if (!bluetoothController.connect()) {
-    // Serial.println("Train hub is disconnected A.");
     return;
   }
 
   if (!bluetoothController.isConnected()) {
-    // Serial.println("Train hub is disconnected B.");
     return;
   }
 
@@ -74,23 +67,12 @@ void loop() {
 
   previousMillis = currentMillis;
 
-  // ---------------------------------------------
-  // --- Output system state to serial console ---
-  // ---------------------------------------------
-  trainController.printState();
-  
   char hubName[] = "trainHub";
   trainHub.setHubName(hubName);
 
   int speed = (int) trainController.getState();
 
-  Serial.write(" Speed: ");
-  Serial.print(speed, DEC);
+  trainController.printState();
 
-  Serial.println();
-
-  // --------------------------------
-  // --- Set speed based on state ---
-  // --------------------------------
   bluetoothController.setMotorSpeed(MOTOR_PORT, speed);
 }

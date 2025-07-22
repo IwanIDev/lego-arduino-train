@@ -2,7 +2,7 @@
 #include "TrainController.hpp"
 #include <Arduino.h>
 
-InputController::InputController(TrainController& controller, int fastButtonPin, int slowButtonPin)
+InputController::InputController(TrainController* controller, int fastButtonPin, int slowButtonPin)
 : trainController(controller), fastButton(fastButtonPin), slowButton(slowButtonPin)
 {
   pinMode(fastButton, INPUT_PULLUP);
@@ -14,12 +14,12 @@ void InputController::handleButtonInput() {
   int slowButtonState = digitalRead(slowButton);
 
   if (fastButtonState == LOW && slowButtonState == LOW) {
-    trainController.setState(STOPPED);
+    trainController->setState(STOPPED);
     delay(100);
   } else if (fastButtonState == LOW) {  // button pressed
-    trainController.setState(FAST);
+    trainController->setState(FAST);
   } else if (slowButtonState == LOW) {  // button pressed
-    trainController.setState(SLOW);
+    trainController->setState(SLOW);
   }
 }
 
@@ -38,7 +38,7 @@ void InputController::handleSerialInput() {
   recievedData = Serial.readStringUntil('\n');
   recievedData.trim();
 
-  if (recievedData.equals(STOP_COMMAND)) trainController.setState(STOPPED);
-  if (recievedData.equals(SLOW_COMMAND)) trainController.setState(SLOW);
-  if (recievedData.equals(FAST_COMMAND)) trainController.setState(FAST);
+  if (recievedData.equals(STOP_COMMAND)) trainController->setState(STOPPED);
+  if (recievedData.equals(SLOW_COMMAND)) trainController->setState(SLOW);
+  if (recievedData.equals(FAST_COMMAND)) trainController->setState(FAST);
 }

@@ -15,6 +15,8 @@ void TrainController::setState(SPEED newState) {
   if (trainState != newState) {
     trainState = newState;
     stateChanged = true;
+  } else {
+    stateChanged = false; // No change if the state is the same
   }
 }
 

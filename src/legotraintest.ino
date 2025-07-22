@@ -5,6 +5,7 @@
  */
 #include "Lpf2Hub.h"
 #include "TrainController.hpp"
+#include "LightSensor.hpp"
 
 Lpf2Hub trainHub;
 const byte MOTOR_PORT = (byte)PoweredUpHubPort::B;
@@ -24,12 +25,11 @@ const long speedSwitchInterval = 100;
 // ------------------------------------
 // --- Light Sensor Train Detection ---
 // ------------------------------------
-bool trainDetected = false;
 const int LIGHT_SENSOR_PIN = A0; // Analogue pin 0
 const int LIGHT_SENSOR_THRESHOLD = 500;
-int lastLightSensorReading = 0;
-int lightSensorTimeout = 0;
 const int LIGHT_SENSOR_TIMEOUT_THRESHOLD = 500;
+
+LightSensor lightSensor(LIGHT_SENSOR_PIN, LIGHT_SENSOR_THRESHOLD);
 
 void setup() {
     Serial.begin(115200);
@@ -85,43 +85,6 @@ void handleInput() {
   if (recievedData.equals(FAST_COMMAND)) trainController.setState(FAST);
 }
 
-int readLightSensorLevel(const int pin) {
-  return analogRead(pin);
-}
-
-bool isTrainPassingOver(const int lightReading) {
-  return lightReading < LIGHT_SENSOR_THRESHOLD;
-}
-
-bool detectPassingTrain() {
-  int currentLightReading = readLightSensorLevel(LIGHT_SENSOR_PIN);
-  bool trainPassing = isTrainPassingOver(currentLightReading);
-
-  // If the timeout hasn't been reached, we do not detect a train, irrespective of
-  // if the light sensor is triggered or not.
-  if (millis() - lightSensorTimeout <= LIGHT_SENSOR_TIMEOUT_THRESHOLD) {
-    return false;
-  } else if (lightSensorTimeout != 0) {
-    lightSensorTimeout = 0;
-  }
-
-  // Condition 1: If train is currently passing over and has not been detected before,
-  // we set detected to true.
-  if (trainPassing && !trainDetected) {
-    Serial.println("--- TRAIN DETECTED! ---");
-    trainDetected = true;
-    lightSensorTimeout = millis();
-  } 
-  // Condition 2: If train has passed over and has been detected before,
-  // we reset the condition assuming the train has cleared the sensor.
-  else if (!trainPassing && trainDetected) {
-    Serial.println("--- TRAIN CLEARED! ---");
-    trainDetected = false;
-    lightSensorTimeout = millis();
-  }
-
-  return trainDetected;
-}
 
 void loop() {
   unsigned long currentMillis = millis();
@@ -133,7 +96,7 @@ void loop() {
   trainController.updateSpeedTimer();
   handleInput();
 
-  if (detectPassingTrain()) {
+  if (lightSensor.detectPassingTrain()) {
     trainController.setState(STOPPED);
   }
 

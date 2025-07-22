@@ -1,3 +1,5 @@
+#define BUFFER_SIZE 64
+
 class LightSensor {
 private:
   int pin;
@@ -6,6 +8,11 @@ private:
   bool trainDetected;
   unsigned long timeout;
   const unsigned long timeoutThreshold;
+  int lightBuffer[BUFFER_SIZE];
+  int lightBufferIndex;
+  bool bufferFull;
+
+  int getAverageLightLevel();
 
 public:
   LightSensor(int sensorPin, int detectionThreshold);

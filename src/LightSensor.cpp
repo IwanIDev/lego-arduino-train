@@ -19,11 +19,18 @@ LightSensor::LightSensor(int sensorPin, int detectionThreshold)
  */
 int LightSensor::readLevel() {
   lastReading = analogRead(pin);
+  lightBuffer[lightBufferIndex] = lastReading;
+  lightBufferIndex = (lightBufferIndex + 1) % BUFFER_SIZE;
+  if (lightBufferIndex == 0) {
+    bufferFull = true;
+  }
   return lastReading;
 }
 
 bool LightSensor::isTrainPassingOver(int lightReading) {
-  return lightReading < threshold;
+  int average = getAverageLightLevel();
+  int dynamicThreshold = average * (1 - (threshold / 100.0)); // Adjust threshold based on average light level
+  return lightReading < dynamicThreshold;
 }
 
 bool LightSensor::detectPassingTrain() {
@@ -66,4 +73,15 @@ void LightSensor::reset() {
   trainDetected = false;
   timeout = 0;
   lastReading = 0;
+}
+
+int LightSensor::getAverageLightLevel() {
+  int sum = 0;
+  int count = bufferFull ? BUFFER_SIZE : lightBufferIndex;
+
+  for (int i = 0; i < count; i++) {
+    sum += lightBuffer[i];
+  }
+
+  return (count > 0) ? (sum / count) : 0; // Return average or 0 if no valid readings
 }

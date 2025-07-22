@@ -26,13 +26,13 @@ const int slowButton = D4;
 InputController inputController(&trainController, fastButton, slowButton);
 
 unsigned long previousMillis = 0;
-const long speedSwitchInterval = 200;
+const long speedSwitchInterval = 100;
 
 // ------------------------------------
 // --- Light Sensor Train Detection ---
 // ------------------------------------
 const int LIGHT_SENSOR_PIN = A0; // Analogue pin 0
-const int LIGHT_SENSOR_THRESHOLD = 500;
+const int LIGHT_SENSOR_THRESHOLD = 20; // Percentage threshold for light level detection
 const int LIGHT_SENSOR_TIMEOUT_THRESHOLD = 500;
 
 LightSensor lightSensor(LIGHT_SENSOR_PIN, LIGHT_SENSOR_THRESHOLD);

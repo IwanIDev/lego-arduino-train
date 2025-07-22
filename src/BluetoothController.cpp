@@ -10,28 +10,29 @@ BluetoothController::BluetoothController(Lpf2Hub* hub)
 }
 
 bool BluetoothController::connect() {
-    if (!trainHub->isConnected() && !trainHub->isConnecting()) {
-        Serial.println("Initialising the train hub...");
-        trainHub->init(); // Initialize the Lpf2Hub instance
-    }
+  if (!trainHub->isConnected() && !trainHub->isConnecting()) {
+    trainHub->init(); // initalize the PoweredUpHub instance
+  }
 
-    // Connect flow: Search for BLE services and try to connect if the UUID of the hub is found
-    if (trainHub->isConnecting()) {
-        Serial.println("Connecting to train hub...");
-        trainHub->connectHub();
-        if (trainHub->isConnected()) {
-            Serial.println("Connected to HUB");
-            Serial.print("Hub address: ");
-            Serial.println(trainHub->getHubAddress().toString().c_str());
-            Serial.print("Hub name: ");
-            Serial.println(trainHub->getHubName().c_str());
-            return true;
-        } else {
-            Serial.println("Failed to connect to HUB");
-            return false;
-        }
-    }
+  if (!trainHub->isConnecting()) {
+    // If we are already connected, we do not need to connect again.
+    return true;
+  }
+
+  trainHub->connectHub();
+
+  if (!trainHub->isConnected()) {
+    Serial.println("Failed to connect to HUB");
     return false;
+  }
+
+  Serial.println("Connected to HUB");
+  Serial.print("Hub address: ");
+  Serial.println(this->getHubAddress().c_str());
+  Serial.print("Hub name: ");
+  Serial.println(this->getHubName().c_str());
+
+  return true;
 }
 
 bool BluetoothController::isConnected() const {

@@ -40,6 +40,19 @@ void setup() {
     pinMode(slowButton, INPUT_PULLUP);
 }
 
+void handleButtonInput(TrainController& controller) {
+  int fastButtonState = digitalRead(fastButton);
+  int slowButtonState = digitalRead(slowButton);
+
+  if (fastButtonState == LOW && slowButtonState == LOW) {
+    controller.setState(STOPPED);
+    delay(100);
+  } else if (fastButtonState == LOW) {  // button pressed
+    controller.setState(FAST);
+  } else if (slowButtonState == LOW) {  // button pressed
+    controller.setState(SLOW);
+  }
+}
 
 void handleInput() {
   const char STOP_COMMAND[] = "stop";
@@ -71,6 +84,7 @@ void loop() {
   // ---------------------------
   trainController.updateSpeedTimer();
   handleInput();
+  handleButtonInput(trainController);
 
   if (lightSensor.detectPassingTrain()) {
     trainController.setState(STOPPED);
@@ -80,12 +94,12 @@ void loop() {
   // --- Connect to train hub via BLE ---
   // ------------------------------------
   if (!bluetoothController.connect()) {
-    // Serial.println("Train hub is disconnected");
+    // Serial.println("Train hub is disconnected A.");
     return;
   }
 
   if (!bluetoothController.isConnected()) {
-    // Serial.println("Train hub is disconnected");
+    // Serial.println("Train hub is disconnected B.");
     return;
   }
 

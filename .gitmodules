@@ -1,0 +1,3 @@
+[submodule "lib/legoino"]
+	path = lib/legoino
+	url = https://github.com/SFrijters/legoino.git

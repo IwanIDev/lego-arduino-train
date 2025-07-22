@@ -38,41 +38,41 @@ const int LIGHT_SENSOR_TIMEOUT_THRESHOLD = 500;
 LightSensor lightSensor(LIGHT_SENSOR_PIN, LIGHT_SENSOR_THRESHOLD);
 
 void setup() {
-  Serial.begin(115200);
+    Serial.begin(115200);
 }
 
 void loop() {
-  unsigned long currentMillis = millis();
-  unsigned long deltaT = currentMillis - previousMillis; // Time elapsed between last speed change and now.
+    unsigned long currentMillis = millis();
+    unsigned long deltaT = currentMillis - previousMillis; // Time elapsed between last speed change and now.
 
-  trainController.updateSpeedTimer();
-  inputController.handleSerialInput();
-  inputController.handleButtonInput();
+    trainController.updateSpeedTimer();
+    inputController.handleSerialInput();
+    inputController.handleButtonInput();
 
-  if (lightSensor.detectPassingTrain()) {
-    trainController.setState(SPEED::STOPPED);
-  }
+    if (lightSensor.detectPassingTrain()) {
+        trainController.setState(SPEED::STOPPED);
+    }
 
-  if (!bluetoothController.connect()) {
-    return;
-  }
+    if (!bluetoothController.connect()) {
+        return;
+    }
 
-  if (!bluetoothController.isConnected()) {
-    return;
-  }
+    if (!bluetoothController.isConnected()) {
+        return;
+    }
 
-  if (deltaT < speedSwitchInterval) { // If we haven't reached the interval to change speed we should not change the speed.
-    return;
-  }
+    if (deltaT < speedSwitchInterval) { // If we haven't reached the interval to change speed we should not change the speed.
+        return;
+    }
 
-  previousMillis = currentMillis;
+    previousMillis = currentMillis;
 
-  char hubName[] = "trainHub";
-  trainHub.setHubName(hubName);
+    char hubName[] = "trainHub";
+    trainHub.setHubName(hubName);
 
-  int speed = (int) trainController.getState();
+    int speed = (int) trainController.getState();
 
-  trainController.printState();
+    trainController.printState();
 
-  bluetoothController.setMotorSpeed(MOTOR_PORT, speed);
+    bluetoothController.setMotorSpeed(MOTOR_PORT, speed);
 }

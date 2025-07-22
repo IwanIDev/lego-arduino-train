@@ -4,24 +4,19 @@
  * 2025-07-15
  */
 #include "Lpf2Hub.h"
+#include "TrainController.hpp"
 
 Lpf2Hub trainHub;
-byte port = (byte)PoweredUpHubPort::B;
+const byte MOTOR_PORT = (byte)PoweredUpHubPort::B;
 
+TrainController trainController(MOTOR_PORT);
 
 // ---------------------------
 // --- Train Speed Control ---
 // ---------------------------
-enum SPEED {
-  STOPPED = 0,
-  FAST = 30,
-  SLOW = 15
-};
 
 const int fastButton = 2;
 const int slowButton = 4;
-
-SPEED trainState = STOPPED;
 
 unsigned long previousMillis = 0;
 const long speedSwitchInterval = 100;
@@ -41,36 +36,6 @@ void setup() {
 
     pinMode(fastButton, INPUT_PULLUP);
     pinMode(slowButton, INPUT_PULLUP);
-}
-
-/*
-* Calculates the current state based on button press.
-*/
-void setState() {
-  int fastButtonState = digitalRead(fastButton);
-  int slowButtonState = digitalRead(slowButton);
-
-  if (fastButtonState == LOW && slowButtonState == LOW) {
-    trainState = STOPPED;
-    delay(100);
-  } else if (fastButtonState == LOW) {  // button pressed
-    trainState = FAST;
-  } else if (slowButtonState == LOW) {  // button pressed
-    trainState = SLOW;
-  }
-}
-
-/*
-* Determines the absolute speed values for the motors given
-* the state.
-*/
-int getSpeed(SPEED state) {
-  switch(state) {
-    case SLOW: return (int) SLOW;
-    case FAST: return (int) FAST;
-    case STOPPED: return 0;
-    default: return 0;
-  }
 }
 
 /*
@@ -115,9 +80,9 @@ void handleInput() {
   recievedData = Serial.readStringUntil('\n');
   recievedData.trim();
 
-  if (recievedData.equals(STOP_COMMAND)) trainState = STOPPED;
-  if (recievedData.equals(SLOW_COMMAND)) trainState = SLOW;
-  if (recievedData.equals(FAST_COMMAND)) trainState = FAST;
+  if (recievedData.equals(STOP_COMMAND)) trainController.setState(STOPPED);
+  if (recievedData.equals(SLOW_COMMAND)) trainController.setState(SLOW);
+  if (recievedData.equals(FAST_COMMAND)) trainController.setState(FAST);
 }
 
 int readLightSensorLevel(const int pin) {
@@ -165,11 +130,11 @@ void loop() {
   // ---------------------------
   // --- Set the train state ---
   // ---------------------------
-  setState();
+  trainController.updateSpeedTimer();
   handleInput();
 
   if (detectPassingTrain()) {
-    trainState = STOPPED;
+    trainController.setState(STOPPED);
   }
 
   // ------------------------------------
@@ -194,13 +159,12 @@ void loop() {
   // ---------------------------------------------
   // --- Output system state to serial console ---
   // ---------------------------------------------
-  Serial.write("Train state: ");
-  Serial.print((int)trainState, DEC);
+  trainController.printState();
   
   char hubName[] = "trainHub";
   trainHub.setHubName(hubName);
 
-  int speed = (int) trainState;
+  int speed = (int) trainController.getState();
 
   Serial.write(" Speed: ");
   Serial.print(speed, DEC);
@@ -210,5 +174,5 @@ void loop() {
   // --------------------------------
   // --- Set speed based on state ---
   // --------------------------------
-  trainHub.setBasicMotorSpeed(port, speed);
+  trainHub.setBasicMotorSpeed(MOTOR_PORT, speed);
 }

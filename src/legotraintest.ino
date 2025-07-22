@@ -3,13 +3,11 @@
  * Iwan I
  * 2025-07-15
  */
-#include <Ultrasonic.h>
 #include "Lpf2Hub.h"
 
 Lpf2Hub trainHub;
 byte port = (byte)PoweredUpHubPort::B;
 
-Ultrasonic ultrasonic(7); // DIN 7
 
 // ---------------------------
 // --- Train Speed Control ---
@@ -122,27 +120,6 @@ void handleInput() {
   if (recievedData.equals(FAST_COMMAND)) trainState = FAST;
 }
 
-/*
-* Check current train distance to sensor
-*/
-long checkDistance() {
-  return ultrasonic.MeasureInCentimeters();
-}
-
-void applyStopAtDistance(long distance, long threshold) {
-  if (distance >= threshold) return;
-  if (distance <= 2) return;
-
-  trainState = STOPPED;
-}
-
-void applySlowAtDistance(long distance, long threshold) {
-  if (distance >= threshold) return;
-  if (distance <= 2) return;
-
-  if (trainState == FAST) trainState = SLOW; 
-}
-
 int readLightSensorLevel(const int pin) {
   return analogRead(pin);
 }
@@ -194,10 +171,6 @@ void loop() {
   if (detectPassingTrain()) {
     trainState = STOPPED;
   }
-
-  // long currentDistance = checkDistance();
-  // applySlowAtDistance(currentDistance, 30);
-  // applyStopAtDistance(currentDistance, 10);
 
   // ------------------------------------
   // --- Connect to train hub via BLE ---

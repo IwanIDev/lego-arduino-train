@@ -26,7 +26,7 @@ const int slowButton = D4;
 InputController inputController(&trainController, fastButton, slowButton);
 
 unsigned long previousMillis = 0;
-const long speedSwitchInterval = 100;
+const long speedSwitchInterval = 200;
 
 // ------------------------------------
 // --- Light Sensor Train Detection ---

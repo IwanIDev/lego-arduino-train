@@ -1,9 +1,10 @@
 #include "Lpf2Hub.h"
 #include <Arduino.h>
 #include "TrainController.hpp"
-#include "LightSensor.hpp"
 #include "BluetoothController.hpp"
 #include "InputController.hpp"
+#include "LightSensor.hpp"
+#include "LightSensorController.hpp"
 
 Lpf2Hub trainHub;
 const byte MOTOR_PORT = (byte)PoweredUpHubPort::B;
@@ -31,9 +32,11 @@ const int LIGHT_SENSOR_THRESHOLD = 20; // Percentage threshold for light level d
 const int LIGHT_SENSOR_TIMEOUT_THRESHOLD = 500;
 
 LightSensor lightSensor(LIGHT_SENSOR_PIN, LIGHT_SENSOR_THRESHOLD);
+LightSensorController lightSensorController;
 
 void setup() {
     Serial.begin(115200);
+    lightSensorController.addSensor(&lightSensor);
 }
 
 void loop() {
@@ -44,7 +47,7 @@ void loop() {
     inputController.handleSerialInput();
     inputController.handleButtonInput();
 
-    if (lightSensor.detectPassingTrain()) {
+    if (lightSensorController.isTrainPassingOver()) {
         trainController.setState(SPEED::STOPPED);
     }
 

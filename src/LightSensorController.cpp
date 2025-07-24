@@ -15,11 +15,11 @@ void LightSensorController::addSensor(LightSensor* sensor) {
         Serial.println("Max sensors reached, cannot add more.");
         return;
     }
-    sensors[sensorCount++] = sensor;
+    sensors[sensorCount++] = sensor; // Add the sensor to the array and increment the count
 }
 
 bool LightSensorController::isTrainPassingOver() {
-    for (int i = 0; i < sensorCount; ++i) {
+    for (int i = 0; i < sensorCount; i++) {
         if (sensors[i] && sensors[i]->detectPassingTrain()) {
             return true; // A train is detected by at least one sensor
         }

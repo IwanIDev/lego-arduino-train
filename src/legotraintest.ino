@@ -9,34 +9,27 @@
 Lpf2Hub trainHub;
 const byte MOTOR_PORT = (byte)PoweredUpHubPort::B;
 
-BluetoothController bluetoothController(&trainHub);
-TrainController trainController(MOTOR_PORT);
-
-// ---------------------------
-// --- Train Speed Control ---
-// ---------------------------
-
 const int fastButton = D2;
 const int slowButton = D4;
-
-InputController inputController(&trainController, fastButton, slowButton);
 
 unsigned long previousMillis = 0;
 const long speedSwitchInterval = 100;
 
-// ------------------------------------
-// --- Light Sensor Train Detection ---
-// ------------------------------------
-const int LIGHT_SENSOR_PIN = A0; // Analogue pin 0
+const int LIGHT_SENSOR_PINS[] = {
+    A0,
+}; 
 const int LIGHT_SENSOR_THRESHOLD = 20; // Percentage threshold for light level detection
 const int LIGHT_SENSOR_TIMEOUT_THRESHOLD = 500;
 
-LightSensor lightSensor(LIGHT_SENSOR_PIN, LIGHT_SENSOR_THRESHOLD);
+BluetoothController bluetoothController(&trainHub);
+TrainController trainController(MOTOR_PORT);
+InputController inputController(&trainController, fastButton, slowButton);
+LightSensor sensor = LightSensor(LIGHT_SENSOR_PINS[0], LIGHT_SENSOR_THRESHOLD);
 LightSensorController lightSensorController;
 
 void setup() {
     Serial.begin(115200);
-    lightSensorController.addSensor(&lightSensor);
+    lightSensorController.addSensor(&sensor);
 }
 
 void loop() {

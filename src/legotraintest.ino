@@ -1,14 +1,9 @@
-/**
- * Basic train motor controls
- * Iwan I
- * 2025-07-15
- */
 #include "Lpf2Hub.h"
+#include <Arduino.h>
 #include "TrainController.hpp"
 #include "LightSensor.hpp"
 #include "BluetoothController.hpp"
 #include "InputController.hpp"
-#include <Arduino.h>
 
 Lpf2Hub trainHub;
 const byte MOTOR_PORT = (byte)PoweredUpHubPort::B;

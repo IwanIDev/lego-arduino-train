@@ -1,3 +1,6 @@
+#ifndef LIGHTSENSOR_HPP
+#define LIGHTSENSOR_HPP
+
 #define BUFFER_SIZE 64
 
 class LightSensor {
@@ -26,3 +29,5 @@ public:
   bool isTrainDetected() const;
   void reset();
 };
+
+#endif // LIGHTSENSOR_HPP

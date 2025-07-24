@@ -40,7 +40,7 @@ int TrainController::getSpeed(SPEED state) {
     switch (state) {
         case FAST: return 30;
         case SLOW: return 15;
-        case STOPPED:
+        case STOPPED: return 0;
         default: return 0;
     }
 }
@@ -60,8 +60,8 @@ void TrainController::printState() {
     Serial.print("Train state: ");
     switch (trainState) {
         case STOPPED: Serial.println("STOPPED"); break;
-        case SLOW:        Serial.println("SLOW");        break;
-        case FAST:        Serial.println("FAST");        break;
-        default:            Serial.println("UNKNOWN"); break;
+        case SLOW: Serial.println("SLOW"); break;
+        case FAST: Serial.println("FAST"); break;
+        default: Serial.println("UNKNOWN"); break;
     }
 }

@@ -38,7 +38,7 @@ void loop() {
 
     trainController.updateSpeedTimer();
     inputController.handleSerialInput();
-    inputController.handleButtonInput();
+    inputController.handleButtonInput(trainController.getState());
 
     if (lightSensorController.isTrainPassingOver()) {
         trainController.setState(SPEED::STOPPED);

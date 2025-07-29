@@ -2,24 +2,67 @@
 #include "TrainController.hpp"
 #include <Arduino.h>
 
-InputController::InputController(TrainController* controller, int fastButtonPin, int slowButtonPin)
-: trainController(controller), fastButton(fastButtonPin), slowButton(slowButtonPin)
+InputController::InputController(TrainController* controller, int forwardButtonPin, int backwardButtonPin)
+: trainController(controller), forwardButton(forwardButtonPin), backwardButton(backwardButtonPin), lastButtonPressTime(0)
 {
-    pinMode(fastButton, INPUT_PULLUP);
-    pinMode(slowButton, INPUT_PULLUP);
+    pinMode(forwardButton, INPUT_PULLUP);
+    pinMode(backwardButton, INPUT_PULLUP);
 }
 
-void InputController::handleButtonInput() {
-    int fastButtonState = digitalRead(fastButton);
-    int slowButtonState = digitalRead(slowButton);
+void InputController::setForwardState(SPEED oldState) {
+    switch (oldState) {
+        case STOPPED:
+            trainController->setState(SLOW);
+            break;
+        case SLOW:
+            trainController->setState(FAST);
+            break;
+        case REVERSE:
+            trainController->setState(STOPPED);
+            break;
+        case FAST:
+            break;
+        default:
+            break;
+    }
+}
 
-    if (fastButtonState == LOW && slowButtonState == LOW) {
-        trainController->setState(STOPPED);
-        delay(100);
-    } else if (fastButtonState == LOW) {    // button pressed
-        trainController->setState(FAST);
-    } else if (slowButtonState == LOW) {    // button pressed
-        trainController->setState(SLOW);
+void InputController::setBackwardState(SPEED oldState) {
+    switch (oldState) {
+        case STOPPED:
+            trainController->setState(REVERSE);
+            break;
+        case SLOW:
+            trainController->setState(STOPPED);
+            break;
+        case FAST:
+            trainController->setState(SLOW);
+            break;
+        case REVERSE:
+            break;
+        default:
+            break;
+    }
+}
+
+void InputController::handleButtonInput(SPEED oldState) {
+    const int forwardButtonState = digitalRead(forwardButton);
+    const int backwardButtonState = digitalRead(backwardButton);
+
+    const bool isForwardButtonPressed = (forwardButtonState == LOW);
+    const bool isBackwardButtonPressed = (backwardButtonState == LOW);
+
+    unsigned long currentTime = millis();
+    if (currentTime - lastButtonPressTime < DEBOUNCE_DELAY) {
+        return; // Exit if not enough time has passed since last press
+    }
+
+    if (isForwardButtonPressed) {
+        setForwardState(oldState);
+        lastButtonPressTime = currentTime;
+    } else if (isBackwardButtonPressed) {
+        setBackwardState(oldState);
+        lastButtonPressTime = currentTime;
     }
 }
 

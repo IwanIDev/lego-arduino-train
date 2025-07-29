@@ -2,24 +2,63 @@
 #include "TrainController.hpp"
 #include <Arduino.h>
 
-InputController::InputController(TrainController* controller, int fastButtonPin, int slowButtonPin)
-: trainController(controller), fastButton(fastButtonPin), slowButton(slowButtonPin)
+InputController::InputController(TrainController* controller, int forwardButtonPin, int backwardButtonPin)
+: trainController(controller), forwardButton(forwardButtonPin), backwardButton(backwardButtonPin)
 {
-    pinMode(fastButton, INPUT_PULLUP);
-    pinMode(slowButton, INPUT_PULLUP);
+    pinMode(forwardButton, INPUT_PULLUP);
+    pinMode(backwardButton, INPUT_PULLUP);
+}
+
+void InputController::setForwardState(SPEED oldState) {
+    switch (oldState) {
+        case STOPPED:
+        case SLOW:
+            trainController->setState(FAST);
+            break;
+        case FAST:
+            trainController->setState(SLOW);
+            break;
+        case REVERSE:
+            trainController->setState(STOPPED);
+            break;
+        default:
+            break;
+    }
+}
+
+void InputController::setBackwardState(SPEED oldState) {
+    switch (oldState) {
+        case STOPPED:
+        case SLOW:
+            trainController->setState(REVERSE);
+            break;
+        case FAST:
+            trainController->setState(SLOW);
+            break;
+        case REVERSE:
+            trainController->setState(STOPPED);
+            break;
+        default:
+            break;
+    }
 }
 
 void InputController::handleButtonInput(SPEED oldState) {
-    int fastButtonState = digitalRead(fastButton);
-    int slowButtonState = digitalRead(slowButton);
+    const int forwardButtonState = digitalRead(forwardButton);
+    const int backwardButtonState = digitalRead(backwardButton);
 
-    if (fastButtonState == LOW && slowButtonState == LOW) {
+    const bool isForwardButtonPressed = (forwardButtonState == LOW);
+    const bool isBackwardButtonPressed = (backwardButtonState == LOW);
+
+    if (isForwardButtonPressed && isBackwardButtonPressed) {
         trainController->setState(STOPPED);
         delay(100);
-    } else if (fastButtonState == LOW) {    // button pressed
-        trainController->setState(FAST);
-    } else if (slowButtonState == LOW) {    // button pressed
-        trainController->setState(SLOW);
+    } else if (isForwardButtonPressed) {
+        setForwardState(oldState);
+    } else if (isBackwardButtonPressed) {
+        setBackwardState(oldState);
+    } else {
+        // If no button is pressed, do nothing
     }
 }
 

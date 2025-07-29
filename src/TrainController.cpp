@@ -37,9 +37,10 @@ void TrainController::clearStateChanged() {
 
 // Get the speed value for a given state
 int TrainController::getSpeed(SPEED state) {
+    int reverseMultiplier = isReverse ? -1 : 1; // Adjust speed for reverse state
     switch (state) {
-        case FAST: return 30;
-        case SLOW: return 15;
+        case FAST: return 30 * reverseMultiplier;
+        case SLOW: return 15 * reverseMultiplier;
         case STOPPED: return 0;
         default: return 0;
     }
@@ -62,7 +63,6 @@ void TrainController::printState() {
         case STOPPED: Serial.println("STOPPED"); break;
         case SLOW: Serial.println("SLOW"); break;
         case FAST: Serial.println("FAST"); break;
-        case REVERSE: Serial.println("REVERSE"); break;
         default: Serial.println("UNKNOWN"); break;
     }
 }

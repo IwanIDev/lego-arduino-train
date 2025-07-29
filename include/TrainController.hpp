@@ -8,8 +8,7 @@
 enum SPEED {
   STOPPED = 0,
   FAST = 30,
-  SLOW = 15,
-  REVERSE = -30,
+  SLOW = 15
 };
 #endif // SPEED_ENUM_DEFINED
 
@@ -20,8 +19,16 @@ private:
   unsigned long previousMillis;
   const long speedSwitchInterval;
   byte port;
+  bool isReverse = false; // Added to track reverse state
 
 public:
+  bool setReverse(bool reverse) {
+    isReverse = reverse;
+    return isReverse;
+  }
+  bool getReverse() const {
+    return isReverse;
+  }
   TrainController(byte motorPort);
   
   void setState(SPEED newState);

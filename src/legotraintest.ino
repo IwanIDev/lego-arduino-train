@@ -61,7 +61,8 @@ void loop() {
     char hubName[] = "trainHub";
     trainHub.setHubName(hubName);
 
-    int speed = (int) trainController.getState();
+    SPEED currentState = trainController.getState();
+    int speed = trainController.getSpeed(currentState);
 
     trainController.printState();
 

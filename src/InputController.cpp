@@ -57,10 +57,7 @@ void InputController::handleButtonInput(SPEED oldState) {
         return; // Exit if not enough time has passed since last press
     }
 
-    if (isForwardButtonPressed && isBackwardButtonPressed) {
-        trainController->setState(STOPPED);
-        lastButtonPressTime = currentTime;
-    } else if (isForwardButtonPressed) {
+    if (isForwardButtonPressed) {
         setForwardState(oldState);
         lastButtonPressTime = currentTime;
     } else if (isBackwardButtonPressed) {

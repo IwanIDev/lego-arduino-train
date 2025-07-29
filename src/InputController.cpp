@@ -126,7 +126,7 @@ void InputController::handleSerialInput() {
     recievedData.trim();
     if (recievedData.length() == 0) return; // Exit if no data received
     recievedData.toLowerCase(); // Normalize to lowercase for command comparison
-    
+
     bool commandFound = false;
 
     for (int i = 0; i < numCommands; i++) {
@@ -134,7 +134,9 @@ void InputController::handleSerialInput() {
         if (!recievedData.equals(commands[i])) continue;
 
         if (i == 3) { // If the command is "reverse"
-            trainController->setReverse(true);
+            trainController->setReverse(!trainController->getReverse()); // Toggle reverse state
+            Serial.print("Reverse state set to: ");
+            Serial.println(trainController->getReverse() ? "ON" : "OFF");
             commandFound = true;
             break; // Exit after processing the command
         }

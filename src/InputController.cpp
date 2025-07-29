@@ -27,9 +27,11 @@ void InputController::handleSerialInput() {
     const char STOP_COMMAND[] = "stop";
     const int STOP_COMMAND_LENGTH = sizeof(STOP_COMMAND) - 1;
     const char SLOW_COMMAND[] = "slow";
-    const int SLOW_COMMAND_LENGTH = sizeof(STOP_COMMAND) - 1;
+    const int SLOW_COMMAND_LENGTH = sizeof(SLOW_COMMAND) - 1;
     const char FAST_COMMAND[] = "fast";
-    const int FAST_COMMAND_LENGTH = sizeof(STOP_COMMAND) - 1;
+    const int FAST_COMMAND_LENGTH = sizeof(FAST_COMMAND) - 1;
+    const char REVERSE_COMMAND[] = "reverse";
+    const int REVERSE_COMMAND_LENGTH = sizeof(REVERSE_COMMAND) - 1;
 
     String recievedData = "";
 
@@ -41,4 +43,5 @@ void InputController::handleSerialInput() {
     if (recievedData.equals(STOP_COMMAND)) trainController->setState(STOPPED);
     if (recievedData.equals(SLOW_COMMAND)) trainController->setState(SLOW);
     if (recievedData.equals(FAST_COMMAND)) trainController->setState(FAST);
+    if (recievedData.equals(REVERSE_COMMAND)) trainController->setState(REVERSE);
 }

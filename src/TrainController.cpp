@@ -60,9 +60,11 @@ void TrainController::updateSpeedTimer() {
 void TrainController::printState() {
     Serial.print("Train state: ");
     switch (trainState) {
-        case STOPPED: Serial.println("STOPPED"); break;
-        case SLOW: Serial.println("SLOW"); break;
-        case FAST: Serial.println("FAST"); break;
-        default: Serial.println("UNKNOWN"); break;
+        case STOPPED: Serial.print("STOPPED"); break;
+        case SLOW: Serial.print("SLOW"); break;
+        case FAST: Serial.print("FAST"); break;
+        default: Serial.print("UNKNOWN"); break;
     }
+    Serial.print(", Reverse: ");
+    Serial.println(isReverse ? "ON" : "OFF");
 }

@@ -19,10 +19,16 @@ private:
   unsigned long previousMillis;
   const long speedSwitchInterval;
   byte port;
-
-public:
   bool isReverse = false; // Added to track reverse state
 
+public:
+  bool setReverse(bool reverse) {
+    isReverse = reverse;
+    return isReverse;
+  }
+  bool getReverse() const {
+    return isReverse;
+  }
   TrainController(byte motorPort);
   
   void setState(SPEED newState);

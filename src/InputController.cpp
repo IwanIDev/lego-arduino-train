@@ -10,38 +10,74 @@ InputController::InputController(TrainController* controller, int forwardButtonP
 }
 
 void InputController::setForwardState(SPEED oldState) {
-    switch (oldState) {
-        case STOPPED:
-            trainController->setState(SLOW);
-            break;
-        case SLOW:
-            trainController->setState(FAST);
-            break;
-        case REVERSE:
-            trainController->setState(STOPPED);
-            break;
-        case FAST:
-            break;
-        default:
-            break;
+    if (trainController->getReverse()) {
+        // When in reverse, decrease speed until stopped, then switch to forward
+        switch (oldState) {
+            case FAST:
+                trainController->setState(SLOW);
+                break;
+            case SLOW:
+                trainController->setState(STOPPED);
+                break;
+            case STOPPED:
+                trainController->setReverse(false); // Switch to forward
+                trainController->setState(SLOW);    // Start at slow speed
+                break;
+            default:
+                trainController->setState(STOPPED);
+                break;
+        }
+    } else {
+        // When already in forward, increase speed
+        switch (oldState) {
+            case STOPPED:
+                trainController->setState(SLOW);
+                break;
+            case SLOW:
+                trainController->setState(FAST);
+                break;
+            case FAST:
+                break;
+            default:
+                trainController->setState(STOPPED);
+                break;
+        }
     }
 }
 
 void InputController::setBackwardState(SPEED oldState) {
-    switch (oldState) {
-        case STOPPED:
-            trainController->setState(REVERSE);
-            break;
-        case SLOW:
-            trainController->setState(STOPPED);
-            break;
-        case FAST:
-            trainController->setState(SLOW);
-            break;
-        case REVERSE:
-            break;
-        default:
-            break;
+    if (trainController->getReverse()) {
+        // When in reverse, increase speed
+        switch (oldState) {
+            case STOPPED:
+                trainController->setState(SLOW);
+                break;
+            case SLOW:
+                trainController->setState(FAST);
+                break;
+            case FAST:
+                break;
+            default:
+                trainController->setState(STOPPED);
+                break;
+        }
+    } else {
+        // When in forward, decrease speed until stopped, then switch to reverse
+        switch (oldState) {
+            case FAST:
+                trainController->setState(SLOW);
+                break;
+            case SLOW:
+                trainController->setState(STOPPED);
+                break;
+            case STOPPED:
+                trainController->setReverse(true); // Switch to reverse
+                trainController->setState(SLOW);   // Start at slow speed
+                break;
+            default:
+                trainController->setState(STOPPED);
+                break;
+        }
     }
 }
 
@@ -73,12 +109,10 @@ void InputController::handleSerialInput() {
     const int SLOW_COMMAND_LENGTH = sizeof(SLOW_COMMAND) - 1;
     const char FAST_COMMAND[] = "fast";
     const int FAST_COMMAND_LENGTH = sizeof(FAST_COMMAND) - 1;
-    const char REVERSE_COMMAND[] = "reverse";
-    const int REVERSE_COMMAND_LENGTH = sizeof(REVERSE_COMMAND) - 1;
 
-    const char* commands[] = {STOP_COMMAND, SLOW_COMMAND, FAST_COMMAND, REVERSE_COMMAND};
-    const int commandLengths[] = {STOP_COMMAND_LENGTH, SLOW_COMMAND_LENGTH, FAST_COMMAND_LENGTH, REVERSE_COMMAND_LENGTH};
-    const SPEED states[] = {STOPPED, SLOW, FAST, REVERSE};
+    const char* commands[] = {STOP_COMMAND, SLOW_COMMAND, FAST_COMMAND};
+    const int commandLengths[] = {STOP_COMMAND_LENGTH, SLOW_COMMAND_LENGTH, FAST_COMMAND_LENGTH};
+    const SPEED states[] = {STOPPED, SLOW, FAST};
 
     const int numCommands = sizeof(commands) / sizeof(commands[0]);
 

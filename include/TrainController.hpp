@@ -8,8 +8,7 @@
 enum SPEED {
   STOPPED = 0,
   FAST = 30,
-  SLOW = 15,
-  REVERSE = -30,
+  SLOW = 15
 };
 #endif // SPEED_ENUM_DEFINED
 
@@ -22,6 +21,8 @@ private:
   byte port;
 
 public:
+  bool isReverse = false; // Added to track reverse state
+
   TrainController(byte motorPort);
   
   void setState(SPEED newState);

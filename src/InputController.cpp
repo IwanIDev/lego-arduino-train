@@ -33,6 +33,12 @@ void InputController::handleSerialInput() {
     const char REVERSE_COMMAND[] = "reverse";
     const int REVERSE_COMMAND_LENGTH = sizeof(REVERSE_COMMAND) - 1;
 
+    const char* commands[] = {STOP_COMMAND, SLOW_COMMAND, FAST_COMMAND, REVERSE_COMMAND};
+    const int commandLengths[] = {STOP_COMMAND_LENGTH, SLOW_COMMAND_LENGTH, FAST_COMMAND_LENGTH, REVERSE_COMMAND_LENGTH};
+    const SPEED states[] = {STOPPED, SLOW, FAST, REVERSE};
+
+    const int numCommands = sizeof(commands) / sizeof(commands[0]);
+
     String recievedData = "";
 
     if (Serial.available() <= 0) return;
@@ -40,8 +46,14 @@ void InputController::handleSerialInput() {
     recievedData = Serial.readStringUntil('\n');
     recievedData.trim();
 
-    if (recievedData.equals(STOP_COMMAND)) trainController->setState(STOPPED);
-    if (recievedData.equals(SLOW_COMMAND)) trainController->setState(SLOW);
-    if (recievedData.equals(FAST_COMMAND)) trainController->setState(FAST);
-    if (recievedData.equals(REVERSE_COMMAND)) trainController->setState(REVERSE);
+    for (int i = 0; i < numCommands; i++) {
+        if (recievedData.length() != commandLengths[i]) continue;
+        if (!recievedData.equals(commands[i])) continue;
+
+        trainController->setState(states[i]);
+        return; // Exit after processing the command
+    }
+    Serial.println("Unknown command. Use 'stop', 'slow', 'fast', or 'reverse'.");
+    trainController->printState(); // Print current state after command processing
+    Serial.flush(); // Ensure all data is sent before returning
 }

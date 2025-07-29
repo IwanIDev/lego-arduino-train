@@ -12,14 +12,16 @@ InputController::InputController(TrainController* controller, int forwardButtonP
 void InputController::setForwardState(SPEED oldState) {
     switch (oldState) {
         case STOPPED:
+            trainController->setState(SLOW);
+            break;
         case SLOW:
             trainController->setState(FAST);
             break;
-        case FAST:
-            trainController->setState(SLOW);
-            break;
         case REVERSE:
             trainController->setState(STOPPED);
+            break;
+        case FAST:
+            trainController->setState(STOPPED);  // Add cycle back to STOPPED
             break;
         default:
             break;
@@ -29,14 +31,15 @@ void InputController::setForwardState(SPEED oldState) {
 void InputController::setBackwardState(SPEED oldState) {
     switch (oldState) {
         case STOPPED:
-        case SLOW:
             trainController->setState(REVERSE);
+            break;
+        case SLOW:
+            trainController->setState(STOPPED);
             break;
         case FAST:
             trainController->setState(SLOW);
             break;
         case REVERSE:
-            trainController->setState(STOPPED);
             break;
         default:
             break;

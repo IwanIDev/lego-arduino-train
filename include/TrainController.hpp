@@ -8,7 +8,8 @@
 enum SPEED {
   STOPPED = 0,
   FAST = 30,
-  SLOW = 15
+  SLOW = 15,
+  REVERSE = -30,
 };
 #endif // SPEED_ENUM_DEFINED
 

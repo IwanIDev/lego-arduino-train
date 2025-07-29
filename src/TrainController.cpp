@@ -62,6 +62,7 @@ void TrainController::printState() {
         case STOPPED: Serial.println("STOPPED"); break;
         case SLOW: Serial.println("SLOW"); break;
         case FAST: Serial.println("FAST"); break;
+        case REVERSE: Serial.println("REVERSE"); break;
         default: Serial.println("UNKNOWN"); break;
     }
 }

@@ -3,7 +3,7 @@
 #include <Arduino.h>
 
 InputController::InputController(TrainController* controller, int forwardButtonPin, int backwardButtonPin)
-: trainController(controller), forwardButton(forwardButtonPin), backwardButton(backwardButtonPin)
+: trainController(controller), forwardButton(forwardButtonPin), backwardButton(backwardButtonPin), lastButtonPressTime(0)
 {
     pinMode(forwardButton, INPUT_PULLUP);
     pinMode(backwardButton, INPUT_PULLUP);
@@ -21,7 +21,6 @@ void InputController::setForwardState(SPEED oldState) {
             trainController->setState(STOPPED);
             break;
         case FAST:
-            trainController->setState(STOPPED);  // Add cycle back to STOPPED
             break;
         default:
             break;
@@ -53,15 +52,20 @@ void InputController::handleButtonInput(SPEED oldState) {
     const bool isForwardButtonPressed = (forwardButtonState == LOW);
     const bool isBackwardButtonPressed = (backwardButtonState == LOW);
 
+    unsigned long currentTime = millis();
+    if (currentTime - lastButtonPressTime < DEBOUNCE_DELAY) {
+        return; // Exit if not enough time has passed since last press
+    }
+
     if (isForwardButtonPressed && isBackwardButtonPressed) {
         trainController->setState(STOPPED);
-        delay(100);
+        lastButtonPressTime = currentTime;
     } else if (isForwardButtonPressed) {
         setForwardState(oldState);
+        lastButtonPressTime = currentTime;
     } else if (isBackwardButtonPressed) {
         setBackwardState(oldState);
-    } else {
-        // If no button is pressed, do nothing
+        lastButtonPressTime = currentTime;
     }
 }
 

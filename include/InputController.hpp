@@ -8,6 +8,8 @@ private:
 
   void setForwardState(SPEED oldState);
   void setBackwardState(SPEED oldState);
+  unsigned long lastButtonPressTime;
+  const unsigned long DEBOUNCE_DELAY = 250; // 250ms delay between button presses
 public:
   InputController(TrainController* controller, int forwardButtonPin, int backwardButtonPin);
 

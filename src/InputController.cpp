@@ -9,7 +9,7 @@ InputController::InputController(TrainController* controller, int fastButtonPin,
     pinMode(slowButton, INPUT_PULLUP);
 }
 
-void InputController::handleButtonInput() {
+void InputController::handleButtonInput(SPEED oldState) {
     int fastButtonState = digitalRead(fastButton);
     int slowButtonState = digitalRead(slowButton);
 

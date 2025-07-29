@@ -109,9 +109,11 @@ void InputController::handleSerialInput() {
     const int SLOW_COMMAND_LENGTH = sizeof(SLOW_COMMAND) - 1;
     const char FAST_COMMAND[] = "fast";
     const int FAST_COMMAND_LENGTH = sizeof(FAST_COMMAND) - 1;
+    const char REVERSE_COMMAND[] = "reverse";
+    const int REVERSE_COMMAND_LENGTH = sizeof(REVERSE_COMMAND) - 1;
 
-    const char* commands[] = {STOP_COMMAND, SLOW_COMMAND, FAST_COMMAND};
-    const int commandLengths[] = {STOP_COMMAND_LENGTH, SLOW_COMMAND_LENGTH, FAST_COMMAND_LENGTH};
+    const char* commands[] = {STOP_COMMAND, SLOW_COMMAND, FAST_COMMAND, REVERSE_COMMAND};
+    const int commandLengths[] = {STOP_COMMAND_LENGTH, SLOW_COMMAND_LENGTH, FAST_COMMAND_LENGTH, REVERSE_COMMAND_LENGTH};
     const SPEED states[] = {STOPPED, SLOW, FAST};
 
     const int numCommands = sizeof(commands) / sizeof(commands[0]);
@@ -122,15 +124,28 @@ void InputController::handleSerialInput() {
 
     recievedData = Serial.readStringUntil('\n');
     recievedData.trim();
+    if (recievedData.length() == 0) return; // Exit if no data received
+    recievedData.toLowerCase(); // Normalize to lowercase for command comparison
+    
+    bool commandFound = false;
 
     for (int i = 0; i < numCommands; i++) {
         if (recievedData.length() != commandLengths[i]) continue;
         if (!recievedData.equals(commands[i])) continue;
 
+        if (i == 3) { // If the command is "reverse"
+            trainController->setReverse(true);
+            commandFound = true;
+            break; // Exit after processing the command
+        }
+
         trainController->setState(states[i]);
-        return; // Exit after processing the command
+        commandFound = true;
+        break; // Exit after processing the command
     }
-    Serial.println("Unknown command. Use 'stop', 'slow', 'fast', or 'reverse'.");
+    if (!commandFound) {
+        Serial.println("Unknown command. Use 'stop', 'slow', 'fast', or 'reverse'.");
+    }
     trainController->printState(); // Print current state after command processing
     Serial.flush(); // Ensure all data is sent before returning
 }

@@ -20,9 +20,16 @@ void LightSensorController::addSensor(LightSensor* sensor) {
 
 bool LightSensorController::isTrainPassingOver() {
     for (int i = 0; i < sensorCount; i++) {
-        if (sensors[i] && sensors[i]->detectPassingTrain()) {
-            return true; // A train is detected by at least one sensor
+            if (sensors[i] && sensors[i]->detectPassingTrain()) {
+                lastTriggeredSensor = sensors[i];
+                return true;
+            }
         }
-    }
-    return false; // No train detected by any sensor
+        return false;
+}
+
+// Returns the location of the last triggered sensor, or a default value if none was triggered
+SensorLocation LightSensorController::getTriggeredSensorLocation() const {
+    return lastTriggeredSensor ? lastTriggeredSensor->getLocation() 
+                               : SensorLocation::STATION_STOP;
 }

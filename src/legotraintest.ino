@@ -5,6 +5,8 @@
 #include "InputController.hpp"
 #include "LightSensor.hpp"
 #include "LightSensorController.hpp"
+#include "SensorAction.hpp"
+#include "ActionController.hpp"
 
 Lpf2Hub trainHub;
 const byte MOTOR_PORT = (byte)PoweredUpHubPort::B;
@@ -15,21 +17,25 @@ const int slowButton = D4;
 unsigned long previousMillis = 0;
 const long speedSwitchInterval = 100;
 
-const int LIGHT_SENSOR_PINS[] = {
-    A0,
-}; 
 const int LIGHT_SENSOR_THRESHOLD = 20; // Percentage threshold for light level detection
 const int LIGHT_SENSOR_TIMEOUT_THRESHOLD = 500;
 
 BluetoothController bluetoothController(&trainHub);
 TrainController trainController(MOTOR_PORT);
 InputController inputController(&trainController, fastButton, slowButton);
-LightSensor sensor = LightSensor(LIGHT_SENSOR_PINS[0], LIGHT_SENSOR_THRESHOLD, SensorLocation::STATION_STOP);
+LightSensor sensors[] = {
+    LightSensor(A0, LIGHT_SENSOR_THRESHOLD, SensorLocation::STATION_STOP)
+    // LightSensor(A1, LIGHT_SENSOR_THRESHOLD, SensorLocation::SPEED_REDUCE),
+    // LightSensor(A2, LIGHT_SENSOR_THRESHOLD, SensorLocation::DIRECTION_CHANGE)
+};
 LightSensorController lightSensorController;
+ActionController actionController(&trainController);
 
 void setup() {
     Serial.begin(115200);
-    lightSensorController.addSensor(&sensor);
+    for (auto& sensor : sensors) {
+        lightSensorController.addSensor(&sensor);
+    }
 }
 
 void loop() {
@@ -41,7 +47,8 @@ void loop() {
     inputController.handleButtonInput(trainController.getState());
 
     if (lightSensorController.isTrainPassingOver()) {
-        trainController.setState(SPEED::STOPPED);
+        SensorLocation triggeredLocation = lightSensorController.getTriggeredSensorLocation();
+        actionController.handleSensorTrigger(triggeredLocation);
     }
 
     if (!bluetoothController.connect()) {

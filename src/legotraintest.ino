@@ -24,7 +24,7 @@ const int LIGHT_SENSOR_TIMEOUT_THRESHOLD = 500;
 BluetoothController bluetoothController(&trainHub);
 TrainController trainController(MOTOR_PORT);
 InputController inputController(&trainController, fastButton, slowButton);
-LightSensor sensor = LightSensor(LIGHT_SENSOR_PINS[0], LIGHT_SENSOR_THRESHOLD);
+LightSensor sensor = LightSensor(LIGHT_SENSOR_PINS[0], LIGHT_SENSOR_THRESHOLD, SensorLocation::STATION_STOP);
 LightSensorController lightSensorController;
 
 void setup() {

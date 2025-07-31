@@ -22,18 +22,7 @@ private:
   int getDynamicThreshold(int average);
 
 public:
-  LightSensor(int sensorPin, int detectionThreshold, SensorLocation loc)
-      : pin(sensorPin),
-        threshold(detectionThreshold),
-        lastReading(0),
-        trainDetected(false),
-        timeout(0),
-        timeoutThreshold(1000), // Set a default value or pass as parameter if needed
-        lightBuffer{0},
-        lightBufferIndex(0),
-        bufferFull(false),
-        lastAverage(0),
-        location(loc) {}
+  LightSensor(int sensorPin, int detectionThreshold, SensorLocation loc);
 
   int readLevel();
   bool isTrainPassingOver(int lightReading);

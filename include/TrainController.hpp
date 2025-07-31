@@ -20,7 +20,7 @@ private:
   byte port;
   bool isReverse = false; // Added to track reverse state
 
-  float speedMultiplier = 1.0f; // Default speed multiplier
+  float speedMultiplier; // Speed multiplier
   const float MIN_MULTIPLIER = 0.0f; // Minimum speed multiplier
   const float MAX_MULTIPLIER = 10.0f; // Maximum speed multiplier
   const float MULTIPLIER_STEP = 1.0f; // Step size for speed multiplier adjustment

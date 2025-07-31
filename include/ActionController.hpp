@@ -3,7 +3,7 @@
 
 #include <map>
 #include "TrainController.hpp"
-#include "SensorAction.hpp"
+#include "Action/SensorAction.hpp"
 
 class ActionController {
 private:

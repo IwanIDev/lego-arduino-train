@@ -17,5 +17,7 @@ public:
     SensorLocation getTriggeredSensorLocation() const;
 
     void addSensor(LightSensor* sensor);
+
+    LightSensor* getTriggeredSensor() const;
 };
 #endif // LIGHTSENSORCONTROLLER_HPP

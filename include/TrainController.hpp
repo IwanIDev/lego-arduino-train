@@ -7,8 +7,7 @@
 #define SPEED_ENUM_DEFINED
 enum SPEED {
   STOPPED = 0,
-  FAST = 30,
-  SLOW = 15
+  GO = 15
 };
 #endif // SPEED_ENUM_DEFINED
 
@@ -20,6 +19,11 @@ private:
   const long speedSwitchInterval;
   byte port;
   bool isReverse = false; // Added to track reverse state
+
+  float speedMultiplier; // Speed multiplier
+  const float MIN_MULTIPLIER = 0.0f; // Minimum speed multiplier
+  const float MAX_MULTIPLIER = 10.0f; // Maximum speed multiplier
+  const float MULTIPLIER_STEP = 1.0f; // Step size for speed multiplier adjustment
 
 public:
   bool setReverse(bool reverse) {
@@ -41,6 +45,12 @@ public:
   void updateSpeedTimer();
   
   void printState();
+
+  void incrementSpeed();
+  void decrementSpeed();
+  float getSpeedMultiplier() const {
+    return speedMultiplier;
+  }
 };
 
 #endif // TRAINCONTROLLER_HPP

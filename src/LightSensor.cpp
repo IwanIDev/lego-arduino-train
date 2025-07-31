@@ -2,14 +2,15 @@
 #include <Arduino.h>
 
 // Constructor
-LightSensor::LightSensor(int sensorPin, int detectionThreshold)
+LightSensor::LightSensor(int sensorPin, int detectionThreshold, SensorLocation loc)
 : pin(sensorPin),
     threshold(detectionThreshold),
     lastReading(0),
     trainDetected(false),
     timeout(0),
     timeoutThreshold(500), // Default timeout threshold of 500 milliseconds
-    lastAverage(0)
+    lastAverage(0),
+    location(loc)
 {
     pinMode(pin, INPUT);
 }

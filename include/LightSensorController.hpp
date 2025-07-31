@@ -7,10 +7,14 @@ class LightSensorController {
 private:
     LightSensor* sensors[MAX_SENSORS]; // Array of LightSensor pointers
     int sensorCount;
+    LightSensor* lastTriggeredSensor;
+
 public:
     LightSensorController();
 
     bool isTrainPassingOver();
+
+    SensorLocation getTriggeredSensorLocation() const;
 
     void addSensor(LightSensor* sensor);
 };

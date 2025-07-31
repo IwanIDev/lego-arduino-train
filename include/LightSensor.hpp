@@ -2,6 +2,7 @@
 #define LIGHTSENSOR_HPP
 
 #define BUFFER_SIZE 64
+#include "SensorAction.hpp"
 
 class LightSensor {
 private:
@@ -15,19 +16,21 @@ private:
   int lightBufferIndex;
   bool bufferFull;
   int lastAverage;
+  SensorLocation location;
 
   int getAverageLightLevel();
   int getDynamicThreshold(int average);
 
 public:
-  LightSensor(int sensorPin, int detectionThreshold);
-  
+  LightSensor(int sensorPin, int detectionThreshold, SensorLocation loc);
+
   int readLevel();
   bool isTrainPassingOver(int lightReading);
   bool detectPassingTrain();
-  
+
   bool isTrainDetected() const;
   void reset();
+  SensorLocation getLocation() const { return location; }
 };
 
 #endif // LIGHTSENSOR_HPP

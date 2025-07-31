@@ -1,4 +1,5 @@
-#pragma once
+#ifndef STOP_ACTION_HPP
+#define STOP_ACTION_HPP
 #include "SensorAction.hpp"
 #include "TrainController.hpp"
 
@@ -6,12 +7,8 @@ class StopAction : public SensorAction {
 private:
     int delayMs;
 public:
-    explicit StopAction(int delay = 0) : delayMs(delay) {}
+    explicit StopAction(int delay = 0);
     
-    void execute(TrainController& controller) override {
-        controller.setState(STOPPED);
-        if (delayMs > 0) {
-            delay(delayMs);
-        }
-    }
+    void execute(TrainController& controller) override;
 };
+#endif // STOP_ACTION_HPP

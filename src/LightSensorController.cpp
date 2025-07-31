@@ -33,3 +33,7 @@ SensorLocation LightSensorController::getTriggeredSensorLocation() const {
     return lastTriggeredSensor ? lastTriggeredSensor->getLocation() 
                                : SensorLocation::STATION_STOP;
 }
+
+LightSensor* LightSensorController::getTriggeredSensor() const {
+    return lastTriggeredSensor;
+}

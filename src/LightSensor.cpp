@@ -1,8 +1,10 @@
 #include "LightSensor.hpp"
 #include <Arduino.h>
+#include "Action/SensorAction.hpp"
+#include <memory>
 
 // Constructor
-LightSensor::LightSensor(int sensorPin, int detectionThreshold, SensorLocation loc)
+LightSensor::LightSensor(int sensorPin, int detectionThreshold, SensorLocation loc, std::unique_ptr<SensorAction> sensorAction)
 : pin(sensorPin),
     threshold(detectionThreshold),
     lastReading(0),
@@ -10,7 +12,10 @@ LightSensor::LightSensor(int sensorPin, int detectionThreshold, SensorLocation l
     timeout(0),
     timeoutThreshold(500), // Default timeout threshold of 500 milliseconds
     lastAverage(0),
-    location(loc)
+    location(loc),
+    lightBufferIndex(0),
+    bufferFull(false),
+    action(std::move(sensorAction)) // Use std::move to transfer ownership of the action
 {
     pinMode(pin, INPUT);
 }
@@ -99,4 +104,10 @@ int LightSensor::getAverageLightLevel() {
     }
 
     return (count > 0) ? (sum / count) : 0; // Return average or 0 if no valid readings
+}
+
+void LightSensor::executeAction(TrainController& controller) {
+    if (action) {
+      action->execute(controller);
+    }
 }

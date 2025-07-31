@@ -5,8 +5,10 @@
 #include "InputController.hpp"
 #include "LightSensor.hpp"
 #include "LightSensorController.hpp"
-#include "SensorAction.hpp"
+#include "Action/SensorAction.hpp"
+#include "Action/StopAction.hpp"
 #include "ActionController.hpp"
+#include <memory>
 
 Lpf2Hub trainHub;
 const byte MOTOR_PORT = (byte)PoweredUpHubPort::B;
@@ -24,7 +26,7 @@ BluetoothController bluetoothController(&trainHub);
 TrainController trainController(MOTOR_PORT);
 InputController inputController(&trainController, fastButton, slowButton);
 LightSensor sensors[] = {
-    LightSensor(A0, LIGHT_SENSOR_THRESHOLD, SensorLocation::STATION_STOP)
+    LightSensor(A0, LIGHT_SENSOR_THRESHOLD, SensorLocation::STATION_STOP, std::unique_ptr<StopAction>(new StopAction(100))),
     // LightSensor(A1, LIGHT_SENSOR_THRESHOLD, SensorLocation::SPEED_REDUCE),
     // LightSensor(A2, LIGHT_SENSOR_THRESHOLD, SensorLocation::DIRECTION_CHANGE)
 };
@@ -47,8 +49,8 @@ void loop() {
     inputController.handleButtonInput(trainController.getState());
 
     if (lightSensorController.isTrainPassingOver()) {
-        SensorLocation triggeredLocation = lightSensorController.getTriggeredSensorLocation();
-        actionController.handleSensorTrigger(triggeredLocation);
+        LightSensor* triggeredSensor = lightSensorController.getTriggeredSensor();
+        actionController.executeAction(triggeredSensor);
     }
 
     if (!bluetoothController.connect()) {

@@ -19,6 +19,9 @@ void TrainController::setState(SPEED newState) {
     } else {
         stateChanged = false; // No change if the state is the same
     }
+    if (newState == STOPPED) {
+        speedMultiplier = 0; // Reset multiplier when stopped
+    }
 }
 
 // Get the current train state

@@ -7,7 +7,8 @@ TrainController::TrainController(byte motorPort)
         stateChanged(false),
         previousMillis(0),
         speedSwitchInterval(100), // 100ms default interval for speed switching
-        port(motorPort)
+        port(motorPort),
+        speedMultiplier(0) // Initialize speedMultiplier
 {}
 
 // Set the train state and mark as changed if different
@@ -39,8 +40,7 @@ void TrainController::clearStateChanged() {
 int TrainController::getSpeed(SPEED state) {
     int reverseMultiplier = isReverse ? -1 : 1; // Adjust speed for reverse state
     switch (state) {
-        case FAST: return 30 * reverseMultiplier;
-        case SLOW: return 15 * reverseMultiplier;
+        case GO: return 15 * reverseMultiplier;
         case STOPPED: return 0;
         default: return 0;
     }
@@ -61,10 +61,25 @@ void TrainController::printState() {
     Serial.print("Train state: ");
     switch (trainState) {
         case STOPPED: Serial.print("STOPPED"); break;
-        case SLOW: Serial.print("SLOW"); break;
-        case FAST: Serial.print("FAST"); break;
+        case GO: Serial.print("GO"); break;
         default: Serial.print("UNKNOWN"); break;
     }
     Serial.print(", Reverse: ");
     Serial.println(isReverse ? "ON" : "OFF");
+}
+
+void TrainController::incrementSpeed() {
+    speedMultiplier = min(speedMultiplier + MULTIPLIER_STEP, MAX_MULTIPLIER);
+    if (speedMultiplier > 0) {
+        setState(GO);
+    }
+}
+
+void TrainController::decrementSpeed() {
+    speedMultiplier = max(speedMultiplier - MULTIPLIER_STEP, MIN_MULTIPLIER);
+    if (speedMultiplier <= 0) {
+        setState(STOPPED);
+    } else {
+        setState(GO);
+    }
 }

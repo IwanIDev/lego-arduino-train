@@ -12,71 +12,35 @@ InputController::InputController(TrainController* controller, int forwardButtonP
 void InputController::setForwardState(SPEED oldState) {
     if (trainController->getReverse()) {
         // When in reverse, decrease speed until stopped, then switch to forward
-        switch (oldState) {
-            case FAST:
-                trainController->setState(SLOW);
-                break;
-            case SLOW:
+        if (oldState != STOPPED) {
+            trainController->decrementSpeed();
+            if (trainController->getSpeedMultiplier() <= 0) {
                 trainController->setState(STOPPED);
-                break;
-            case STOPPED:
-                trainController->setReverse(false); // Switch to forward
-                trainController->setState(SLOW);    // Start at slow speed
-                break;
-            default:
-                trainController->setState(STOPPED);
-                break;
+            }
+        } else {
+            trainController->setReverse(false); // Switch to forward
+            trainController->incrementSpeed();  // Start moving forward
         }
     } else {
-        // When already in forward, increase speed
-        switch (oldState) {
-            case STOPPED:
-                trainController->setState(SLOW);
-                break;
-            case SLOW:
-                trainController->setState(FAST);
-                break;
-            case FAST:
-                break;
-            default:
-                trainController->setState(STOPPED);
-                break;
-        }
+        // When in forward, increase speed
+        trainController->incrementSpeed();
     }
 }
 
 void InputController::setBackwardState(SPEED oldState) {
     if (trainController->getReverse()) {
         // When in reverse, increase speed
-        switch (oldState) {
-            case STOPPED:
-                trainController->setState(SLOW);
-                break;
-            case SLOW:
-                trainController->setState(FAST);
-                break;
-            case FAST:
-                break;
-            default:
-                trainController->setState(STOPPED);
-                break;
-        }
+        trainController->incrementSpeed();
     } else {
         // When in forward, decrease speed until stopped, then switch to reverse
-        switch (oldState) {
-            case FAST:
-                trainController->setState(SLOW);
-                break;
-            case SLOW:
+        if (oldState != STOPPED) {
+            trainController->decrementSpeed();
+            if (trainController->getSpeedMultiplier() <= 0) {
                 trainController->setState(STOPPED);
-                break;
-            case STOPPED:
-                trainController->setReverse(true); // Switch to reverse
-                trainController->setState(SLOW);   // Start at slow speed
-                break;
-            default:
-                trainController->setState(STOPPED);
-                break;
+            }
+        } else {
+            trainController->setReverse(true); // Switch to reverse
+            trainController->incrementSpeed(); // Start moving backward
         }
     }
 }
@@ -114,7 +78,7 @@ void InputController::handleSerialInput() {
 
     const char* commands[] = {STOP_COMMAND, SLOW_COMMAND, FAST_COMMAND, REVERSE_COMMAND};
     const int commandLengths[] = {STOP_COMMAND_LENGTH, SLOW_COMMAND_LENGTH, FAST_COMMAND_LENGTH, REVERSE_COMMAND_LENGTH};
-    const SPEED states[] = {STOPPED, SLOW, FAST};
+    const SPEED states[] = {STOPPED, GO, GO, GO}; // Assuming GO is the state for both FAST and SLOW commands
 
     const int numCommands = sizeof(commands) / sizeof(commands[0]);
 

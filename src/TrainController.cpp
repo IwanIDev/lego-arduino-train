@@ -39,8 +39,14 @@ void TrainController::clearStateChanged() {
 // Get the speed value for a given state
 int TrainController::getSpeed(SPEED state) {
     int reverseMultiplier = isReverse ? -1 : 1; // Adjust speed for reverse state
+    if (speedMultiplier < MIN_MULTIPLIER) {
+        speedMultiplier = MIN_MULTIPLIER; // Check for minimum multiplier
+    } else if (speedMultiplier > MAX_MULTIPLIER) {
+        speedMultiplier = MAX_MULTIPLIER; // Check for maximum multiplier
+    }
+    // Calculate speed based on state and multiplier
     switch (state) {
-        case GO: return 15 * reverseMultiplier;
+        case GO: return 15 * reverseMultiplier * speedMultiplier;
         case STOPPED: return 0;
         default: return 0;
     }
@@ -65,7 +71,9 @@ void TrainController::printState() {
         default: Serial.print("UNKNOWN"); break;
     }
     Serial.print(", Reverse: ");
-    Serial.println(isReverse ? "ON" : "OFF");
+    Serial.print(isReverse ? "ON" : "OFF");
+    Serial.print(", Speed Multiplier: ");
+    Serial.println(speedMultiplier);
 }
 
 void TrainController::incrementSpeed() {

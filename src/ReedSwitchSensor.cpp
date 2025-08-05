@@ -10,9 +10,9 @@ ReedSwitchSensor::ReedSwitchSensor(int pin, SensorLocation loc, std::unique_ptr<
       lastState(false),
       trainDetected(false),
       lastDebounceTime(0),
-      debounceDelay(50), // 50ms debounce delay
+      debounceDelay(10),
       timeout(0),
-      timeoutThreshold(500), // Default timeout threshold of 500 milliseconds
+      timeoutThreshold(250), // Default timeout threshold of 250 milliseconds
       location(loc),
       action(std::move(sensorAction)) // Use std::move to transfer ownership of the action
 {
@@ -34,17 +34,17 @@ bool ReedSwitchSensor::readPin() {
  */
 bool ReedSwitchSensor::isStateStable() {
     bool reading = readPin();
+    unsigned long currentTime = millis();
     
-    // If the switch changed, due to noise or pressing
+    // If the switch changed, update last state and reset timer
     if (reading != lastState) {
-        // Reset the debouncing timer
-        lastDebounceTime = millis();
+        lastDebounceTime = currentTime;
         lastState = reading;
         return false;
     }
     
     // If the reading has been stable for longer than the debounce delay
-    if ((millis() - lastDebounceTime) > debounceDelay) {
+    if ((currentTime - lastDebounceTime) > debounceDelay) {
         // If the current state has changed from the last confirmed state
         if (reading != currentState) {
             currentState = reading;
@@ -61,6 +61,7 @@ bool ReedSwitchSensor::isStateStable() {
  */
 bool ReedSwitchSensor::detectPassingTrain() {
     bool stateChanged = isStateStable();
+    bool currentReading = readPin();
     
     // If the timeout hasn't been reached, we do not detect a train, irrespective of
     // if the reed switch is triggered or not.
@@ -70,29 +71,31 @@ bool ReedSwitchSensor::detectPassingTrain() {
         timeout = 0;
     }
     
-    // Only process if there was a stable state change
+    // Only process stable state changes for normal operation
     if (!stateChanged) {
         return false;
     }
+
+    bool detected = false;
     
     // Condition 1: If reed switch is activated and train has not been detected before,
     // we set detected to true.
     if (currentState && !trainDetected) {
-        Serial.println("--- TRAIN DETECTED (Reed Switch)! ---");
         trainDetected = true;
         timeout = millis();
-        return true;
+        detected = true;
     } 
     // Condition 2: If reed switch is deactivated and train has been detected before,
     // we reset the condition assuming the train has cleared the sensor.
     else if (!currentState && trainDetected) {
-        Serial.println("--- TRAIN CLEARED (Reed Switch)! ---");
         trainDetected = false;
         timeout = millis();
-        return false;
     }
-    
-    return false; // No change in detection state
+
+    const char* output = trainDetected ? " --- TRAIN DETECTED (Reed Switch)! ---" : " --- TRAIN CLEARED (Reed Switch)! ---";
+    Serial.println(output);
+
+    return detected;
 }
 
 /**

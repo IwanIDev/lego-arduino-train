@@ -9,6 +9,8 @@
 #include "Action/StopAction.hpp"
 #include "Action/ReverseAction.hpp"
 #include "ActionController.hpp"
+#include "ReedSwitchSensor.hpp"
+#include "ReedSwitchSensorController.hpp"
 #include <memory>
 
 Lpf2Hub trainHub;
@@ -32,12 +34,20 @@ LightSensor sensors[] = {
     // LightSensor(A2, LIGHT_SENSOR_THRESHOLD, SensorLocation::SPEED_REDUCE)
 };
 LightSensorController lightSensorController;
+ReedSwitchSensor reedSwitchSensors[] = {
+    ReedSwitchSensor(D3, SensorLocation::STATION_STOP, std::unique_ptr<StopAction>(new StopAction(100))),
+    // Add more ReedSwitchSensors as needed
+};
+ReedSwitchSensorController reedSwitchSensorController;
 ActionController actionController(&trainController);
 
 void setup() {
     Serial.begin(115200);
     for (auto& sensor : sensors) {
         lightSensorController.addSensor(&sensor);
+    }
+    for (auto& sensor : reedSwitchSensors) {
+        reedSwitchSensorController.addSensor(&sensor);
     }
 }
 
@@ -51,6 +61,11 @@ void loop() {
 
     if (lightSensorController.isTrainPassingOver()) {
         LightSensor* triggeredSensor = lightSensorController.getTriggeredSensor();
+        actionController.executeAction(triggeredSensor);
+    }
+    
+    if (reedSwitchSensorController.isTrainPassingOver()) {
+        ReedSwitchSensor* triggeredSensor = reedSwitchSensorController.getTriggeredSensor();
         actionController.executeAction(triggeredSensor);
     }
 

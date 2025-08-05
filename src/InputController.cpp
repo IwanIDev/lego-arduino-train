@@ -67,51 +67,41 @@ void InputController::handleButtonInput(SPEED oldState) {
 }
 
 void InputController::handleSerialInput() {
-    const char STOP_COMMAND[] = "stop";
-    const int STOP_COMMAND_LENGTH = sizeof(STOP_COMMAND) - 1;
-    const char SLOW_COMMAND[] = "slow";
-    const int SLOW_COMMAND_LENGTH = sizeof(SLOW_COMMAND) - 1;
-    const char FAST_COMMAND[] = "fast";
-    const int FAST_COMMAND_LENGTH = sizeof(FAST_COMMAND) - 1;
-    const char REVERSE_COMMAND[] = "reverse";
-    const int REVERSE_COMMAND_LENGTH = sizeof(REVERSE_COMMAND) - 1;
-
-    const char* commands[] = {STOP_COMMAND, SLOW_COMMAND, FAST_COMMAND, REVERSE_COMMAND};
-    const int commandLengths[] = {STOP_COMMAND_LENGTH, SLOW_COMMAND_LENGTH, FAST_COMMAND_LENGTH, REVERSE_COMMAND_LENGTH};
-    const SPEED states[] = {STOPPED, GO, GO, GO}; // Assuming GO is the state for both FAST and SLOW commands
-
-    const int numCommands = sizeof(commands) / sizeof(commands[0]);
-
-    String recievedData = "";
-
     if (Serial.available() <= 0) return;
 
-    recievedData = Serial.readStringUntil('\n');
-    recievedData.trim();
-    if (recievedData.length() == 0) return; // Exit if no data received
-    recievedData.toLowerCase(); // Normalize to lowercase for command comparison
+    String receivedData = Serial.readStringUntil('\n');
+    receivedData.trim();
+    if (receivedData.length() == 0) return; // Exit if no data received
+    receivedData.toLowerCase(); // Normalize to lowercase for command comparison
 
-    bool commandFound = false;
+    bool commandFound = true;
 
-    for (int i = 0; i < numCommands; i++) {
-        if (recievedData.length() != commandLengths[i]) continue;
-        if (!recievedData.equals(commands[i])) continue;
-
-        if (i == 3) { // If the command is "reverse"
-            trainController->setReverse(!trainController->getReverse()); // Toggle reverse state
-            Serial.print("Reverse state set to: ");
-            Serial.println(trainController->getReverse() ? "ON" : "OFF");
-            commandFound = true;
-            break; // Exit after processing the command
-        }
-
-        trainController->setState(states[i]);
-        commandFound = true;
-        break; // Exit after processing the command
+    if (receivedData.equals("stop")) {
+        trainController->setState(STOPPED);
+        Serial.println("Train stopped");
+    } 
+    else if (receivedData.equals("up")) {
+        SPEED currentState = trainController->getState();
+        setForwardState(currentState);
+        Serial.println("Speed increased / Moving forward");
+    } 
+    else if (receivedData.equals("down")) {
+        SPEED currentState = trainController->getState();
+        setBackwardState(currentState);
+        Serial.println("Speed decreased / Moving backward");
+    } 
+    else if (receivedData.equals("reverse")) {
+        trainController->setReverse(!trainController->getReverse());
+        Serial.print("Reverse state set to: ");
+        Serial.println(trainController->getReverse() ? "ON" : "OFF");
+    } 
+    else {
+        commandFound = false;
+        Serial.println("Unknown command. Use 'stop', 'up', 'down', or 'reverse'.");
     }
-    if (!commandFound) {
-        Serial.println("Unknown command. Use 'stop', 'slow', 'fast', or 'reverse'.");
+
+    if (commandFound) {
+        trainController->printState(); // Print current state after command processing
     }
-    trainController->printState(); // Print current state after command processing
     Serial.flush(); // Ensure all data is sent before returning
 }

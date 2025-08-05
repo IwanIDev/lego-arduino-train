@@ -127,3 +127,10 @@ void ReedSwitchSensor::executeAction(TrainController& controller) {
     }
 }
 
+/**
+ * Gets the location of the sensor.
+ * @return The location of the sensor.
+ */
+SensorLocation ReedSwitchSensor::getLocation() const {
+    return location;
+}

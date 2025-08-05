@@ -27,6 +27,7 @@ public:
     bool isTrainDetected() const override; // Check if train is currently detected
     void reset() override; // Reset the sensor state
     void executeAction(TrainController& controller) override; // Execute the associated action
+    SensorLocation getLocation() const;
 };
 
 #endif // REEDSWITCHSENSOR_HPP

@@ -10,9 +10,9 @@ ReedSwitchSensor::ReedSwitchSensor(int pin, SensorLocation loc, std::unique_ptr<
       lastState(false),
       trainDetected(false),
       lastDebounceTime(0),
-      debounceDelay(10),
+      debounceDelay(50),
       timeout(0),
-      timeoutThreshold(250), // Default timeout threshold of 250 milliseconds
+      timeoutThreshold(0), // Default timeout threshold of 250 milliseconds
       location(loc),
       action(std::move(sensorAction)) // Use std::move to transfer ownership of the action
 {

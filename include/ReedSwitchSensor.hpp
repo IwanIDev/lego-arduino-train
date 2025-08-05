@@ -3,9 +3,10 @@
 
 #include "TrainController.hpp"
 #include "Action/SensorAction.hpp"
+#include "Sensor.hpp"
 #include <memory>
 
-class ReedSwitchSensor {
+class ReedSwitchSensor : public Sensor {
 private:
     int pin; // Pin number where the reed switch is connected
     bool currentState; // Current state of the reed switch
@@ -22,10 +23,10 @@ private:
     bool isStateStable(); // Check if the state is stable after debouncing
 public:
     ReedSwitchSensor(int pin, SensorLocation loc, std::unique_ptr<SensorAction> sensorAction);
-    bool detectPassingTrain(); // Main detection method
-    bool isTrainDetected() const; // Check if train is currently detected
-    void reset(); // Reset the sensor state
-    void executeAction(TrainController& controller); // Execute the associated action
+    bool detectPassingTrain() override; // Main detection method
+    bool isTrainDetected() const override; // Check if train is currently detected
+    void reset() override; // Reset the sensor state
+    void executeAction(TrainController& controller) override; // Execute the associated action
 };
 
 #endif // REEDSWITCHSENSOR_HPP

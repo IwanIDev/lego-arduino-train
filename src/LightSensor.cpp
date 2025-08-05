@@ -1,4 +1,5 @@
 #include "LightSensor.hpp"
+#include "Sensor.hpp"
 #include <Arduino.h>
 #include "Action/SensorAction.hpp"
 #include <memory>

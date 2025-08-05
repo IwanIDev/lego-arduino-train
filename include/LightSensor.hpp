@@ -2,10 +2,11 @@
 #define LIGHTSENSOR_HPP
 
 #define BUFFER_SIZE 64
+#include "Sensor.hpp"
 #include "Action/SensorAction.hpp"
 #include <memory>
 
-class LightSensor {
+class LightSensor : public Sensor {
 private:
   int pin;
   int threshold;
@@ -28,13 +29,14 @@ public:
       
   int readLevel();
   bool isTrainPassingOver(int lightReading);
-  bool detectPassingTrain();
-
-  bool isTrainDetected() const;
-  void reset();
+  
+  // Override methods from Sensor base class
+  bool detectPassingTrain() override;
+  bool isTrainDetected() const override;
+  void reset() override;
+  void executeAction(TrainController& controller) override;
+  
   SensorLocation getLocation() const { return location; }
-
-  void executeAction(TrainController& controller);
 };
 
 #endif // LIGHTSENSOR_HPP

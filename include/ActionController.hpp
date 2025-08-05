@@ -2,7 +2,7 @@
 #define ACTION_CONTROLLER_HPP
 
 #include "TrainController.hpp"
-#include "LightSensor.hpp"
+#include "Sensor.hpp"
 
 class ActionController {
 private:
@@ -10,6 +10,6 @@ private:
 
 public:
     explicit ActionController(TrainController* controller);
-    void executeAction(LightSensor* sensor);
+    void executeAction(Sensor* sensor);
 };
 #endif // ACTION_CONTROLLER_HPP

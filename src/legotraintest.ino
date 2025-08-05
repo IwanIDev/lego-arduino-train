@@ -35,7 +35,8 @@ LightSensor sensors[] = {
 };
 LightSensorController lightSensorController;
 ReedSwitchSensor reedSwitchSensors[] = {
-    ReedSwitchSensor(D3, SensorLocation::STATION_STOP, std::unique_ptr<StopAction>(new StopAction(100))),
+    ReedSwitchSensor(D12, SensorLocation::STATION_STOP, std::unique_ptr<StopAction>(new StopAction(100))),
+    ReedSwitchSensor(D10, SensorLocation::STATION_STOP, std::unique_ptr<ReverseAction>(new ReverseAction(100))),
     // Add more ReedSwitchSensors as needed
 };
 ReedSwitchSensorController reedSwitchSensorController;
@@ -63,7 +64,7 @@ void loop() {
         LightSensor* triggeredSensor = lightSensorController.getTriggeredSensor();
         actionController.executeAction(triggeredSensor);
     }
-    
+
     if (reedSwitchSensorController.isTrainPassingOver()) {
         ReedSwitchSensor* triggeredSensor = reedSwitchSensorController.getTriggeredSensor();
         actionController.executeAction(triggeredSensor);

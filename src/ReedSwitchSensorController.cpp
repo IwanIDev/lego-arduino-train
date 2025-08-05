@@ -30,7 +30,8 @@ bool ReedSwitchSensorController::isTrainPassingOver() {
 
 // Returns the location of the last triggered sensor, or a default value if none was triggered
 SensorLocation ReedSwitchSensorController::getTriggeredSensorLocation() const {
-    return lastTriggeredSensor ? lastTriggeredSensor->getLocation() : SensorLocation::STATION_STOP;
+    ReedSwitchSensor* sensor = lastTriggeredSensor;
+    return sensor ? sensor->getLocation() : SensorLocation::STATION_STOP;
 }
 
 ReedSwitchSensor* ReedSwitchSensorController::getTriggeredSensor() const {

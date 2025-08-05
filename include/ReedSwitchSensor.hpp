@@ -2,20 +2,30 @@
 #define REEDSWITCHSENSOR_HPP
 
 #include "TrainController.hpp"
+#include "Action/SensorAction.hpp"
+#include <memory>
 
 class ReedSwitchSensor {
 private:
     int pin; // Pin number where the reed switch is connected
+    bool currentState; // Current state of the reed switch
     bool lastState; // Last state of the reed switch
+    bool trainDetected; // Whether a train is currently detected
     unsigned long lastDebounceTime; // Last time the state was changed
-    const unsigned long debounceDelay; // Debounce delay in milliseconds
+    unsigned long debounceDelay; // Debounce delay in milliseconds
+    unsigned long timeout; // Timeout to prevent multiple triggers
+    unsigned long timeoutThreshold; // Timeout threshold in milliseconds
+    SensorLocation location; // Location of the sensor
+    std::unique_ptr<SensorAction> action; // Action to execute when train is detected
 
-    void updateState();
+    bool readPin(); // Read the current pin state
+    bool isStateStable(); // Check if the state is stable after debouncing
 public:
-    ReedSwitchSensor(int pin);
-    bool isTriggered();
-    void reset();
-    void executeAction(TrainController& controller);
+    ReedSwitchSensor(int pin, SensorLocation loc, std::unique_ptr<SensorAction> sensorAction);
+    bool detectPassingTrain(); // Main detection method
+    bool isTrainDetected() const; // Check if train is currently detected
+    void reset(); // Reset the sensor state
+    void executeAction(TrainController& controller); // Execute the associated action
 };
 
 #endif // REEDSWITCHSENSOR_HPP

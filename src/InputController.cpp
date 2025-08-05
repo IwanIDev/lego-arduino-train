@@ -74,29 +74,28 @@ void InputController::handleSerialInput() {
     if (receivedData.length() == 0) return; // Exit if no data received
     receivedData.toLowerCase(); // Normalize to lowercase for command comparison
 
-    bool commandFound = true;
+    bool commandFound = false;
 
     if (receivedData.equals("stop")) {
         trainController->setState(STOPPED);
         Serial.println("Train stopped");
-    } 
-    else if (receivedData.equals("up")) {
+        commandFound = true;
+    } else if (receivedData.equals("up")) {
         SPEED currentState = trainController->getState();
         setForwardState(currentState);
         Serial.println("Speed increased / Moving forward");
-    } 
-    else if (receivedData.equals("down")) {
+        commandFound = true;
+    } else if (receivedData.equals("down")) {
         SPEED currentState = trainController->getState();
         setBackwardState(currentState);
         Serial.println("Speed decreased / Moving backward");
-    } 
-    else if (receivedData.equals("reverse")) {
+        commandFound = true;
+    } else if (receivedData.equals("reverse")) {
         trainController->setReverse(!trainController->getReverse());
         Serial.print("Reverse state set to: ");
         Serial.println(trainController->getReverse() ? "ON" : "OFF");
-    } 
-    else {
-        commandFound = false;
+        commandFound = true;
+    } else {
         Serial.println("Unknown command. Use 'stop', 'up', 'down', or 'reverse'.");
     }
 

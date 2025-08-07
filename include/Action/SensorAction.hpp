@@ -15,5 +15,6 @@ public:
     virtual ~SensorAction() = default;
     virtual void execute(TrainController& controller) = 0;
     virtual std::unique_ptr<SensorAction> clone() const = 0; // Virtual clone method
+    virtual bool isDelayedAction() const { return false; } // Override in DelayedAction
 };
 #endif // SENSOR_ACTION_HPP

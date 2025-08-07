@@ -111,10 +111,11 @@ int LightSensor::getAverageLightLevel() {
 
 void LightSensor::executeAction(TrainController& controller, ActionController& actionController) {
     if (action) {
-        // Check if this is a DelayedAction
-        DelayedAction* delayedAction = dynamic_cast<DelayedAction*>(action.get());
-        if (delayedAction) {
+        // Check if this is a DelayedAction using virtual method
+        if (action->isDelayedAction()) {
             // For DelayedAction, create a fresh instance and add it to ActionController
+            // We know it's a DelayedAction, so we can safely static_cast
+            DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
             actionController.addDelayedAction(delayedAction->createFresh());
         } else {
             // For immediate actions, execute directly

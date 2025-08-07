@@ -15,6 +15,7 @@ public:
     DelayedAction(std::unique_ptr<SensorAction> action, unsigned long delayTime);
     void execute(TrainController& controller) override;
     std::unique_ptr<SensorAction> clone() const override;
+    bool isDelayedAction() const override { return true; } // Identify as DelayedAction
     bool update(TrainController& controller); // Non-blocking update method
     bool isFinished() const;
     void reset();

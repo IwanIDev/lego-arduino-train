@@ -16,5 +16,3 @@ public:
 };
 
 #endif // STARTACTION_HPP
-
-#endif // STARTACTION_HPP

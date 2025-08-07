@@ -13,7 +13,7 @@ private:
     std::vector<std::unique_ptr<SensorAction>> actions;
 public:
     SequentialAction();
-    SequentialAction(std::vector<std::unique_ptr<SensorAction>> actionList) {
+    SequentialAction(std::vector<std::unique_ptr<SensorAction>>&& actionList) {
         actions = std::move(actionList);
     }
     void addAction(std::unique_ptr<SensorAction> action);

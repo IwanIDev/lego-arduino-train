@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "Action/StartAction.hpp"
 #include "TrainController.hpp"
+#include <memory>
 
 /**
  * Constructor for StartAction.
@@ -54,4 +55,8 @@ void StartAction::execute(TrainController& controller) {
         // 5. Delay for the specified time
         delay(delayMs);
     }
+}
+
+std::unique_ptr<SensorAction> StartAction::clone() const {
+    return std::unique_ptr<SensorAction>(new StartAction(speed, delayMs, forceReverse));
 }

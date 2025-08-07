@@ -2,6 +2,7 @@
 #define STARTACTION_HPP
 
 #include "SensorAction.hpp"
+#include <memory>
 
 class StartAction : public SensorAction {
 private:
@@ -11,6 +12,9 @@ private:
 public:
     StartAction(float speed, int delayMs, bool forceReverse = false);
     void execute(TrainController& controller) override;
+    std::unique_ptr<SensorAction> clone() const override;
 };
+
+#endif // STARTACTION_HPP
 
 #endif // STARTACTION_HPP

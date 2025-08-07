@@ -2,6 +2,7 @@
 #define SPEEDACTION_HPP
 
 #include "SensorAction.hpp"
+#include <memory>
 
 class SpeedAction : public SensorAction {
 private:
@@ -10,6 +11,7 @@ private:
 public:
     SpeedAction(int speedChange, int delayMs);
     void execute(TrainController& controller) override;
+    std::unique_ptr<SensorAction> clone() const override;
 };
 
 #endif // SPEEDACTION_HPP

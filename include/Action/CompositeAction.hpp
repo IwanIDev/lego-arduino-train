@@ -13,6 +13,7 @@ public:
     void addAction(std::unique_ptr<SensorAction> action);
 
     void execute(TrainController& controller) override;
+    std::unique_ptr<SensorAction> clone() const override;
 };
 
 #endif // COMPOSITEACTION_HPP

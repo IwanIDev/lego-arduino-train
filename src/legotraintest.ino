@@ -8,6 +8,7 @@
 #include "Action/SensorAction.hpp"
 #include "Action/StopAction.hpp"
 #include "Action/ReverseAction.hpp"
+#include "Action/DelayedAction.hpp"
 #include "ActionController.hpp"
 #include "ReedSwitchSensor.hpp"
 #include "ReedSwitchSensorController.hpp"
@@ -29,14 +30,17 @@ BluetoothController bluetoothController(&trainHub);
 TrainController trainController(MOTOR_PORT);
 InputController inputController(&trainController, fastButton, slowButton);
 LightSensor sensors[] = {
-    LightSensor(A0, LIGHT_SENSOR_THRESHOLD, SensorLocation::STATION_STOP, std::unique_ptr<StopAction>(new StopAction(100))),
+    // LightSensor(A0, LIGHT_SENSOR_THRESHOLD, SensorLocation::STATION_STOP, std::unique_ptr<StopAction>(new StopAction(100))),
     // LightSensor(A1, LIGHT_SENSOR_THRESHOLD, SensorLocation::DIRECTION_CHANGE, std::unique_ptr<ReverseAction>(new ReverseAction(0))),
     // LightSensor(A2, LIGHT_SENSOR_THRESHOLD, SensorLocation::SPEED_REDUCE)
 };
 LightSensorController lightSensorController;
 ReedSwitchSensor reedSwitchSensors[] = {
-    ReedSwitchSensor(D12, SensorLocation::STATION_STOP, std::unique_ptr<StopAction>(new StopAction(100))),
-    ReedSwitchSensor(D10, SensorLocation::STATION_STOP, std::unique_ptr<ReverseAction>(new ReverseAction(100))),
+    // ReedSwitchSensor(D12, SensorLocation::STATION_STOP, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
+    ReedSwitchSensor(D12, SensorLocation::STATION_STOP, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
+    ReedSwitchSensor(D11, SensorLocation::STATION_STOP, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
+    ReedSwitchSensor(D10, SensorLocation::STATION_STOP, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
+    ReedSwitchSensor(D9, SensorLocation::STATION_STOP, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
     // Add more ReedSwitchSensors as needed
 };
 ReedSwitchSensorController reedSwitchSensorController;
@@ -44,9 +48,9 @@ ActionController actionController(&trainController);
 
 void setup() {
     Serial.begin(115200);
-    for (auto& sensor : sensors) {
-        lightSensorController.addSensor(&sensor);
-    }
+    // for (auto& sensor : sensors) {
+    //     lightSensorController.addSensor(&sensor);
+    // }
     for (auto& sensor : reedSwitchSensors) {
         reedSwitchSensorController.addSensor(&sensor);
     }
@@ -69,6 +73,8 @@ void loop() {
         ReedSwitchSensor* triggeredSensor = reedSwitchSensorController.getTriggeredSensor();
         actionController.executeAction(triggeredSensor);
     }
+
+    actionController.update(); // Update all delayed actions
 
     if (!bluetoothController.connect()) {
         return;

@@ -14,9 +14,13 @@ private:
 public:
     DelayedAction(std::unique_ptr<SensorAction> action, unsigned long delayTime);
     void execute(TrainController& controller) override;
+    std::unique_ptr<SensorAction> clone() const override;
     bool update(TrainController& controller); // Non-blocking update method
     bool isFinished() const;
     void reset();
+    
+    // Method to create a new DelayedAction instance with the same parameters
+    std::unique_ptr<DelayedAction> createFresh() const;
 };
 
 #endif // DELAYED_ACTION_HPP

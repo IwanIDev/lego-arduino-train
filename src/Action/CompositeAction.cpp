@@ -9,3 +9,11 @@ void CompositeAction::execute(TrainController& controller) {
         action->execute(controller);
     }
 }
+
+std::unique_ptr<SensorAction> CompositeAction::clone() const {
+    std::unique_ptr<CompositeAction> cloned(new CompositeAction());
+    for (const auto& action : actions) {
+        cloned->addAction(action->clone());
+    }
+    return std::unique_ptr<SensorAction>(cloned.release());
+}

@@ -11,7 +11,7 @@ ActionController::ActionController(TrainController* controller)
  */
 void ActionController::executeAction(Sensor* sensor) {
     if (sensor != nullptr) {
-        sensor->executeAction(*trainController);
+        sensor->executeAction(*trainController, *this);
     }
 }
 

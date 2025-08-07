@@ -24,6 +24,8 @@ void DelayedAction::execute(TrainController& controller) {
     startTime = millis();
     isActive = true;
     isCompleted = false;
+
+    Serial.println("Using deprecated execute method for DelayedAction");
     
     // Block until delay is complete, then execute
     while (!update(controller)) {
@@ -77,4 +79,21 @@ void DelayedAction::reset() {
     isActive = false;
     isCompleted = false;
     startTime = 0;
+}
+
+/**
+ * Create a fresh DelayedAction instance with the same parameters.
+ * @return A new DelayedAction with the same action and delay time
+ */
+std::unique_ptr<DelayedAction> DelayedAction::createFresh() const {
+    // Clone the inner action and create a new DelayedAction
+    return std::unique_ptr<DelayedAction>(new DelayedAction(action->clone(), delayTime));
+}
+
+/**
+ * Clone method for SensorAction interface
+ * @return A new DelayedAction instance
+ */
+std::unique_ptr<SensorAction> DelayedAction::clone() const {
+    return std::unique_ptr<SensorAction>(createFresh().release());
 }

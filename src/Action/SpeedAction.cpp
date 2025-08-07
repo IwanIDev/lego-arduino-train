@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "Action/SpeedAction.hpp"
 #include "TrainController.hpp"
+#include <memory>
 
 /**
  * Constructor for SpeedAction.
@@ -37,4 +38,8 @@ void SpeedAction::execute(TrainController& controller) {
     if (delayMs > 0) {
         delay(delayMs);
     }
+}
+
+std::unique_ptr<SensorAction> SpeedAction::clone() const {
+    return std::unique_ptr<SensorAction>(new SpeedAction(speedChange, delayMs));
 }

@@ -1,4 +1,5 @@
 #include "Action/ReverseAction.hpp"
+#include <memory>
 
 ReverseAction::ReverseAction(int delay)
     : delayMs(delay) {}
@@ -19,4 +20,8 @@ void ReverseAction::execute(TrainController& controller) {
     if (delayMs > 0) {
         delay(delayMs);
     }
+}
+
+std::unique_ptr<SensorAction> ReverseAction::clone() const {
+    return std::unique_ptr<SensorAction>(new ReverseAction(delayMs));
 }

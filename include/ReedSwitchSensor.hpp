@@ -6,6 +6,8 @@
 #include "Sensor.hpp"
 #include <memory>
 
+class ActionController; // Forward declaration
+
 class ReedSwitchSensor : public Sensor {
 private:
     int pin; // Pin number where the reed switch is connected
@@ -26,7 +28,7 @@ public:
     bool detectPassingTrain() override; // Main detection method
     bool isTrainDetected() const override; // Check if train is currently detected
     void reset() override; // Reset the sensor state
-    void executeAction(TrainController& controller) override; // Execute the associated action
+    void executeAction(TrainController& controller, ActionController& actionController) override; // Execute the associated action
     SensorLocation getLocation() const;
 };
 

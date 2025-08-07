@@ -2,6 +2,7 @@
 #define REVERSE_ACTION_HPP
 #include "SensorAction.hpp"
 #include "TrainController.hpp"
+#include <memory>
 
 class ReverseAction : public SensorAction {
 private:
@@ -10,5 +11,6 @@ public:
     explicit ReverseAction(int delay = 0);
     
     void execute(TrainController& controller) override;
+    std::unique_ptr<SensorAction> clone() const override;
 };
 #endif // REVERSE_ACTION_HPP

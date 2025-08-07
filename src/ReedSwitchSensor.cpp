@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include "ReedSwitchSensor.hpp"
+#include "ActionController.hpp"
 #include "Action/SensorAction.hpp"
+#include "Action/DelayedAction.hpp"
 #include <memory>
 
 // Constructor
@@ -120,10 +122,19 @@ void ReedSwitchSensor::reset() {
 /**
  * Executes the associated action if one is defined.
  * @param controller The train controller to operate on.
+ * @param actionController The action controller to manage delayed actions.
  */
-void ReedSwitchSensor::executeAction(TrainController& controller) {
+void ReedSwitchSensor::executeAction(TrainController& controller, ActionController& actionController) {
     if (action) {
-        action->execute(controller);
+        // Check if this is a DelayedAction
+        DelayedAction* delayedAction = dynamic_cast<DelayedAction*>(action.get());
+        if (delayedAction) {
+            // For DelayedAction, create a fresh instance and add it to ActionController
+            actionController.addDelayedAction(delayedAction->createFresh());
+        } else {
+            // For immediate actions, execute directly
+            action->execute(controller);
+        }
     }
 }
 

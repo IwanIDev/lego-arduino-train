@@ -1,5 +1,5 @@
-#ifndef COMPOSITEACTION_HPP
-#define COMPOSITEACTION_HPP
+#ifndef SEQUENTIALACTION_HPP
+#define SEQUENTIALACTION_HPP
 
 #include "Action/SensorAction.hpp"
 #include <vector>
@@ -8,16 +8,18 @@
 // Forward declaration
 class ActionController;
 
-class CompositeAction : public SensorAction {
+class SequentialAction : public SensorAction {
 private:
     std::vector<std::unique_ptr<SensorAction>> actions;
-
 public:
+    SequentialAction();
+    SequentialAction(std::vector<std::unique_ptr<SensorAction>>&& actionList) {
+        actions = std::move(actionList);
+    }
     void addAction(std::unique_ptr<SensorAction> action);
-
     void execute(TrainController& controller) override;
     void execute(TrainController& controller, ActionController& actionController) override;
     std::unique_ptr<SensorAction> clone() const override;
 };
 
-#endif // COMPOSITEACTION_HPP
+#endif // SEQUENTIALACTION_HPP

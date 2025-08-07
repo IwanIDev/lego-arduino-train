@@ -2,6 +2,8 @@
 #include "Sensor.hpp"
 #include <Arduino.h>
 #include "Action/SensorAction.hpp"
+#include "ActionController.hpp"
+#include "Action/DelayedAction.hpp"
 #include <memory>
 
 // Constructor
@@ -107,8 +109,17 @@ int LightSensor::getAverageLightLevel() {
     return (count > 0) ? (sum / count) : 0; // Return average or 0 if no valid readings
 }
 
-void LightSensor::executeAction(TrainController& controller) {
+void LightSensor::executeAction(TrainController& controller, ActionController& actionController) {
     if (action) {
-      action->execute(controller);
+        // Check if this is a DelayedAction using virtual method
+        if (action->isDelayedAction()) {
+            // For DelayedAction, create a fresh instance and add it to ActionController
+            // We know it's a DelayedAction, so we can safely static_cast
+            DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
+            actionController.addDelayedAction(delayedAction->createFresh());
+        } else {
+            // For all other actions (including SequentialAction, CompositeAction), use the two-parameter execute
+            action->execute(controller, actionController);
+        }
     }
 }

@@ -34,7 +34,7 @@ public:
   bool detectPassingTrain() override;
   bool isTrainDetected() const override;
   void reset() override;
-  void executeAction(TrainController& controller) override;
+  void executeAction(TrainController& controller, ActionController& actionController) override;
   
   SensorLocation getLocation() const { return location; }
 };

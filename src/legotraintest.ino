@@ -9,6 +9,8 @@
 #include "Action/StopAction.hpp"
 #include "Action/ReverseAction.hpp"
 #include "Action/DelayedAction.hpp"
+#include "Action/SpeedAction.hpp"
+#include "Action/SequentialAction.hpp"
 #include "ActionController.hpp"
 #include "ReedSwitchSensor.hpp"
 #include "ReedSwitchSensorController.hpp"
@@ -38,7 +40,13 @@ LightSensorController lightSensorController;
 ReedSwitchSensor reedSwitchSensors[] = {
     // ReedSwitchSensor(D12, SensorLocation::STATION_STOP, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
     ReedSwitchSensor(D12, SensorLocation::STATION_STOP, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
-    ReedSwitchSensor(D11, SensorLocation::STATION_STOP, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
+    ReedSwitchSensor(D11, SensorLocation::STATION_STOP, []() {
+        std::vector<std::unique_ptr<SensorAction>> actions;
+        actions.push_back(std::unique_ptr<SensorAction>(new StopAction(0)));
+        actions.push_back(std::unique_ptr<SensorAction>(new ReverseAction(0)));
+        actions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(3, 0)));
+        return std::unique_ptr<SequentialAction>(new SequentialAction(std::move(actions)));
+    }()),
     ReedSwitchSensor(D10, SensorLocation::STATION_STOP, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
     ReedSwitchSensor(D9, SensorLocation::STATION_STOP, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
     // Add more ReedSwitchSensors as needed

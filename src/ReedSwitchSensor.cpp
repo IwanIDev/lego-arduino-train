@@ -128,8 +128,8 @@ void ReedSwitchSensor::executeAction(TrainController& controller, ActionControll
             DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
             actionController.addDelayedAction(delayedAction->createFresh());
         } else {
-            // For immediate actions, execute directly
-            action->execute(controller);
+            // For all other actions (including SequentialAction, CompositeAction), use the two-parameter execute
+            action->execute(controller, actionController);
         }
     }
 }

@@ -8,21 +8,73 @@
  * @param delayTime The delay time in milliseconds before executing the action.
  */
 DelayedAction::DelayedAction(std::unique_ptr<SensorAction> action, unsigned long delayTime)
-    : action(std::move(action)), delayTime(delayTime)
+    : action(std::move(action)), delayTime(delayTime), startTime(0), isActive(false), isCompleted(false)
 {
 
 }
 
 /**
- * Executes the delayed action on the train controller.
+ * Executes the delayed action on the train controller (blocking version - kept for compatibility).
+ * DEPRECATED: Use update() for non-blocking execution.
  * @param controller The train controller to operate on.
  */
+[[deprecated("Use update() for non-blocking execution")]]
 void DelayedAction::execute(TrainController& controller) {
-    // 1. Delay for the specified time
-    delay(delayTime);
-
-    // 2. Execute the action after the delay
-    if (action) {
-        action->execute(controller);
+    // Start the timer and mark as active
+    startTime = millis();
+    isActive = true;
+    isCompleted = false;
+    
+    // Block until delay is complete, then execute
+    while (!update(controller)) {
+        // Small delay to prevent busy waiting
+        delay(1);
     }
+}
+
+/**
+ * Non-blocking update method.
+ * @param controller The train controller to operate on.
+ * @return true if the action has completed, false if still waiting
+ */
+bool DelayedAction::update(TrainController& controller) {
+    if (isCompleted) {
+        return true;
+    }
+    
+    if (!isActive) {
+        // Start the timer
+        startTime = millis();
+        isActive = true;
+        return false;
+    }
+    
+    // Check if delay time has elapsed
+    if (millis() - startTime >= delayTime) {
+        // Execute the action
+        if (action) {
+            action->execute(controller);
+        }
+        isCompleted = true;
+        return true;
+    }
+    
+    return false; // Still waiting
+}
+
+/**
+ * Check if the delayed action has finished executing.
+ * @return true if completed, false otherwise
+ */
+bool DelayedAction::isFinished() const {
+    return isCompleted;
+}
+
+/**
+ * Reset the delayed action to be executed again.
+ */
+void DelayedAction::reset() {
+    isActive = false;
+    isCompleted = false;
+    startTime = 0;
 }

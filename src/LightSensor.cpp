@@ -4,6 +4,7 @@
 #include "Action/SensorAction.hpp"
 #include "ActionController.hpp"
 #include "Action/DelayedAction.hpp"
+#include "Action/SequentialAction.hpp"
 #include <memory>
 
 // Constructor
@@ -110,16 +111,27 @@ int LightSensor::getAverageLightLevel() {
 }
 
 void LightSensor::executeAction(TrainController& controller, ActionController& actionController) {
-    if (action) {
-        // Check if this is a DelayedAction using virtual method
-        if (action->isDelayedAction()) {
-            // For DelayedAction, create a fresh instance and add it to ActionController
-            // We know it's a DelayedAction, so we can safely static_cast
-            DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
-            actionController.addDelayedAction(delayedAction->createFresh());
-        } else {
-            // For all other actions (including SequentialAction, CompositeAction), use the two-parameter execute
-            action->execute(controller, actionController);
-        }
+    if (!action) {
+        Serial.println("No action defined for LightSensor.");
+        return;
     }
+
+    if (action->isDelayedAction()) {
+        // For DelayedAction, create a fresh instance and add it to ActionController
+        // We know it's a DelayedAction, so we can safely static_cast
+        DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
+        actionController.addDelayedAction(delayedAction->createFresh());
+        return;
+    }
+
+    // Check if this is a SequentialAction
+    if (action->isSequentialAction()) {
+        // For SequentialAction, clone it and add to ActionController for managed execution
+        SequentialAction* sequentialAction = static_cast<SequentialAction*>(action.get());
+        actionController.addSequentialAction(sequentialAction->createFresh());
+        return;
+    }
+
+    // For all other immediate actions, execute directly
+    action->execute(controller, actionController);
 }

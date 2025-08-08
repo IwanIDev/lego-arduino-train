@@ -1,4 +1,5 @@
 #include "ActionController.hpp"
+#include "Action/SequentialAction.hpp"
 #include <algorithm>
 
 ActionController::ActionController(TrainController* controller) 
@@ -34,6 +35,14 @@ void ActionController::addDelayedAction(std::unique_ptr<SensorAction> action, un
 }
 
 /**
+ * Add a sequential action to be managed.
+ * @param action The sequential action to add
+ */
+void ActionController::addSequentialAction(std::unique_ptr<SequentialAction> action) {
+    activeSequentialActions.push_back(std::move(action));
+}
+
+/**
  * Update all active delayed actions. Call this regularly from your main loop.
  * This method is non-blocking and will execute actions when their delays have elapsed.
  */
@@ -42,13 +51,22 @@ void ActionController::update() {
         return;
     }
     
-    // Update all actions and remove completed ones
+    // Update all delayed actions and remove completed ones
     activeDelayedActions.erase(
         std::remove_if(activeDelayedActions.begin(), activeDelayedActions.end(),
             [this](std::unique_ptr<DelayedAction>& action) {
                 return action->update(*trainController);
             }),
         activeDelayedActions.end()
+    );
+    
+    // Update all sequential actions and remove completed ones
+    activeSequentialActions.erase(
+        std::remove_if(activeSequentialActions.begin(), activeSequentialActions.end(),
+            [this](std::unique_ptr<SequentialAction>& action) {
+                return action->update(*trainController, *this);
+            }),
+        activeSequentialActions.end()
     );
 }
 
@@ -60,6 +78,21 @@ void ActionController::clearAllDelayedActions() {
 }
 
 /**
+ * Clear all active sequential actions.
+ */
+void ActionController::clearAllSequentialActions() {
+    activeSequentialActions.clear();
+}
+
+/**
+ * Clear all active actions (delayed and sequential).
+ */
+void ActionController::clearAllActions() {
+    activeDelayedActions.clear();
+    activeSequentialActions.clear();
+}
+
+/**
  * Get the number of active delayed actions.
  * @return Number of active delayed actions
  */
@@ -68,9 +101,33 @@ size_t ActionController::getActiveDelayedActionsCount() const {
 }
 
 /**
+ * Get the number of active sequential actions.
+ * @return Number of active sequential actions
+ */
+size_t ActionController::getActiveSequentialActionsCount() const {
+    return activeSequentialActions.size();
+}
+
+/**
  * Check if there are any active delayed actions.
  * @return true if there are active delayed actions, false otherwise
  */
 bool ActionController::hasActiveDelayedActions() const {
     return !activeDelayedActions.empty();
+}
+
+/**
+ * Check if there are any active sequential actions.
+ * @return true if there are active sequential actions, false otherwise
+ */
+bool ActionController::hasActiveSequentialActions() const {
+    return !activeSequentialActions.empty();
+}
+
+/**
+ * Check if there are any active actions (delayed or sequential).
+ * @return true if there are active actions, false otherwise
+ */
+bool ActionController::hasActiveActions() const {
+    return hasActiveDelayedActions() || hasActiveSequentialActions();
 }

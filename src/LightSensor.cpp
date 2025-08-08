@@ -125,9 +125,9 @@ void LightSensor::executeAction(TrainController& controller, ActionController& a
     }
 
     // Check if this is a SequentialAction
-    SequentialAction* sequentialAction = dynamic_cast<SequentialAction*>(action.get());
-    if (sequentialAction) {
+    if (action->isSequentialAction()) {
         // For SequentialAction, clone it and add to ActionController for managed execution
+        SequentialAction* sequentialAction = static_cast<SequentialAction*>(action.get());
         std::unique_ptr<SequentialAction> clonedSequential(
             static_cast<SequentialAction*>(sequentialAction->clone().release())
         );

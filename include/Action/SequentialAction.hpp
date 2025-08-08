@@ -36,6 +36,8 @@ public:
     void reset();
     bool isFinished() const;
     bool isActive() const { return isExecuting; }
+
+    std::unique_ptr<SequentialAction> createFresh() const;
 };
 
 #endif // SEQUENTIALACTION_HPP

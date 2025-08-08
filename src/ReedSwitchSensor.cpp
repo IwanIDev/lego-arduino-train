@@ -138,10 +138,7 @@ void ReedSwitchSensor::executeAction(TrainController& controller, ActionControll
     if (action->isSequentialAction()) {
         // For SequentialAction, clone it and add to ActionController for managed execution
         SequentialAction* sequentialAction = static_cast<SequentialAction*>(action.get());
-        std::unique_ptr<SequentialAction> clonedSequential(
-            static_cast<SequentialAction*>(sequentialAction->clone().release())
-        );
-        actionController.addSequentialAction(std::move(clonedSequential));
+        actionController.addSequentialAction(sequentialAction->createFresh());
         return;
     }
 

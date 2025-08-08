@@ -67,15 +67,7 @@ void SequentialAction::execute(TrainController& controller, ActionController& ac
  * @return A unique pointer to the cloned SequentialAction.
  */
 std::unique_ptr<SensorAction> SequentialAction::clone() const {
-    std::unique_ptr<SequentialAction> cloned(new SequentialAction());
-    for (const auto& action : actions) {
-        if (action) {
-            cloned->addAction(action->clone());
-        } else {
-            Serial.println("Encountered a null action while cloning SequentialAction.");
-        }
-    }
-    return std::unique_ptr<SensorAction>(cloned.release());
+    return std::unique_ptr<SensorAction>(createFresh().release());
 }
 
 /**
@@ -156,4 +148,16 @@ void SequentialAction::reset() {
  */
 bool SequentialAction::isFinished() const {
     return !isExecuting;
+}
+
+std::unique_ptr<SequentialAction> SequentialAction::createFresh() const {
+    std::unique_ptr<SequentialAction> fresh(new SequentialAction());
+    for (const auto& action : actions) {
+        if (action) {
+            fresh->addAction(action->clone());
+        } else {
+            Serial.println("Encountered a null action while creating fresh SequentialAction.");
+        }
+    }
+    return fresh;
 }

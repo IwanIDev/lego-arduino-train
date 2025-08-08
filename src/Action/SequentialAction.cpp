@@ -50,7 +50,6 @@ void SequentialAction::execute(TrainController& controller) {
  * @param actionController The action controller for managing delayed actions.
  */
 void SequentialAction::execute(TrainController& controller, ActionController& actionController) {
-    Serial.println("Starting SequentialAction execution");
     if (!isExecuting) {
         isExecuting = true;
         currentActionIndex = 0;
@@ -91,43 +90,32 @@ bool SequentialAction::update(TrainController& controller, ActionController& act
             currentActionIndex++;
             continue;
         }
-        
-        if (action->isDelayedAction()) {
-            if (!currentDelayedAction) {
-                // Start the delayed action
-                DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
-                currentDelayedAction = delayedAction->createFresh();
-                Serial.print("Starting DelayedAction ");
-                Serial.print(currentActionIndex + 1);
-                Serial.print(" of ");
-                Serial.println(actions.size());
-            }
-            
-            // Update the delayed action
-            if (currentDelayedAction->update(controller)) {
-                // Delayed action completed, move to next
-                Serial.print("DelayedAction ");
-                Serial.print(currentActionIndex + 1);
-                Serial.println(" completed");
-                currentDelayedAction.reset();
-                currentActionIndex++;
-            } else {
-                // Still waiting for delayed action to complete
-                return false;
-            }
-        } else {
+
+        if (!action->isDelayedAction()) {
             // Execute immediate action and move to next
-            Serial.print("Executing immediate action ");
-            Serial.print(currentActionIndex + 1);
-            Serial.print(" of ");
-            Serial.println(actions.size());
             action->execute(controller);
             currentActionIndex++;
+            continue;
         }
+
+        if (!currentDelayedAction) {
+            // Start the delayed action
+            DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
+            currentDelayedAction = delayedAction->createFresh();
+        }
+
+        // Update the delayed action
+        if (!currentDelayedAction->update(controller)) {
+            // Still waiting for delayed action to complete
+            return false;
+        }
+        
+        // Delayed action completed, move to next
+        currentDelayedAction.reset();
+        currentActionIndex++;
+
     }
-    
     // All actions completed
-    Serial.println("SequentialAction execution completed");
     isExecuting = false;
     currentActionIndex = 0;
     return true;

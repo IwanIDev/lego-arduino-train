@@ -121,28 +121,32 @@ void ReedSwitchSensor::reset() {
 }
 
 void ReedSwitchSensor::executeAction(TrainController& controller, ActionController& actionController) {
-    if (action) {
-        // Check if this is a DelayedAction using virtual method
-        if (action->isDelayedAction()) {
-            // For DelayedAction, create a fresh instance and add it to ActionController
-            // We know it's a DelayedAction, so we can safely static_cast
-            DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
-            actionController.addDelayedAction(delayedAction->createFresh());
-        } else {
-            // Check if this is a SequentialAction
-            SequentialAction* sequentialAction = dynamic_cast<SequentialAction*>(action.get());
-            if (sequentialAction) {
-                // For SequentialAction, clone it and add to ActionController for managed execution
-                std::unique_ptr<SequentialAction> clonedSequential(
-                    static_cast<SequentialAction*>(sequentialAction->clone().release())
-                );
-                actionController.addSequentialAction(std::move(clonedSequential));
-            } else {
-                // For all other immediate actions, execute directly
-                action->execute(controller, actionController);
-            }
-        }
+    if (!action) {
+        Serial.println("No action defined for ReedSwitchSensor.");
+        return;
     }
+
+    if (action->isDelayedAction()) {
+        // For DelayedAction, create a fresh instance and add it to ActionController
+        // We know it's a DelayedAction, so we can safely static_cast
+        DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
+        actionController.addDelayedAction(delayedAction->createFresh());
+        return;
+    }
+
+    // Check if this is a SequentialAction
+    SequentialAction* sequentialAction = dynamic_cast<SequentialAction*>(action.get());
+    if (sequentialAction) {
+        // For SequentialAction, clone it and add to ActionController for managed execution
+        std::unique_ptr<SequentialAction> clonedSequential(
+            static_cast<SequentialAction*>(sequentialAction->clone().release())
+        );
+        actionController.addSequentialAction(std::move(clonedSequential));
+        return;
+    }
+
+    // For all other immediate actions, execute directly
+    action->execute(controller, actionController);
 }
 
 /**

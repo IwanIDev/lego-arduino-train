@@ -7,7 +7,7 @@
 /**
  * Constructor for SequentialAction.
  */
-SequentialAction::SequentialAction()  
+SequentialAction::SequentialAction() : currentActionIndex(0), isExecuting(false)
 {
     actions.reserve(10);  // Reserve space for 10 actions
 }
@@ -45,25 +45,21 @@ void SequentialAction::execute(TrainController& controller) {
 
 /**
  * Executes all actions in the sequence with proper DelayedAction handling.
+ * This version starts the sequential execution and relies on update() for completion.
  * @param controller The train controller to operate on.
  * @param actionController The action controller for managing delayed actions.
  */
 void SequentialAction::execute(TrainController& controller, ActionController& actionController) {
-    for (auto& action : actions) {
-        if (action) {
-            if (action->isDelayedAction()) {
-                // For DelayedAction, create a fresh instance and add it to ActionController
-                DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
-                actionController.addDelayedAction(delayedAction->createFresh());
-                Serial.println("Added DelayedAction to ActionController for non-blocking execution");
-            } else {
-                // For immediate actions, execute directly
-                action->execute(controller);
-            }
-        } else {
-            Serial.println("Encountered a null action in SequentialAction.");
-        }
+    Serial.println("Starting SequentialAction execution");
+    if (!isExecuting) {
+        isExecuting = true;
+        currentActionIndex = 0;
+        currentDelayedAction.reset();
     }
+    
+    // Start the first update cycle - the ActionController will need to call update() 
+    // repeatedly until this SequentialAction is finished
+    update(controller, actionController);
 }
 
 /**
@@ -80,4 +76,84 @@ std::unique_ptr<SensorAction> SequentialAction::clone() const {
         }
     }
     return std::unique_ptr<SensorAction>(cloned.release());
+}
+
+/**
+ * Non-blocking update method for SequentialAction.
+ * This method processes actions one at a time, waiting for DelayedActions to complete
+ * before proceeding to the next action in the sequence.
+ * @param controller The train controller to operate on.
+ * @param actionController The action controller for managing delayed actions.
+ * @return true if all actions in the sequence have completed, false if still executing.
+ */
+bool SequentialAction::update(TrainController& controller, ActionController& actionController) {
+    if (!isExecuting) {
+        return true; // Already finished
+    }
+    
+    while (currentActionIndex < actions.size()) {
+        auto& action = actions[currentActionIndex];
+        
+        if (!action) {
+            Serial.println("Encountered a null action in SequentialAction, skipping.");
+            currentActionIndex++;
+            continue;
+        }
+        
+        if (action->isDelayedAction()) {
+            if (!currentDelayedAction) {
+                // Start the delayed action
+                DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
+                currentDelayedAction = delayedAction->createFresh();
+                Serial.print("Starting DelayedAction ");
+                Serial.print(currentActionIndex + 1);
+                Serial.print(" of ");
+                Serial.println(actions.size());
+            }
+            
+            // Update the delayed action
+            if (currentDelayedAction->update(controller)) {
+                // Delayed action completed, move to next
+                Serial.print("DelayedAction ");
+                Serial.print(currentActionIndex + 1);
+                Serial.println(" completed");
+                currentDelayedAction.reset();
+                currentActionIndex++;
+            } else {
+                // Still waiting for delayed action to complete
+                return false;
+            }
+        } else {
+            // Execute immediate action and move to next
+            Serial.print("Executing immediate action ");
+            Serial.print(currentActionIndex + 1);
+            Serial.print(" of ");
+            Serial.println(actions.size());
+            action->execute(controller);
+            currentActionIndex++;
+        }
+    }
+    
+    // All actions completed
+    Serial.println("SequentialAction execution completed");
+    isExecuting = false;
+    currentActionIndex = 0;
+    return true;
+}
+
+/**
+ * Reset the SequentialAction to be executed again.
+ */
+void SequentialAction::reset() {
+    isExecuting = false;
+    currentActionIndex = 0;
+    currentDelayedAction.reset();
+}
+
+/**
+ * Check if the SequentialAction has finished executing.
+ * @return true if all actions have completed, false if still executing.
+ */
+bool SequentialAction::isFinished() const {
+    return !isExecuting;
 }

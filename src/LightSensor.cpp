@@ -4,6 +4,7 @@
 #include "Action/SensorAction.hpp"
 #include "ActionController.hpp"
 #include "Action/DelayedAction.hpp"
+#include "Action/SequentialAction.hpp"
 #include <memory>
 
 // Constructor
@@ -118,8 +119,18 @@ void LightSensor::executeAction(TrainController& controller, ActionController& a
             DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
             actionController.addDelayedAction(delayedAction->createFresh());
         } else {
-            // For all other actions (including SequentialAction, CompositeAction), use the two-parameter execute
-            action->execute(controller, actionController);
+            // Check if this is a SequentialAction
+            SequentialAction* sequentialAction = dynamic_cast<SequentialAction*>(action.get());
+            if (sequentialAction) {
+                // For SequentialAction, clone it and add to ActionController for managed execution
+                std::unique_ptr<SequentialAction> clonedSequential(
+                    static_cast<SequentialAction*>(sequentialAction->clone().release())
+                );
+                actionController.addSequentialAction(std::move(clonedSequential));
+            } else {
+                // For all other immediate actions, execute directly
+                action->execute(controller, actionController);
+            }
         }
     }
 }

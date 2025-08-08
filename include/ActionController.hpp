@@ -8,10 +8,14 @@
 #include <vector>
 #include <memory>
 
+// Forward declaration
+class SequentialAction;
+
 class ActionController {
 private:
     TrainController* trainController;
     std::vector<std::unique_ptr<DelayedAction>> activeDelayedActions;
+    std::vector<std::unique_ptr<SequentialAction>> activeSequentialActions;
 
 public:
     explicit ActionController(TrainController* controller);
@@ -23,12 +27,20 @@ public:
     void addDelayedAction(std::unique_ptr<DelayedAction> action);
     void addDelayedAction(std::unique_ptr<SensorAction> action, unsigned long delayTimeMs);
     
+    // Sequential action management
+    void addSequentialAction(std::unique_ptr<SequentialAction> action);
+    
     // Non-blocking update method - call this from your main loop
     void update();
     
     // Management methods
     void clearAllDelayedActions();
+    void clearAllSequentialActions();
+    void clearAllActions();
     size_t getActiveDelayedActionsCount() const;
+    size_t getActiveSequentialActionsCount() const;
     bool hasActiveDelayedActions() const;
+    bool hasActiveSequentialActions() const;
+    bool hasActiveActions() const;
 };
 #endif // ACTION_CONTROLLER_HPP

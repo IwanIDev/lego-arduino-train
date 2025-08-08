@@ -29,7 +29,7 @@ public:
     void execute(TrainController& controller) override;
     void execute(TrainController& controller, ActionController& actionController) override;
     std::unique_ptr<SensorAction> clone() const override;
-    bool isSequentialAction() const { return true; } // Identify as SequentialAction
+    bool isSequentialAction() const override { return true; } // Identify as SequentialAction
     
     // Non-blocking execution methods
     bool update(TrainController& controller, ActionController& actionController);

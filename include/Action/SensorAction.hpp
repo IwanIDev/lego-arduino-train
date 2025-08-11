@@ -10,7 +10,8 @@ enum class SensorLocation {
     WEST_STATION,
     WEST_TUNNEL,
     EAST_STATION,
-    EAST_TUNNEL
+    EAST_TUNNEL,
+    UNKNOWN
 };
 
 class SensorAction {

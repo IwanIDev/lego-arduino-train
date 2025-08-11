@@ -26,17 +26,28 @@ void PositionTracker::updatePosition(SensorLocation newPosition) {
 }
 
 void PositionTracker::updateDirection(SensorLocation newPosition) {
-    // Simple direction detection based on sensor sequence
-    // This assumes sensors are arranged in a sequence on your track
-    int currentIndex = static_cast<int>(currentPosition);
-    int newIndex = static_cast<int>(newPosition);
-    
-    if (newIndex > currentIndex) {
-        currentDirection = TrainDirection::FORWARD;
-    } else if (newIndex < currentIndex) {
-        currentDirection = TrainDirection::REVERSE;
+    // Check direction based on track layout
+    for (const auto& segment : trackMap) {
+        if (segment.location != currentPosition) continue; // Skip segments not matching current position
+        
+        // Check if movement matches forward direction
+        if (segment.nextForward == newPosition) {
+            currentDirection = TrainDirection::FORWARD;
+            return;
+        }
+        // Check if movement matches reverse direction 
+        else if (segment.nextReverse == newPosition) {
+            currentDirection = TrainDirection::REVERSE;
+            return;
+        }
+        break;
     }
-    // If equal, keep current direction
+    // Unexpected movement, log to serial
+    Serial.print("Unexpected movement from ");
+    Serial.print(static_cast<int>(currentPosition));
+    Serial.print(" to ");
+    Serial.print(static_cast<int>(newPosition));
+    Serial.println(" detected.");
 }
 
 std::vector<std::unique_ptr<SensorAction>> PositionTracker::getActionsForPosition(SensorLocation position, TrainDirection direction) {

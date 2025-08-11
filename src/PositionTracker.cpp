@@ -48,6 +48,7 @@ std::vector<std::unique_ptr<SensorAction>> PositionTracker::getActionsForPositio
             
             // Clone actions for execution
             for (const auto& action : sourceActions) {
+                if (!action) continue; // Skip null actions
                 actions.push_back(action->clone());
             }
             break;

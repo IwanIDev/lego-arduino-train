@@ -25,6 +25,9 @@ private:
     TrainDirection currentDirection;
     std::vector<TrackSegment> trackMap;
     
+    // Helper method to update direction based on position change
+    void updateDirection(SensorLocation newPosition);
+    
 public:
     PositionTracker(SensorLocation startPosition);
     

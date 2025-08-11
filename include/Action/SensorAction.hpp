@@ -7,10 +7,10 @@
 class ActionController;
 
 enum class SensorLocation {
-    STATION_STOP,
-    SPEED_REDUCE,
-    DIRECTION_CHANGE,
-    // Add more locations as needed
+    WEST_STATION,
+    WEST_TUNNEL,
+    EAST_STATION,
+    EAST_TUNNEL
 };
 
 class SensorAction {

@@ -103,6 +103,7 @@ String getPositionName(SensorLocation location) {
 
 void setup() {
     Serial.begin(115200);
+    delay(1000); // Give time for the serial connection to establish
     Serial.println("Initializing LEGO Train Position Tracking System");
     
     // Setup sensors
@@ -141,12 +142,30 @@ void loop() {
 
     actionController.update(); // Update all delayed actions
 
-    if (!bluetoothController.connect()) {
-        Serial.println("Bluetooth connection failed");
-        return;
+    
+    // Try to connect to Bluetooth, but don't block the entire loop
+    static unsigned long lastBluetoothAttempt = 0;
+    const unsigned long bluetoothRetryInterval = 5000; // Retry every 5 seconds
+    
+    if (currentMillis - lastBluetoothAttempt > bluetoothRetryInterval) {
+        if (!bluetoothController.connect()) {
+            Serial.println("Bluetooth connection failed - retrying in 5 seconds");
+            lastBluetoothAttempt = currentMillis;
+            return; // Try again later
+        }
+        lastBluetoothAttempt = currentMillis;
     }
 
+    // Only proceed with motor control if we have a Bluetooth connection
     if (!bluetoothController.isConnected()) {
+        // Print status every 10 seconds to show the system is running
+        static unsigned long lastStatusPrint = 0;
+        const unsigned long statusPrintInterval = 10000;
+        
+        if (currentMillis - lastStatusPrint > statusPrintInterval) {
+            Serial.println("System running - waiting for Bluetooth connection...");
+            lastStatusPrint = currentMillis;
+        }
         return;
     }
 

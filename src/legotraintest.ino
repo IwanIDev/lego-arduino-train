@@ -78,11 +78,14 @@ void setupTrackLayout() {
     TrackSegment westTunnel;
     westTunnel.location = SensorLocation::WEST_TUNNEL;
     
-    std::vector<std::unique_ptr<SensorAction>> forwardActions;
-    forwardActions.push_back(std::unique_ptr<StopAction>(new StopAction(100)));
-    forwardActions.push_back(std::unique_ptr<SensorAction>(new ReverseAction(0)));
-    forwardActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(-1, 0)));
-    westTunnel.forwardActions.push_back(std::unique_ptr<SequentialAction>(new SequentialAction(std::move(forwardActions))));
+    // Create SequentialAction for forward direction: Stop -> Reverse -> Speed
+    {
+        std::vector<std::unique_ptr<SensorAction>> forwardActions;
+        forwardActions.push_back(std::unique_ptr<SensorAction>(new StopAction(100)));
+        forwardActions.push_back(std::unique_ptr<SensorAction>(new ReverseAction(0)));
+        forwardActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(-1, 0)));
+        westTunnel.forwardActions.push_back(std::unique_ptr<SequentialAction>(new SequentialAction(std::move(forwardActions))));
+    }
     
     westTunnel.reverseActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(-2, 0)));
     
@@ -166,18 +169,35 @@ void loop() {
         
         // Get and execute position-based actions
         auto actions = positionTracker.getActionsForPosition(currentPos, currentDir);
-        for (auto& action : actions) {
-            if (!action) continue;
+        Serial.print("Found ");
+        Serial.print(actions.size());
+        Serial.println(" actions to execute");
+        
+        for (size_t i = 0; i < actions.size(); i++) {
+            auto& action = actions[i];
+            if (!action) {
+                Serial.print("Action ");
+                Serial.print(i);
+                Serial.println(" is null, skipping");
+                continue;
+            }
+            
+            Serial.print("Processing action ");
+            Serial.print(i);
+            Serial.print(": ");
             
             if (action->isDelayedAction()) {
+                Serial.println("DelayedAction detected");
                 DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
                 actionController.addDelayedAction(delayedAction->createFresh());
                 Serial.println("Added DelayedAction to ActionController");
             } else if (action->isSequentialAction()) {
+                Serial.println("SequentialAction detected");
                 SequentialAction* sequentialAction = static_cast<SequentialAction*>(action.get());
                 actionController.addSequentialAction(sequentialAction->createFresh());
                 Serial.println("Added SequentialAction to ActionController");
             } else {
+                Serial.println("Immediate action detected");
                 action->execute(trainController, actionController);
                 Serial.println("Executed immediate action");
             }
@@ -188,6 +208,18 @@ void loop() {
     }
 
     actionController.update(); // Update all delayed actions
+    
+    // Debug: Show active actions
+    static unsigned long lastDebugPrint = 0;
+    if (currentMillis - lastDebugPrint > 2000) { // Print every 2 seconds
+        if (actionController.hasActiveActions()) {
+            Serial.print("Active actions: DelayedActions=");
+            Serial.print(actionController.getActiveDelayedActionsCount());
+            Serial.print(", SequentialActions=");
+            Serial.println(actionController.getActiveSequentialActionsCount());
+        }
+        lastDebugPrint = currentMillis;
+    }
 
     
     // Try to connect to Bluetooth, but don't block the entire loop

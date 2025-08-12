@@ -51,6 +51,7 @@ void SequentialAction::execute(TrainController& controller) {
  */
 void SequentialAction::execute(TrainController& controller, ActionController& actionController) {
     if (!isExecuting) {
+        Serial.println("Starting SequentialAction execution");
         isExecuting = true;
         currentActionIndex = 0;
         currentDelayedAction.reset();

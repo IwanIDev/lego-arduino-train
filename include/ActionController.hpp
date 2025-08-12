@@ -8,20 +8,26 @@
 #include <vector>
 #include <memory>
 
-// Forward declaration
+// Forward declarations
 class SequentialAction;
+class PositionSensorController;
 
 class ActionController {
 private:
     TrainController* trainController;
     std::vector<std::unique_ptr<DelayedAction>> activeDelayedActions;
     std::vector<std::unique_ptr<SequentialAction>> activeSequentialActions;
+    PositionSensorController* positionController; // Optional position-based controller
 
 public:
     explicit ActionController(TrainController* controller);
     
     // Original sensor-based action execution
     void executeAction(Sensor* sensor);
+    
+    // Position-based action management
+    void setPositionController(PositionSensorController* controller);
+    PositionSensorController* getPositionController() const { return positionController; }
     
     // Delayed action management
     void addDelayedAction(std::unique_ptr<DelayedAction> action);

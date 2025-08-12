@@ -1,9 +1,10 @@
 #include "ActionController.hpp"
 #include "Action/SequentialAction.hpp"
+#include "PositionSensorController.hpp"
 #include <algorithm>
 
 ActionController::ActionController(TrainController* controller) 
-    : trainController(controller) {
+    : trainController(controller), positionController(nullptr) {
 }
 
 /**
@@ -14,6 +15,14 @@ void ActionController::executeAction(Sensor* sensor) {
     if (sensor != nullptr) {
         sensor->executeAction(*trainController, *this);
     }
+}
+
+/**
+ * Set the position controller for position-based actions.
+ * @param controller The position sensor controller to use
+ */
+void ActionController::setPositionController(PositionSensorController* controller) {
+    positionController = controller;
 }
 
 /**
@@ -49,6 +58,11 @@ void ActionController::addSequentialAction(std::unique_ptr<SequentialAction> act
 void ActionController::update() {
     if (trainController == nullptr) {
         return;
+    }
+    
+    // Update position-based actions if available
+    if (positionController != nullptr) {
+        positionController->checkAndExecuteActions(*trainController, *this);
     }
     
     // Update all delayed actions and remove completed ones

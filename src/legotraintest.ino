@@ -14,6 +14,8 @@
 #include "ActionController.hpp"
 #include "ReedSwitchSensor.hpp"
 #include "ReedSwitchSensorController.hpp"
+#include "PositionTracker.hpp"
+#include "PositionAwareSensorController.hpp"
 #include <memory>
 
 Lpf2Hub trainHub;
@@ -38,32 +40,83 @@ LightSensor sensors[] = {
 };
 LightSensorController lightSensorController;
 ReedSwitchSensor reedSwitchSensors[] = {
-    // ReedSwitchSensor(D12, SensorLocation::STATION_STOP, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
-    ReedSwitchSensor(D12, SensorLocation::STATION_STOP, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new SpeedAction(-2, 0)), 500))),
-    ReedSwitchSensor(D11, SensorLocation::STATION_STOP, []() {
+    // Assign different sensor locations to each physical sensor
+    ReedSwitchSensor(D12, SensorLocation::WEST_STATION, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new SpeedAction(-2, 0)), 500))),
+    ReedSwitchSensor(D11, SensorLocation::WEST_TUNNEL, []() {
         std::vector<std::unique_ptr<SensorAction>> actions;
         actions.push_back(std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500)));
         actions.push_back(std::unique_ptr<SensorAction>(new ReverseAction(0)));
         actions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(3, 0)));
         return std::unique_ptr<SequentialAction>(new SequentialAction(std::move(actions)));
     }()),
-    ReedSwitchSensor(D10, SensorLocation::STATION_STOP, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
-    ReedSwitchSensor(D9, SensorLocation::STATION_STOP, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
-    // Add more ReedSwitchSensors as needed
+    ReedSwitchSensor(D10, SensorLocation::EAST_STATION, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
+    ReedSwitchSensor(D9, SensorLocation::EAST_TUNNEL, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
 };
 ReedSwitchSensorController reedSwitchSensorController;
 ActionController actionController(&trainController);
 
+// Position tracking components
+PositionTracker positionTracker(SensorLocation::WEST_STATION); // Start at first sensor
+PositionAwareSensorController positionAwareSensorController(&reedSwitchSensorController, &lightSensorController, &positionTracker);
+
+// Setup track layout with sensor position relationships
+void setupTrackLayout() {
+    Serial.println("Setting up track layout...");
+    
+    // Define the track layout - this should match your physical track
+    // Assuming sensors are arranged in sequence: SENSOR_1 -> SENSOR_2 -> SENSOR_3 -> SENSOR_4 -> SENSOR_1 (loop)
+    
+    // You can customize these based on your actual track layout
+    // For now, setting up a simple sequential track
+    
+    Serial.println("Track layout configured");
+}
+
+void printCurrentPosition() {
+    Serial.print("Current Position: ");
+    Serial.print(getPositionName(positionTracker.getCurrentPosition()));
+    Serial.print(" (Previous: ");
+    Serial.print(getPositionName(positionTracker.getPreviousPosition()));
+    Serial.print(", Direction: ");
+    Serial.print(positionTracker.getDirection() == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
+    Serial.println(")");
+}
+
+// Helper function to manually set position (useful for testing)
+void setManualPosition(SensorLocation position) {
+    Serial.print("Manually setting position to: ");
+    Serial.println(static_cast<int>(position));
+    positionTracker.updatePosition(position);
+    printCurrentPosition();
+}
+
+// Helper function to get position name for debugging
+String getPositionName(SensorLocation location) {
+    switch (location) {
+        case SensorLocation::WEST_STATION: return "WEST_STATION";
+        case SensorLocation::WEST_TUNNEL: return "WEST_TUNNEL";
+        case SensorLocation::EAST_STATION: return "EAST_STATION";
+        case SensorLocation::EAST_TUNNEL: return "EAST_TUNNEL";
+        default: return "UNKNOWN";
+    }
+}
+
 void setup() {
     Serial.begin(115200);
-    // for (auto& sensor : sensors) {
-    //     lightSensorController.addSensor(&sensor);
-    // }
-    Serial.println("Setting up train controller...");
+    Serial.println("Initializing LEGO Train Position Tracking System");
+    
+    // Setup sensors
+     Serial.println("Setting up train controller...");
     for (auto& sensor : reedSwitchSensors) {
         reedSwitchSensorController.addSensor(&sensor);
     }
     Serial.println("Set up train controller");
+    // Setup track layout for position tracking
+    setupTrackLayout();
+    
+    Serial.println("Position tracking system initialized");
+    Serial.print("Starting position: ");
+    Serial.println(static_cast<int>(positionTracker.getCurrentPosition()));
 }
 
 void loop() {
@@ -74,14 +127,16 @@ void loop() {
     inputController.handleSerialInput();
     inputController.handleButtonInput(trainController.getState());
 
-    if (lightSensorController.isTrainPassingOver()) {
-        LightSensor* triggeredSensor = lightSensorController.getTriggeredSensor();
-        actionController.executeAction(triggeredSensor);
-    }
-
-    if (reedSwitchSensorController.isTrainPassingOver()) {
-        ReedSwitchSensor* triggeredSensor = reedSwitchSensorController.getTriggeredSensor();
-        actionController.executeAction(triggeredSensor);
+    // Check sensors and update position automatically
+    if (positionAwareSensorController.checkSensorsAndUpdatePosition()) {
+        // Position was updated - execute sensor actions
+        Sensor* triggeredSensor = positionAwareSensorController.getTriggeredSensor();
+        if (triggeredSensor) {
+            actionController.executeAction(triggeredSensor);
+        }
+        
+        // Print current position for debugging
+        printCurrentPosition();
     }
 
     actionController.update(); // Update all delayed actions

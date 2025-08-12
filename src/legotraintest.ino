@@ -59,9 +59,11 @@ void setup() {
     // for (auto& sensor : sensors) {
     //     lightSensorController.addSensor(&sensor);
     // }
+    Serial.println("Setting up train controller...");
     for (auto& sensor : reedSwitchSensors) {
         reedSwitchSensorController.addSensor(&sensor);
     }
+    Serial.println("Set up train controller");
 }
 
 void loop() {
@@ -85,6 +87,7 @@ void loop() {
     actionController.update(); // Update all delayed actions
 
     if (!bluetoothController.connect()) {
+        Serial.println("Bluetooth connection failed");
         return;
     }
 

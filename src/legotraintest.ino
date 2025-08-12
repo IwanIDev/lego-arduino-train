@@ -106,10 +106,11 @@ void setup() {
     Serial.println("Initializing LEGO Train Position Tracking System");
     
     // Setup sensors
+     Serial.println("Setting up train controller...");
     for (auto& sensor : reedSwitchSensors) {
         reedSwitchSensorController.addSensor(&sensor);
     }
-    
+    Serial.println("Set up train controller");
     // Setup track layout for position tracking
     setupTrackLayout();
     
@@ -141,6 +142,7 @@ void loop() {
     actionController.update(); // Update all delayed actions
 
     if (!bluetoothController.connect()) {
+        Serial.println("Bluetooth connection failed");
         return;
     }
 

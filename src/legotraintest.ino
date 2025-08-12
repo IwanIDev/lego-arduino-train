@@ -16,6 +16,7 @@
 #include "ReedSwitchSensorController.hpp"
 #include "PositionTracker.hpp"
 #include "PositionAwareSensorController.hpp"
+#include "PositionSensorController.hpp"
 #include <memory>
 
 Lpf2Hub trainHub;
@@ -40,17 +41,11 @@ LightSensor sensors[] = {
 };
 LightSensorController lightSensorController;
 ReedSwitchSensor reedSwitchSensors[] = {
-    // Assign different sensor locations to each physical sensor
-    ReedSwitchSensor(D12, SensorLocation::WEST_STATION, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new SpeedAction(-1, 0)), 500))),
-    ReedSwitchSensor(D11, SensorLocation::WEST_TUNNEL, []() {
-        std::vector<std::unique_ptr<SensorAction>> actions;
-        actions.push_back(std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500)));
-        actions.push_back(std::unique_ptr<SensorAction>(new ReverseAction(0)));
-        actions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(1, 0)));
-        return std::unique_ptr<SequentialAction>(new SequentialAction(std::move(actions)));
-    }()),
-    ReedSwitchSensor(D10, SensorLocation::EAST_STATION, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
-    ReedSwitchSensor(D9, SensorLocation::EAST_TUNNEL, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),
+    // Reed switch sensors without actions - actions will be handled by position-based system
+    ReedSwitchSensor(D12, SensorLocation::WEST_STATION),
+    ReedSwitchSensor(D11, SensorLocation::WEST_TUNNEL),
+    ReedSwitchSensor(D10, SensorLocation::EAST_STATION),
+    ReedSwitchSensor(D9, SensorLocation::EAST_TUNNEL),
 };
 ReedSwitchSensorController reedSwitchSensorController;
 ActionController actionController(&trainController);
@@ -59,17 +54,42 @@ ActionController actionController(&trainController);
 PositionTracker positionTracker(SensorLocation::WEST_STATION); // Start at first sensor
 PositionAwareSensorController positionAwareSensorController(&reedSwitchSensorController, &lightSensorController, &positionTracker);
 
+// Position-based action controller
+PositionSensorController positionSensorController(positionTracker);
+
 // Setup track layout with sensor position relationships
 void setupTrackLayout() {
     Serial.println("Setting up track layout...");
+
+    // CURRENT LAYOUT: WEST_STATION -> WEST_TUNNEL -> WEST_TUNNEL -> WEST_STATION
+
+    // WEST_STATION
+    TrackSegment westStation;
+    westStation.location = SensorLocation::WEST_STATION;
+    westStation.forwardActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(2, 0)));
+    westStation.reverseActions.push_back(std::unique_ptr<DelayedAction>(new DelayedAction(
+        std::unique_ptr<SensorAction>(new StopAction(100)), 500
+    )));
+    westStation.nextForward = SensorLocation::WEST_TUNNEL;
+    westStation.nextReverse = SensorLocation::EAST_TUNNEL;
+    positionTracker.addTrackSegment(westStation);
+
+    // WEST_TUNNEL
+    TrackSegment westTunnel;
+    westTunnel.location = SensorLocation::WEST_TUNNEL;
     
-    // Define the track layout - this should match your physical track
-    // Assuming sensors are arranged in sequence: SENSOR_1 -> SENSOR_2 -> SENSOR_3 -> SENSOR_4 -> SENSOR_1 (loop)
+    std::vector<std::unique_ptr<SensorAction>> forwardActions;
+    forwardActions.push_back(std::unique_ptr<StopAction>(new StopAction(100)));
+    forwardActions.push_back(std::unique_ptr<SensorAction>(new ReverseAction(0)));
+    forwardActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(-1, 0)));
+    westTunnel.forwardActions.push_back(std::unique_ptr<SequentialAction>(new SequentialAction(std::move(forwardActions))));
     
-    // You can customize these based on your actual track layout
-    // For now, setting up a simple sequential track
+    westTunnel.reverseActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(-2, 0)));
     
-    Serial.println("Track layout configured");
+    westTunnel.nextForward = SensorLocation::EAST_STATION;
+    westTunnel.nextReverse = SensorLocation::WEST_STATION;
+    positionTracker.addTrackSegment(westTunnel);
+
 }
 
 void printCurrentPosition() {
@@ -107,13 +127,18 @@ void setup() {
     Serial.println("Initializing LEGO Train Position Tracking System");
     
     // Setup sensors
-     Serial.println("Setting up train controller...");
+    Serial.println("Setting up train controller...");
     for (auto& sensor : reedSwitchSensors) {
         reedSwitchSensorController.addSensor(&sensor);
     }
     Serial.println("Set up train controller");
+    
     // Setup track layout for position tracking
     setupTrackLayout();
+    
+    // Connect the position-based controller to the action controller
+    actionController.setPositionController(&positionSensorController);
+    Serial.println("Position-based action system enabled");
     
     Serial.println("Position tracking system initialized");
     Serial.print("Starting position: ");
@@ -130,10 +155,32 @@ void loop() {
 
     // Check sensors and update position automatically
     if (positionAwareSensorController.checkSensorsAndUpdatePosition()) {
-        // Position was updated - execute sensor actions
-        Sensor* triggeredSensor = positionAwareSensorController.getTriggeredSensor();
-        if (triggeredSensor) {
-            actionController.executeAction(triggeredSensor);
+        // Position was updated - execute position-based actions
+        SensorLocation currentPos = positionTracker.getCurrentPosition();
+        TrainDirection currentDir = positionTracker.getDirection();
+        
+        Serial.print("Executing actions for position: ");
+        Serial.print(getPositionName(currentPos));
+        Serial.print(" in direction: ");
+        Serial.println(currentDir == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
+        
+        // Get and execute position-based actions
+        auto actions = positionTracker.getActionsForPosition(currentPos, currentDir);
+        for (auto& action : actions) {
+            if (!action) continue;
+            
+            if (action->isDelayedAction()) {
+                DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
+                actionController.addDelayedAction(delayedAction->createFresh());
+                Serial.println("Added DelayedAction to ActionController");
+            } else if (action->isSequentialAction()) {
+                SequentialAction* sequentialAction = static_cast<SequentialAction*>(action.get());
+                actionController.addSequentialAction(sequentialAction->createFresh());
+                Serial.println("Added SequentialAction to ActionController");
+            } else {
+                action->execute(trainController, actionController);
+                Serial.println("Executed immediate action");
+            }
         }
         
         // Print current position for debugging

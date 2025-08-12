@@ -84,6 +84,7 @@ void TrainController::incrementSpeed() {
     if (speedMultiplier > 0) {
         setState(GO);
     }
+    Serial.println("Speed incremented");
 }
 
 void TrainController::decrementSpeed() {
@@ -93,4 +94,5 @@ void TrainController::decrementSpeed() {
     } else {
         setState(GO);
     }
+    Serial.println("Speed decremented");
 }

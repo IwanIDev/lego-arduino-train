@@ -41,12 +41,12 @@ LightSensor sensors[] = {
 LightSensorController lightSensorController;
 ReedSwitchSensor reedSwitchSensors[] = {
     // Assign different sensor locations to each physical sensor
-    ReedSwitchSensor(D12, SensorLocation::WEST_STATION, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new SpeedAction(-2, 0)), 500))),
+    ReedSwitchSensor(D12, SensorLocation::WEST_STATION, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new SpeedAction(-1, 0)), 500))),
     ReedSwitchSensor(D11, SensorLocation::WEST_TUNNEL, []() {
         std::vector<std::unique_ptr<SensorAction>> actions;
         actions.push_back(std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500)));
         actions.push_back(std::unique_ptr<SensorAction>(new ReverseAction(0)));
-        actions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(3, 0)));
+        actions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(1, 0)));
         return std::unique_ptr<SequentialAction>(new SequentialAction(std::move(actions)));
     }()),
     ReedSwitchSensor(D10, SensorLocation::EAST_STATION, std::unique_ptr<DelayedAction>(new DelayedAction(std::unique_ptr<SensorAction>(new StopAction(100)), 500))),

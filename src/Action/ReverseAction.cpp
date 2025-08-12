@@ -9,12 +9,8 @@ void ReverseAction::execute(TrainController& controller) {
     bool currentReverse = controller.getReverse();
     controller.setReverse(!currentReverse);
     
-    // If the train is currently stopped (speedMultiplier = 0), give it some initial speed
-    // so the reverse action has an effect
-    if (controller.getSpeedMultiplier() <= 0) {
-        controller.incrementSpeed(); // Give it some initial speed
-        controller.setState(GO);      // Make sure it's set to GO state
-    }
+    // Don't automatically start the train if it's stopped
+    // Let other actions control the speed
     
     // Optional delay after reversing
     if (delayMs > 0) {

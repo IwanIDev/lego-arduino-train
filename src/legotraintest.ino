@@ -271,7 +271,9 @@ void loop() {
     SPEED currentState = trainController.getState();
     int speed = trainController.getSpeed(currentState);
 
-    trainController.printState();
+    if (trainController.hasStateChanged()) {
+        trainController.printState();
+    }
 
     bluetoothController.setMotorSpeed(MOTOR_PORT, speed);
 }

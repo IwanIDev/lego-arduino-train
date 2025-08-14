@@ -51,6 +51,7 @@ void SequentialAction::execute(TrainController& controller) {
  */
 void SequentialAction::execute(TrainController& controller, ActionController& actionController) {
     if (!isExecuting) {
+        Serial.println("Starting SequentialAction execution");
         isExecuting = true;
         currentActionIndex = 0;
         currentDelayedAction.reset();
@@ -81,6 +82,8 @@ bool SequentialAction::update(TrainController& controller, ActionController& act
     if (!isExecuting) {
         return true; // Already finished
     }
+    
+    Serial.println("Updating SequentialAction, current index: " + String(currentActionIndex));
     
     while (currentActionIndex < actions.size()) {
         auto& action = actions[currentActionIndex];

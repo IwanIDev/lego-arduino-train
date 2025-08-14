@@ -73,7 +73,7 @@ void ActionController::update() {
     activeDelayedActions.erase(
         std::remove_if(activeDelayedActions.begin(), activeDelayedActions.end(),
             [this](std::unique_ptr<DelayedAction>& action) {
-                return action->update(*trainController);
+                return action->update(*trainController, *this);
             }),
         activeDelayedActions.end()
     );

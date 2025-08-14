@@ -98,9 +98,9 @@ void setupTrackLayout() {
         westTunnel.forwardActions.push_back(std::unique_ptr<SequentialAction>(new SequentialAction(std::move(forwardActions))));
     }
     
-    westTunnel.reverseActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(2, 0)));
+    westTunnel.reverseActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(0, 0)));
 
-    westTunnel.nextForward = SensorLocation::EAST_TUNNEL;
+    westTunnel.nextForward = SensorLocation::WEST_TUNNEL;
     westTunnel.nextReverse = SensorLocation::WEST_STATION;
     positionTracker.addTrackSegment(westTunnel);
 
@@ -111,8 +111,10 @@ void printCurrentPosition() {
     Serial.print(getPositionName(positionTracker.getCurrentPosition()));
     Serial.print(" (Previous: ");
     Serial.print(getPositionName(positionTracker.getPreviousPosition()));
-    Serial.print(", Direction: ");
+    Serial.print(", PositionTracker Direction: ");
     Serial.print(positionTracker.getDirection() == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
+    Serial.print(", TrainController Reverse: ");
+    Serial.print(trainController.getReverse() ? "ON" : "OFF");
     Serial.println(")");
 }
 
@@ -153,6 +155,28 @@ void setup() {
     // Connect the position-based controller to the action controller
     actionController.setPositionController(&positionSensorController);
     Serial.println("Position-based action system enabled");
+    
+    // Synchronize direction between TrainController and PositionTracker at startup
+    TrainDirection positionTrackerDirection = positionTracker.getDirection();
+    bool trainControllerReverse = trainController.getReverse();
+    
+    // Convert PositionTracker direction to TrainController reverse boolean
+    // FORWARD = false (not reverse), REVERSE = true (reverse)
+    bool expectedReverse = (positionTrackerDirection == TrainDirection::REVERSE);
+    
+    if (trainControllerReverse != expectedReverse) {
+        Serial.print("Synchronizing directions at startup: TrainController was ");
+        Serial.print(trainControllerReverse ? "REVERSE" : "FORWARD");
+        Serial.print(", PositionTracker was ");
+        Serial.print(positionTrackerDirection == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
+        
+        trainController.setReverse(expectedReverse);
+        Serial.print(" -> Both now set to ");
+        Serial.println(expectedReverse ? "REVERSE" : "FORWARD");
+    } else {
+        Serial.print("Directions already synchronized: ");
+        Serial.println(expectedReverse ? "REVERSE" : "FORWARD");
+    }
     
     Serial.println("Position tracking system initialized");
     Serial.print("Starting position: ");

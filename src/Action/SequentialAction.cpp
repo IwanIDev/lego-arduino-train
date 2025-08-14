@@ -94,7 +94,7 @@ bool SequentialAction::update(TrainController& controller, ActionController& act
 
         if (!action->isDelayedAction()) {
             // Execute immediate action and move to next
-            action->execute(controller);
+            action->execute(controller, actionController);
             currentActionIndex++;
             continue;
         }
@@ -106,7 +106,7 @@ bool SequentialAction::update(TrainController& controller, ActionController& act
         }
 
         // Update the delayed action
-        if (!currentDelayedAction->update(controller)) {
+        if (!currentDelayedAction->update(controller, actionController)) {
             // Still waiting for delayed action to complete
             return false;
         }

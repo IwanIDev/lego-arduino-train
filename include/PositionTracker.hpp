@@ -35,6 +35,7 @@ public:
     SensorLocation getCurrentPosition() const { return currentPosition; }
     SensorLocation getPreviousPosition() const { return previousPosition; }
     TrainDirection getDirection() const { return currentDirection; }
+    void setDirection(TrainDirection direction) { currentDirection = direction; }
     
     void addTrackSegment(const TrackSegment& segment);
     std::vector<std::unique_ptr<SensorAction>> getActionsForPosition(SensorLocation position, TrainDirection direction);

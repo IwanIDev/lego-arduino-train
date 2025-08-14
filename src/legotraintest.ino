@@ -66,10 +66,11 @@ void setupTrackLayout() {
     // WEST_STATION
     TrackSegment westStation;
     westStation.location = SensorLocation::WEST_STATION;
-    westStation.forwardActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(2, 0)));
+    westStation.forwardActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(0, 0)));
     // Sequential action for reverse direction: STOP (delay) -> REVERSE (delay) -> SPEED
     {
         std::vector<std::unique_ptr<SensorAction>> reverseActions;
+        reverseActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(-1, 0)));
         reverseActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
             std::unique_ptr<SensorAction>(new StopAction(0)), 500
         )));
@@ -97,8 +98,8 @@ void setupTrackLayout() {
         forwardActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(2, 0)));
         westTunnel.forwardActions.push_back(std::unique_ptr<SequentialAction>(new SequentialAction(std::move(forwardActions))));
     }
-    
-    westTunnel.reverseActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(0, 0)));
+
+    westTunnel.reverseActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(1, 0)));
 
     westTunnel.nextForward = SensorLocation::WEST_TUNNEL;
     westTunnel.nextReverse = SensorLocation::WEST_STATION;
@@ -186,6 +187,20 @@ void setup() {
 void loop() {
     unsigned long currentMillis = millis();
     unsigned long deltaT = currentMillis - previousMillis; // Time elapsed between last speed change and now.
+
+    // Debug: Periodically check raw pin states
+    static unsigned long lastPinCheck = 0;
+    if (currentMillis - lastPinCheck > 5000) { // Every 5 seconds
+        Serial.print("PIN STATE CHECK - D12: ");
+        Serial.print(digitalRead(D12) == LOW ? "ACTIVE" : "INACTIVE");
+        Serial.print(", D11: ");
+        Serial.print(digitalRead(D11) == LOW ? "ACTIVE" : "INACTIVE");
+        Serial.print(", D10: ");
+        Serial.print(digitalRead(D10) == LOW ? "ACTIVE" : "INACTIVE");
+        Serial.print(", D9: ");
+        Serial.println(digitalRead(D9) == LOW ? "ACTIVE" : "INACTIVE");
+        lastPinCheck = currentMillis;
+    }
 
     trainController.updateSpeedTimer();
     inputController.handleSerialInput();

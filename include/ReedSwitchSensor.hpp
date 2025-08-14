@@ -31,6 +31,7 @@ public:
     void reset() override; // Reset the sensor state
     void executeAction(TrainController& controller, ActionController& actionController) override; // Execute the associated action
     SensorLocation getLocation() const;
+    int getPin() const { return pin; } // Get the pin number for debugging
 };
 
 #endif // REEDSWITCHSENSOR_HPP

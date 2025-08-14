@@ -66,10 +66,11 @@ void setupTrackLayout() {
     // WEST_STATION
     TrackSegment westStation;
     westStation.location = SensorLocation::WEST_STATION;
-    westStation.forwardActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(2, 0)));
+    westStation.forwardActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(0, 0)));
     // Sequential action for reverse direction: STOP (delay) -> REVERSE (delay) -> SPEED
     {
         std::vector<std::unique_ptr<SensorAction>> reverseActions;
+        reverseActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(-1, 0)));
         reverseActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
             std::unique_ptr<SensorAction>(new StopAction(0)), 500
         )));
@@ -97,10 +98,10 @@ void setupTrackLayout() {
         forwardActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(2, 0)));
         westTunnel.forwardActions.push_back(std::unique_ptr<SequentialAction>(new SequentialAction(std::move(forwardActions))));
     }
-    
-    westTunnel.reverseActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(2, 0)));
 
-    westTunnel.nextForward = SensorLocation::EAST_TUNNEL;
+    westTunnel.reverseActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(1, 0)));
+
+    westTunnel.nextForward = SensorLocation::WEST_TUNNEL;
     westTunnel.nextReverse = SensorLocation::WEST_STATION;
     positionTracker.addTrackSegment(westTunnel);
 
@@ -111,8 +112,10 @@ void printCurrentPosition() {
     Serial.print(getPositionName(positionTracker.getCurrentPosition()));
     Serial.print(" (Previous: ");
     Serial.print(getPositionName(positionTracker.getPreviousPosition()));
-    Serial.print(", Direction: ");
+    Serial.print(", PositionTracker Direction: ");
     Serial.print(positionTracker.getDirection() == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
+    Serial.print(", TrainController Reverse: ");
+    Serial.print(trainController.getReverse() ? "ON" : "OFF");
     Serial.println(")");
 }
 
@@ -154,6 +157,28 @@ void setup() {
     actionController.setPositionController(&positionSensorController);
     Serial.println("Position-based action system enabled");
     
+    // Synchronize direction between TrainController and PositionTracker at startup
+    TrainDirection positionTrackerDirection = positionTracker.getDirection();
+    bool trainControllerReverse = trainController.getReverse();
+    
+    // Convert PositionTracker direction to TrainController reverse boolean
+    // FORWARD = false (not reverse), REVERSE = true (reverse)
+    bool expectedReverse = (positionTrackerDirection == TrainDirection::REVERSE);
+    
+    if (trainControllerReverse != expectedReverse) {
+        Serial.print("Synchronizing directions at startup: TrainController was ");
+        Serial.print(trainControllerReverse ? "REVERSE" : "FORWARD");
+        Serial.print(", PositionTracker was ");
+        Serial.print(positionTrackerDirection == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
+        
+        trainController.setReverse(expectedReverse);
+        Serial.print(" -> Both now set to ");
+        Serial.println(expectedReverse ? "REVERSE" : "FORWARD");
+    } else {
+        Serial.print("Directions already synchronized: ");
+        Serial.println(expectedReverse ? "REVERSE" : "FORWARD");
+    }
+    
     Serial.println("Position tracking system initialized");
     Serial.print("Starting position: ");
     Serial.println(static_cast<int>(positionTracker.getCurrentPosition()));
@@ -162,6 +187,20 @@ void setup() {
 void loop() {
     unsigned long currentMillis = millis();
     unsigned long deltaT = currentMillis - previousMillis; // Time elapsed between last speed change and now.
+
+    // Debug: Periodically check raw pin states
+    static unsigned long lastPinCheck = 0;
+    if (currentMillis - lastPinCheck > 5000) { // Every 5 seconds
+        Serial.print("PIN STATE CHECK - D12: ");
+        Serial.print(digitalRead(D12) == LOW ? "ACTIVE" : "INACTIVE");
+        Serial.print(", D11: ");
+        Serial.print(digitalRead(D11) == LOW ? "ACTIVE" : "INACTIVE");
+        Serial.print(", D10: ");
+        Serial.print(digitalRead(D10) == LOW ? "ACTIVE" : "INACTIVE");
+        Serial.print(", D9: ");
+        Serial.println(digitalRead(D9) == LOW ? "ACTIVE" : "INACTIVE");
+        lastPinCheck = currentMillis;
+    }
 
     trainController.updateSpeedTimer();
     inputController.handleSerialInput();

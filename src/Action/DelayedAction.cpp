@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include "Action/DelayedAction.hpp"
 #include "TrainController.hpp"
+#include "ActionController.hpp"
 
 /**
  * Constructor for DelayedAction.
@@ -35,6 +36,28 @@ void DelayedAction::execute(TrainController& controller) {
 }
 
 /**
+ * Executes the delayed action on the train controller with ActionController (blocking version).
+ * DEPRECATED: Use update() for non-blocking execution.
+ * @param controller The train controller to operate on.
+ * @param actionController The action controller for managing complex actions.
+ */
+[[deprecated("Use update() for non-blocking execution")]]
+void DelayedAction::execute(TrainController& controller, ActionController& actionController) {
+    // Start the timer and mark as active
+    startTime = millis();
+    isActive = true;
+    isCompleted = false;
+
+    Serial.println("Using deprecated execute method for DelayedAction with ActionController");
+    
+    // Block until delay is complete, then execute
+    while (!update(controller, actionController)) {
+        // Small delay to prevent busy waiting
+        delay(1);
+    }
+}
+
+/**
  * Non-blocking update method.
  * @param controller The train controller to operate on.
  * @return true if the action has completed, false if still waiting
@@ -56,6 +79,37 @@ bool DelayedAction::update(TrainController& controller) {
         // Execute the action
         if (action) {
             action->execute(controller);
+        }
+        isCompleted = true;
+        return true;
+    }
+    
+    return false; // Still waiting
+}
+
+/**
+ * Non-blocking update method with ActionController.
+ * @param controller The train controller to operate on.
+ * @param actionController The action controller for managing complex actions.
+ * @return true if the action has completed, false if still waiting
+ */
+bool DelayedAction::update(TrainController& controller, ActionController& actionController) {
+    if (isCompleted) {
+        return true;
+    }
+    
+    if (!isActive) {
+        // Start the timer
+        startTime = millis();
+        isActive = true;
+        return false;
+    }
+    
+    // Check if delay time has elapsed
+    if (millis() - startTime >= delayTime) {
+        // Execute the action with ActionController
+        if (action) {
+            action->execute(controller, actionController);
         }
         isCompleted = true;
         return true;

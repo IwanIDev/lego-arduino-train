@@ -7,7 +7,12 @@ PositionTracker::PositionTracker(SensorLocation startPosition)
 
 void PositionTracker::updatePosition(SensorLocation newPosition) {
     if (newPosition == currentPosition) {
-        // No change in position
+        // Same position triggered again - this often happens when reversing over the same sensor
+        // Don't update direction based on sensor movement in this case, trust the current direction
+        Serial.print("Same sensor triggered again at position: ");
+        Serial.print(static_cast<int>(currentPosition));
+        Serial.print(", keeping current direction: ");
+        Serial.println(currentDirection == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
         return;
     }
     

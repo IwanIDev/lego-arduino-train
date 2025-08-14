@@ -22,6 +22,9 @@ public:
     // Check all position actions and execute if conditions are met
     void checkAndExecuteActions(TrainController& trainController, ActionController& actionController);
     
+    // Access to position tracker
+    PositionTracker* getPositionTracker() { return &positionTracker; }
+    
     // Reset all position actions (useful when starting a new loop)
     void resetAllActions();
     

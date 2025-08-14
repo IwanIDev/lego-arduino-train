@@ -32,20 +32,18 @@ bool PositionAwareSensorController::checkSensorsAndUpdatePosition() {
     if (sensorTriggered && newLocation != SensorLocation::UNKNOWN && 
         (currentTime - lastTriggerTime) > DEBOUNCE_TIME) {
         
-        // Only update if the location actually changed
-        if (newLocation != lastTriggeredLocation) {
-            lastTriggeredLocation = newLocation;
-            lastTriggerTime = currentTime;
-            
-            // Update the position tracker
-            if (positionTracker) {
-                positionTracker->updatePosition(newLocation);
-            }
-            
-            Serial.print("Position updated to: ");
-            Serial.println(static_cast<int>(newLocation));
-            return true;
+        // Always update the position tracker - let it decide how to handle repeated positions
+        lastTriggeredLocation = newLocation;
+        lastTriggerTime = currentTime;
+        
+        // Update the position tracker
+        if (positionTracker) {
+            positionTracker->updatePosition(newLocation);
         }
+        
+        Serial.print("Sensor trigger processed for location: ");
+        Serial.println(static_cast<int>(newLocation));
+        return true;
     }
     
     return false;

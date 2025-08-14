@@ -82,9 +82,7 @@ bool SequentialAction::update(TrainController& controller, ActionController& act
     if (!isExecuting) {
         return true; // Already finished
     }
-    
-    Serial.println("Updating SequentialAction, current index: " + String(currentActionIndex));
-    
+        
     while (currentActionIndex < actions.size()) {
         auto& action = actions[currentActionIndex];
         

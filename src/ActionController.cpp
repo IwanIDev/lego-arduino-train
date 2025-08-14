@@ -48,7 +48,7 @@ void ActionController::addDelayedAction(std::unique_ptr<SensorAction> action, un
  * @param action The sequential action to add
  */
 void ActionController::addSequentialAction(std::unique_ptr<SequentialAction> action) {
-    if (action && trainController) {
+    if (action && trainController != nullptr) {
         // Execute the sequential action to initialize it, then add it for updating
         action->execute(*trainController, *this);
         activeSequentialActions.push_back(std::move(action));

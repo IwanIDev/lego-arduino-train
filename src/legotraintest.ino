@@ -71,7 +71,6 @@ void setupTrackLayout() {
     // Sequential action for reverse direction: STOP (delay) -> REVERSE (delay) -> SPEED
     {
         std::vector<std::unique_ptr<SensorAction>> reverseActions;
-        reverseActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(-1, 0)));
         reverseActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
             std::unique_ptr<SensorAction>(new StopAction(0)), 500
         )));
@@ -100,7 +99,7 @@ void setupTrackLayout() {
         westTunnel.forwardActions.push_back(std::unique_ptr<SequentialAction>(new SequentialAction(std::move(forwardActions))));
     }
 
-    westTunnel.reverseActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(1, 0)));
+    westTunnel.reverseActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(0, 0)));
 
     westTunnel.nextForward = SensorLocation::WEST_TUNNEL;
     westTunnel.nextReverse = SensorLocation::WEST_STATION;

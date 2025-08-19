@@ -12,20 +12,13 @@ TrainController::TrainController(byte motorPort)
 {}
 
 // Set the train state and mark as changed if different
-void TrainController::setState(SPEED newState) {
-    Serial.print("DEBUG: setState called - old state: ");
-    Serial.print(trainState);
-    Serial.print(", new state: ");
-    Serial.print(newState);
-    
+void TrainController::setState(SPEED newState) {    
     if (trainState != newState) {
         trainState = newState;
         stateChanged = true;
-        Serial.println(", state CHANGED, stateChanged set to true");
     } else {
         // Don't clear stateChanged if states are the same - preserve existing flag
-        Serial.print(", state SAME, stateChanged remains: ");
-        Serial.println(stateChanged);
+
     }
 }
 

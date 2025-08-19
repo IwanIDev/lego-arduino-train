@@ -66,7 +66,8 @@ void setupTrackLayout() {
     // WEST_STATION
     TrackSegment westStation;
     westStation.location = SensorLocation::WEST_STATION;
-    westStation.forwardActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(0, 0)));
+    // No forward actions needed for WEST_STATION - train just passes through
+    
     // Sequential action for reverse direction: STOP (delay) -> REVERSE (delay) -> SPEED
     {
         std::vector<std::unique_ptr<SensorAction>> reverseActions;

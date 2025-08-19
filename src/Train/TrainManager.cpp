@@ -168,15 +168,22 @@ void TrainManager::handlePositionUpdate() {
         return;
     }
     
+    // Store previous position and direction to detect changes
+    SensorLocation previousPosition = positionTracker->getCurrentPosition();
+    TrainDirection previousDirection = positionTracker->getDirection();
+    
     // Update sensor readings
-    positionAwareSensorController->checkSensorsAndUpdatePosition();
+    bool positionChanged = positionAwareSensorController->checkSensorsAndUpdatePosition();
     
-    // Check for position changes and execute position-based actions
+    // Check if position or direction changed
     SensorLocation currentPosition = positionTracker->getCurrentPosition();
-    TrainDirection direction = positionTracker->getDirection();
+    TrainDirection currentDirection = positionTracker->getDirection();
+    bool directionChanged = (previousDirection != currentDirection);
     
-    // Execute position-based actions for all trains
-    executePositionBasedActions(currentPosition, direction);
+    // Execute position-based actions if position changed OR direction changed
+    if (positionChanged || directionChanged) {
+        executePositionBasedActions(currentPosition, currentDirection);
+    }
 }
 
 void TrainManager::updateTrainConnections() {
@@ -230,8 +237,11 @@ void TrainManager::updateTrainControllers() {
     static size_t currentTrainIndex = 0;
     unsigned long currentTime = millis();
     
+    // For single train systems, update more frequently; for multi-train, space them out
+    unsigned long updateInterval = (trains.size() <= 1) ? 10 : 50; // 10ms for single train, 50ms for multi-train
+    
     // Space out train updates to avoid Bluetooth conflicts
-    if (currentTime - lastTrainUpdateTime >= 50) { // 50ms between train updates
+    if (currentTime - lastTrainUpdateTime >= updateInterval) {
         if (currentTrainIndex < trains.size()) {
             auto& train = trains[currentTrainIndex];
             
@@ -261,12 +271,37 @@ void TrainManager::selectBestTrainForPosition(SensorLocation position) {
     // In a more sophisticated system, this could consider proximity, train schedules, etc.
     for (auto& train : trains) {
         if (train->isConnected()) {
-            auto* positionController = train->getPositionSensorController();
-            if (positionController) {
-                // The position controller will handle the actual action execution
-                // based on the current position and direction
-                break; // Only apply to first connected train for now
+            // Get the track segment actions from the position tracker
+            TrainDirection direction = positionTracker->getDirection();
+            auto actions = positionTracker->getActionsForPosition(position, direction);
+            
+            // Execute each action through the train's action controller
+            auto* actionController = train->getActionController();
+            auto* trainController = train->getTrainController();
+            
+            if (actionController && trainController && !actions.empty()) {                
+                for (auto& action : actions) {
+                    if (action) {
+                        // Check if this is a SequentialAction and we already have active ones
+                        if (action->isSequentialAction() && actionController->hasActiveSequentialActions()) {
+                            Serial.println("SequentialAction already active, skipping duplicate position-based execution");
+                            continue;
+                        }
+                        
+                        // Handle SequentialActions specially - they need to be managed by ActionController
+                        if (action->isSequentialAction()) {
+                            Serial.println("TrainManager: Adding SequentialAction to ActionController for managed execution");
+                            // Cast to SequentialAction and create a fresh copy for the ActionController
+                            SequentialAction* sequentialAction = static_cast<SequentialAction*>(action.get());
+                            actionController->addSequentialAction(sequentialAction->createFresh());
+                        } else {
+                            // For immediate actions, execute directly
+                            action->execute(*trainController, *actionController);
+                        }
+                    }
+                }
             }
+            break; // Only apply to first connected train for now
         }
     }
 }

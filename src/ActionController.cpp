@@ -48,10 +48,24 @@ void ActionController::addDelayedAction(std::unique_ptr<SensorAction> action, un
  * @param action The sequential action to add
  */
 void ActionController::addSequentialAction(std::unique_ptr<SequentialAction> action) {
+    Serial.print("ActionController::addSequentialAction() called, action is ");
+    Serial.println(action ? "valid" : "null");
+    Serial.print("trainController is ");
+    Serial.println(trainController ? "valid" : "null");
+    
     if (action && trainController != nullptr) {
+        Serial.println("ActionController: Executing sequential action to initialize it");
         // Execute the sequential action to initialize it, then add it for updating
         action->execute(*trainController, *this);
+        
+        Serial.print("ActionController: Adding sequential action to list, current count=");
+        Serial.println(activeSequentialActions.size());
         activeSequentialActions.push_back(std::move(action));
+        
+        Serial.print("ActionController: Sequential action added, new count=");
+        Serial.println(activeSequentialActions.size());
+    } else {
+        Serial.println("ActionController: Cannot add sequential action - null action or trainController");
     }
 }
 
@@ -62,6 +76,18 @@ void ActionController::addSequentialAction(std::unique_ptr<SequentialAction> act
 void ActionController::update() {
     if (trainController == nullptr) {
         return;
+    }
+    
+    static unsigned long lastUpdateDebug = 0;
+    unsigned long currentTime = millis();
+    
+    // Debug output every 200ms to avoid spam
+    if (currentTime - lastUpdateDebug > 200) {
+        Serial.print("ActionController::update() - Active delayed: ");
+        Serial.print(activeDelayedActions.size());
+        Serial.print(", Active sequential: ");
+        Serial.println(activeSequentialActions.size());
+        lastUpdateDebug = currentTime;
     }
     
     // Update position-based actions if available
@@ -79,13 +105,22 @@ void ActionController::update() {
     );
     
     // Update all sequential actions and remove completed ones
+    Serial.print("ActionController: Before updating sequential actions, count=");
+    Serial.println(activeSequentialActions.size());
+    
     activeSequentialActions.erase(
         std::remove_if(activeSequentialActions.begin(), activeSequentialActions.end(),
             [this](std::unique_ptr<SequentialAction>& action) {
-                return action->update(*trainController, *this);
+                bool isFinished = action->update(*trainController, *this);
+                Serial.print("ActionController: SequentialAction update returned: ");
+                Serial.println(isFinished ? "TRUE (remove)" : "FALSE (keep)");
+                return isFinished;
             }),
         activeSequentialActions.end()
     );
+    
+    Serial.print("ActionController: After updating sequential actions, count=");
+    Serial.println(activeSequentialActions.size());
 }
 
 /**

@@ -187,9 +187,38 @@ void TrainManager::updateTrainConnections() {
         return;
     }
     
+    // Count how many trains are already connected
+    int connectedTrains = 0;
+    for (auto& train : trains) {
+        if (train->isConnected()) {
+            connectedTrains++;
+        }
+    }
+    
+    // If we have a single hub setup, only allow one train to connect
+    // TODO: Make this configurable based on actual hardware setup
+    const int MAX_CONCURRENT_CONNECTIONS = 1;
+    
+    if (connectedTrains >= MAX_CONCURRENT_CONNECTIONS) {
+        // Skip connection attempts if we're at the limit
+        lastBluetoothAttempt = currentTime;
+        return;
+    }
+    
+    // Try to connect one disconnected train
     for (auto& train : trains) {
         if (!train->isConnected()) {
-            train->connect();
+            Serial.print("Attempting connection for train: ");
+            Serial.println(train->getHubName());
+            
+            bool connectionResult = train->connect();
+            if (connectionResult) {
+                connectedTrains++;
+                if (connectedTrains >= MAX_CONCURRENT_CONNECTIONS) {
+                    break; // Stop trying to connect more trains
+                }
+            }
+            break; // Only try one train per update cycle
         }
     }
     
@@ -197,10 +226,27 @@ void TrainManager::updateTrainConnections() {
 }
 
 void TrainManager::updateTrainControllers() {
-    for (auto& train : trains) {
-        train->update();
-        train->handleSerialInput();
-        train->handleButtonInput();
+    static unsigned long lastTrainUpdateTime = 0;
+    static size_t currentTrainIndex = 0;
+    unsigned long currentTime = millis();
+    
+    // Space out train updates to avoid Bluetooth conflicts
+    if (currentTime - lastTrainUpdateTime >= 50) { // 50ms between train updates
+        if (currentTrainIndex < trains.size()) {
+            auto& train = trains[currentTrainIndex];
+            
+            // Only update trains that are actually connected
+            if (train->isConnected()) {                
+                train->update();
+                train->handleSerialInput();
+                train->handleButtonInput();
+            }
+            
+            currentTrainIndex++;
+            lastTrainUpdateTime = currentTime;
+        } else {
+            currentTrainIndex = 0; // Reset to first train
+        }
     }
 }
 

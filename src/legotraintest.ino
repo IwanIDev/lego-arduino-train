@@ -17,6 +17,7 @@
 #include "PositionTracker.hpp"
 #include "PositionAwareSensorController.hpp"
 #include "PositionSensorController.hpp"
+#include "Train/TrainManager.hpp"
 #include <memory>
 
 Lpf2Hub trainHub;
@@ -31,9 +32,6 @@ const long speedSwitchInterval = 100;
 const int LIGHT_SENSOR_THRESHOLD = 20; // Percentage threshold for light level detection
 const int LIGHT_SENSOR_TIMEOUT_THRESHOLD = 500;
 
-BluetoothController bluetoothController(&trainHub);
-TrainController trainController(MOTOR_PORT);
-InputController inputController(&trainController, fastButton, slowButton);
 LightSensor sensors[] = {
     // LightSensor(A0, LIGHT_SENSOR_THRESHOLD, SensorLocation::STATION_STOP, std::unique_ptr<StopAction>(new StopAction(100))),
     // LightSensor(A1, LIGHT_SENSOR_THRESHOLD, SensorLocation::DIRECTION_CHANGE, std::unique_ptr<ReverseAction>(new ReverseAction(0))),
@@ -48,7 +46,6 @@ ReedSwitchSensor reedSwitchSensors[] = {
     ReedSwitchSensor(D9, SensorLocation::EAST_TUNNEL),
 };
 ReedSwitchSensorController reedSwitchSensorController;
-ActionController actionController(&trainController);
 
 // Position tracking components
 PositionTracker positionTracker(SensorLocation::WEST_STATION); // Start at first sensor
@@ -56,6 +53,9 @@ PositionAwareSensorController positionAwareSensorController(&reedSwitchSensorCon
 
 // Position-based action controller
 PositionSensorController positionSensorController(positionTracker);
+
+// Train Manager
+TrainManager trainManager(&positionAwareSensorController, &positionTracker, &reedSwitchSensorController, &lightSensorController);
 
 // Setup track layout with sensor position relationships
 void setupTrackLayout() {
@@ -114,9 +114,7 @@ void printCurrentPosition() {
     Serial.print(getPositionName(positionTracker.getPreviousPosition()));
     Serial.print(", PositionTracker Direction: ");
     Serial.print(positionTracker.getDirection() == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
-    Serial.print(", TrainController Reverse: ");
-    Serial.print(trainController.getReverse() ? "ON" : "OFF");
-    Serial.println(")");
+    Serial.println();
 }
 
 // Helper function to manually set position (useful for testing)
@@ -140,179 +138,58 @@ String getPositionName(SensorLocation location) {
 
 void setup() {
     Serial.begin(115200);
-    delay(1000); // Give time for the serial connection to establish
-    Serial.println("Initializing LEGO Train Position Tracking System");
+    delay(1000);
+    Serial.println("Initializing Multi-Train LEGO System");
     
     // Setup sensors
-    Serial.println("Setting up train controller...");
     for (auto& sensor : reedSwitchSensors) {
         reedSwitchSensorController.addSensor(&sensor);
     }
-    Serial.println("Set up train controller");
     
-    // Setup track layout for position tracking
+    // Setup track layout
     setupTrackLayout();
     
-    // Connect the position-based controller to the action controller
-    actionController.setPositionController(&positionSensorController);
-    Serial.println("Position-based action system enabled");
+    // Add trains to the manager
+    TrainConfig train1Config;
+    train1Config.hubName = "Train1";
+    train1Config.motorPort = MOTOR_PORT;
+    train1Config.fastButtonPin = fastButton;
+    train1Config.slowButtonPin = slowButton;
+    size_t train1Index = trainManager.addTrain(train1Config);
     
-    // Synchronize direction between TrainController and PositionTracker at startup
-    TrainDirection positionTrackerDirection = positionTracker.getDirection();
-    bool trainControllerReverse = trainController.getReverse();
+    TrainConfig train2Config;
+    train2Config.hubName = "Train2";
+    train2Config.motorPort = MOTOR_PORT;
+    train2Config.fastButtonPin = fastButton;
+    train2Config.slowButtonPin = slowButton;
+    size_t train2Index = trainManager.addTrain(train2Config);
     
-    // Convert PositionTracker direction to TrainController reverse boolean
-    // FORWARD = false (not reverse), REVERSE = true (reverse)
-    bool expectedReverse = (positionTrackerDirection == TrainDirection::REVERSE);
-    
-    if (trainControllerReverse != expectedReverse) {
-        Serial.print("Synchronizing directions at startup: TrainController was ");
-        Serial.print(trainControllerReverse ? "REVERSE" : "FORWARD");
-        Serial.print(", PositionTracker was ");
-        Serial.print(positionTrackerDirection == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
-        
-        trainController.setReverse(expectedReverse);
-        Serial.print(" -> Both now set to ");
-        Serial.println(expectedReverse ? "REVERSE" : "FORWARD");
+    // Initialize the train manager
+    if (trainManager.initialize()) {
+        Serial.println("Multi-train system initialized successfully");
     } else {
-        Serial.print("Directions already synchronized: ");
-        Serial.println(expectedReverse ? "REVERSE" : "FORWARD");
+        Serial.println("Failed to initialize multi-train system");
     }
     
-    Serial.println("Position tracking system initialized");
-    Serial.print("Starting position: ");
-    Serial.println(static_cast<int>(positionTracker.getCurrentPosition()));
+    // Print initial status
+    printCurrentPosition();
+    
+    Serial.println("\nSystem ready. Use serial commands to control trains.");
+    Serial.println("Type 'help' for available commands.");
 }
 
 void loop() {
-    unsigned long currentMillis = millis();
-    unsigned long deltaT = currentMillis - previousMillis; // Time elapsed between last speed change and now.
-
-    // Debug: Periodically check raw pin states
-    static unsigned long lastPinCheck = 0;
-    if (currentMillis - lastPinCheck > 5000) { // Every 5 seconds
-        Serial.print("PIN STATE CHECK - D12: ");
-        Serial.print(digitalRead(D12) == LOW ? "ACTIVE" : "INACTIVE");
-        Serial.print(", D11: ");
-        Serial.print(digitalRead(D11) == LOW ? "ACTIVE" : "INACTIVE");
-        Serial.print(", D10: ");
-        Serial.print(digitalRead(D10) == LOW ? "ACTIVE" : "INACTIVE");
-        Serial.print(", D9: ");
-        Serial.println(digitalRead(D9) == LOW ? "ACTIVE" : "INACTIVE");
-        lastPinCheck = currentMillis;
-    }
-
-    trainController.updateSpeedTimer();
-    inputController.handleSerialInput();
-    inputController.handleButtonInput(trainController.getState());
-
-    // Check sensors and update position automatically
-    if (positionAwareSensorController.checkSensorsAndUpdatePosition()) {
-        // Position was updated - execute position-based actions
-        SensorLocation currentPos = positionTracker.getCurrentPosition();
-        TrainDirection currentDir = positionTracker.getDirection();
-        
-        Serial.print("Executing actions for position: ");
-        Serial.print(getPositionName(currentPos));
-        Serial.print(" in direction: ");
-        Serial.println(currentDir == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
-        
-        // Get and execute position-based actions
-        auto actions = positionTracker.getActionsForPosition(currentPos, currentDir);
-        Serial.print("Found ");
-        Serial.print(actions.size());
-        Serial.println(" actions to execute");
-        
-        for (size_t i = 0; i < actions.size(); i++) {
-            auto& action = actions[i];
-            if (!action) {
-                Serial.print("Action ");
-                Serial.print(i);
-                Serial.println(" is null, skipping");
-                continue;
-            }
-            
-            Serial.print("Processing action ");
-            Serial.print(i);
-            Serial.print(": ");
-            
-            if (action->isDelayedAction()) {
-                Serial.println("DelayedAction detected");
-                DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
-                actionController.addDelayedAction(delayedAction->createFresh());
-                Serial.println("Added DelayedAction to ActionController");
-            } else if (action->isSequentialAction()) {
-                Serial.println("SequentialAction detected");
-                SequentialAction* sequentialAction = static_cast<SequentialAction*>(action.get());
-                actionController.addSequentialAction(sequentialAction->createFresh());
-                Serial.println("Added SequentialAction to ActionController");
-            } else {
-                Serial.println("Immediate action detected");
-                action->execute(trainController, actionController);
-                Serial.println("Executed immediate action");
-            }
-        }
-        
-        // Print current position for debugging
+    // Update the train manager (handles all trains)
+    trainManager.update();
+    
+    // Print status periodically
+    static unsigned long lastStatusPrint = 0;
+    unsigned long currentTime = millis();
+    if (currentTime - lastStatusPrint > 10000) { // Every 10 seconds
         printCurrentPosition();
+        lastStatusPrint = currentTime;
     }
-
-    actionController.update(); // Update all delayed actions
     
-    // Debug: Show active actions
-    static unsigned long lastDebugPrint = 0;
-    if (currentMillis - lastDebugPrint > 2000) { // Print every 2 seconds
-        if (actionController.hasActiveActions()) {
-            Serial.print("Active actions: DelayedActions=");
-            Serial.print(actionController.getActiveDelayedActionsCount());
-            Serial.print(", SequentialActions=");
-            Serial.println(actionController.getActiveSequentialActionsCount());
-        }
-        lastDebugPrint = currentMillis;
-    }
-
-    
-    // Try to connect to Bluetooth, but don't block the entire loop
-    static unsigned long lastBluetoothAttempt = 0;
-    const unsigned long bluetoothRetryInterval = 5000; // Retry every 5 seconds
-    
-    if (currentMillis - lastBluetoothAttempt > bluetoothRetryInterval) {
-        if (!bluetoothController.connect()) {
-            Serial.println("Bluetooth connection failed - retrying in 5 seconds");
-            lastBluetoothAttempt = currentMillis;
-            return; // Try again later
-        }
-        lastBluetoothAttempt = currentMillis;
-    }
-
-    // Only proceed with motor control if we have a Bluetooth connection
-    if (!bluetoothController.isConnected()) {
-        // Print status every 10 seconds to show the system is running
-        static unsigned long lastStatusPrint = 0;
-        const unsigned long statusPrintInterval = 10000;
-        
-        if (currentMillis - lastStatusPrint > statusPrintInterval) {
-            Serial.println("System running - waiting for Bluetooth connection...");
-            lastStatusPrint = currentMillis;
-        }
-        return;
-    }
-
-    if (deltaT < speedSwitchInterval) { // If we haven't reached the interval to change speed we should not change the speed.
-        return;
-    }
-
-    previousMillis = currentMillis;
-
-    char hubName[] = "trainHub";
-    trainHub.setHubName(hubName);
-
-    SPEED currentState = trainController.getState();
-    int speed = trainController.getSpeed(currentState);
-
-    if (trainController.hasStateChanged()) {
-        trainController.printState();
-    }
-
-    bluetoothController.setMotorSpeed(MOTOR_PORT, speed);
+    // Small delay to prevent overwhelming the system
+    delay(10);
 }

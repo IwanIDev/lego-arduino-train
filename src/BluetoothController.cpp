@@ -36,20 +36,72 @@ bool BluetoothController::connect() {
 }
 
 bool BluetoothController::isConnected() const {
-        return trainHub->isConnected();
+        // Check if trainHub exists
+        if (!trainHub) {
+                return false;
+        }
+        
+        // Get the connection state safely with additional validation
+        bool hubConnected = trainHub->isConnected();
+        
+        // Validate the return value makes sense (should be 0 or 1)
+        // If we get garbage values like 145, treat as not connected
+        if (hubConnected != 0 && hubConnected != 1) {
+                return false;
+        }
+        
+        return hubConnected;
 }
 
 void BluetoothController::setMotorSpeed(byte port, int speed) {
-        if (!isConnected()) {
+        if (!isConnected() || !trainHub) {
+                Serial.println("Cannot set motor speed: No connection or null hub");
                 return;
         }
+        
+        // Additional safety checks - ensure hub is still properly connected
+        if (!trainHub->isConnected()) {
+                Serial.println("Warning: Hub connection lost during motor speed setting");
+                return;
+        }
+        
+        // Add extra validation for hub state
+        if (!trainHub) {
+                Serial.println("Error: trainHub is null");
+                return;
+        }
+        
+        // Add a small delay to ensure the Bluetooth stack is ready
+        delay(10); // Increased delay for better stability
+        
+        // Final check before the potentially dangerous operation
+        if (!trainHub->isConnected()) {
+                Serial.println("Warning: Hub connection lost just before motor command");
+                return;
+        }
+        
+        // Attempt to set motor speed with basic error handling
+        Serial.print("Setting motor speed: port=");
+        Serial.print(port);
+        Serial.print(", speed=");
+        Serial.println(speed);
+        
         trainHub->setBasicMotorSpeed(port, speed);
+        
+        Serial.println("Motor speed command sent successfully");
 }
 
 void BluetoothController::setHubName(const char* name) {
-        if (!isConnected()) {
+        if (!isConnected() || !trainHub) {
                 return;
         }
+        
+        // Additional safety check - ensure hub is still properly connected
+        if (!trainHub->isConnected()) {
+                Serial.println("Warning: Hub connection lost during hub name setting");
+                return;
+        }
+        
         trainHub->setHubName((char*) name);
 }
 

@@ -35,6 +35,9 @@ private:
     // State
     bool connected;
     unsigned long lastConnectionAttempt;
+    unsigned long connectionTimestamp;
+    unsigned long lastCommandTimestamp;
+    bool firstCommandSent;
     
 public:
     TrainInstance(const TrainConfig& trainConfig, size_t id, PositionTracker* positionTracker);
@@ -46,6 +49,7 @@ public:
     // Connection management
     bool connect();
     bool isConnected() const { return connected && bluetoothController->isConnected(); }
+    bool validateConnection();
     unsigned long getLastConnectionAttempt() const { return lastConnectionAttempt; }
     
     // Control

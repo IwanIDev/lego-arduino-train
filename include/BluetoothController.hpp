@@ -1,3 +1,6 @@
+#ifndef BLUETOOTHCONTROLLER_HPP
+#define BLUETOOTHCONTROLLER_HPP
+
 #include "Lpf2Hub.h"
 
 class BluetoothController {
@@ -16,3 +19,5 @@ public:
   String getHubAddress();
   String getHubName();
 };
+
+#endif // BLUETOOTHCONTROLLER_HPP

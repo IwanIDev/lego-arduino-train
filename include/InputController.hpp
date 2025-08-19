@@ -1,3 +1,5 @@
+#ifndef INPUTCONTROLLER_HPP
+#define INPUTCONTROLLER_HPP
 #include "TrainController.hpp"
 
 class InputController {
@@ -16,3 +18,5 @@ public:
   void handleButtonInput(SPEED oldState);
   void handleSerialInput();
 };
+
+#endif // INPUTCONTROLLER_HPP

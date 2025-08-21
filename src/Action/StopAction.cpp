@@ -11,6 +11,7 @@ void StopAction::execute(TrainController& controller) {
     Serial.println(controller.getState());
     
     controller.setState(STOPPED);
+    controller.setSpeedMultiplier(0);
     
     Serial.print("StopAction: State set to STOPPED, final state=");
     Serial.println(controller.getState());

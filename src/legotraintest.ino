@@ -164,11 +164,11 @@ void setup() {
     }
     
     // Attach interrupts to sensor pins for more reliable detection
-    attachInterrupt(digitalPinToInterrupt(D12), sensorISR, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(D11), sensorISR, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(D10), sensorISR, CHANGE);
-    attachInterrupt(digitalPinToInterrupt(D9), sensorISR, CHANGE);
-    Serial.println("Sensor interrupts attached to pins D12, D11, D10, D9");
+    // attachInterrupt(digitalPinToInterrupt(D12), sensorISR, CHANGE);
+    // attachInterrupt(digitalPinToInterrupt(D11), sensorISR, CHANGE);
+    // attachInterrupt(digitalPinToInterrupt(D10), sensorISR, CHANGE);
+    // attachInterrupt(digitalPinToInterrupt(D9), sensorISR, CHANGE);
+    // Serial.println("Sensor interrupts attached to pins D12, D11, D10, D9");
     
     // Setup track layout
     setupTrackLayout();

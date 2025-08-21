@@ -47,20 +47,6 @@ ReedSwitchSensor reedSwitchSensors[] = {
 };
 ReedSwitchSensorController reedSwitchSensorController;
 
-// Interrupt flags for sensor detection
-volatile bool sensorInterruptFlag = false;
-volatile unsigned long lastInterruptTime = 0;
-
-// Interrupt Service Routine for sensor detection
-void IRAM_ATTR sensorISR() {
-    unsigned long currentTime = millis();
-    // Debounce: ignore interrupts within 50ms of the last one
-    if (currentTime - lastInterruptTime > 50) {
-        sensorInterruptFlag = true;
-        lastInterruptTime = currentTime;
-    }
-}
-
 // Position tracking components
 PositionTracker positionTracker(SensorLocation::WEST_STATION); // Start at first sensor
 PositionAwareSensorController positionAwareSensorController(&reedSwitchSensorController, &lightSensorController, &positionTracker);
@@ -203,14 +189,6 @@ void setup() {
 }
 
 void loop() {
-    // Check for sensor interrupt flag
-    if (sensorInterruptFlag) {
-        sensorInterruptFlag = false;
-        Serial.println("*** SENSOR INTERRUPT DETECTED - Forcing immediate sensor check ***");
-        // Force immediate sensor update
-        positionAwareSensorController.checkSensorsAndUpdatePosition();
-    }
-    
     // Update the train manager (handles all trains)
     trainManager.update();
     

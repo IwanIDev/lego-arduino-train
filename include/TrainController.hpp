@@ -39,7 +39,10 @@ public:
   SPEED getState();
   bool hasStateChanged();
   void clearStateChanged();
-  
+
+  void setSpeedMultiplier(float multiplier);
+  float getSpeedMultiplier() const;
+
   int getSpeed(SPEED state);
   bool canUpdateSpeed();
   void updateSpeedTimer();
@@ -48,9 +51,6 @@ public:
 
   void incrementSpeed();
   void decrementSpeed();
-  float getSpeedMultiplier() const {
-    return speedMultiplier;
-  }
 };
 
 #endif // TRAINCONTROLLER_HPP

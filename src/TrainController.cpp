@@ -149,3 +149,23 @@ void TrainController::decrementSpeed() {
     Serial.print(", newState: ");
     Serial.println(trainState);
 }
+
+void TrainController::setSpeedMultiplier(float multiplier) {
+    if (multiplier < MIN_MULTIPLIER) {
+        speedMultiplier = MIN_MULTIPLIER;
+    } else if (multiplier > MAX_MULTIPLIER) {
+        speedMultiplier = MAX_MULTIPLIER;
+    } else {
+        speedMultiplier = multiplier;
+    }
+
+    if (speedMultiplier <= 0) {
+        setState(STOPPED);
+    } else {
+        setState(GO);
+    }
+}
+
+float TrainController::getSpeedMultiplier() const {
+    return speedMultiplier;
+}

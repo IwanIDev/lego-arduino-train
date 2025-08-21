@@ -12,7 +12,7 @@ private:
     PositionTracker* positionTracker;
     SensorLocation lastTriggeredLocation;
     unsigned long lastTriggerTime;
-    static const unsigned long DEBOUNCE_TIME = 200; // ms to prevent duplicate triggers
+    static const unsigned long DEBOUNCE_TIME = 100; // Reduced from 200ms to 100ms for faster response
     
 public:
     PositionAwareSensorController(ReedSwitchSensorController* reedController, 

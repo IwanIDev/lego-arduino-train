@@ -40,7 +40,7 @@ private:
     // System state
     bool initialized;
     unsigned long lastUpdate;
-    static const unsigned long UPDATE_INTERVAL = 50; // 50ms update interval
+    static const unsigned long UPDATE_INTERVAL = 10; // 10ms update interval for more responsive sensor detection
     
     // Connection management
     unsigned long lastBluetoothAttempt;

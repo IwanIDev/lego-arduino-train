@@ -13,7 +13,7 @@ ReedSwitchSensor::ReedSwitchSensor(int pin, SensorLocation loc, std::unique_ptr<
       lastState(false),
       trainDetected(false),
       lastDebounceTime(0),
-      debounceDelay(50),
+      debounceDelay(25), // Reduced from 50ms to 25ms for faster response
       timeout(0),
       timeoutThreshold(0), // Default timeout threshold of 250 milliseconds
       location(loc),
@@ -29,7 +29,7 @@ ReedSwitchSensor::ReedSwitchSensor(int pin, SensorLocation loc)
       lastState(false),
       trainDetected(false),
       lastDebounceTime(0),
-      debounceDelay(50),
+      debounceDelay(25), // Reduced from 50ms to 25ms for faster response
       timeout(0),
       timeoutThreshold(0),
       location(loc),
@@ -81,6 +81,21 @@ bool ReedSwitchSensor::isStateStable() {
 bool ReedSwitchSensor::detectPassingTrain() {
     bool stateChanged = isStateStable();
     bool currentReading = readPin();
+    
+    // Debug: Print current reading state for monitoring
+    static unsigned long lastDebugPrint = 0;
+    unsigned long currentTime = millis();
+    if (currentTime - lastDebugPrint > 1000) { // Debug every 1 second
+        Serial.print("Sensor Pin ");
+        Serial.print(pin);
+        Serial.print(" - Raw reading: ");
+        Serial.print(currentReading ? "ACTIVE" : "INACTIVE");
+        Serial.print(", Current state: ");
+        Serial.print(currentState ? "ACTIVE" : "INACTIVE");
+        Serial.print(", Train detected: ");
+        Serial.println(trainDetected ? "YES" : "NO");
+        lastDebugPrint = currentTime;
+    }
     
     // If the timeout hasn't been reached, we do not detect a train, irrespective of
     // if the reed switch is triggered or not.

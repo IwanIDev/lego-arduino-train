@@ -47,6 +47,20 @@ ReedSwitchSensor reedSwitchSensors[] = {
 };
 ReedSwitchSensorController reedSwitchSensorController;
 
+// Interrupt flags for sensor detection
+volatile bool sensorInterruptFlag = false;
+volatile unsigned long lastInterruptTime = 0;
+
+// Interrupt Service Routine for sensor detection
+void IRAM_ATTR sensorISR() {
+    unsigned long currentTime = millis();
+    // Debounce: ignore interrupts within 50ms of the last one
+    if (currentTime - lastInterruptTime > 50) {
+        sensorInterruptFlag = true;
+        lastInterruptTime = currentTime;
+    }
+}
+
 // Position tracking components
 PositionTracker positionTracker(SensorLocation::WEST_STATION); // Start at first sensor
 PositionAwareSensorController positionAwareSensorController(&reedSwitchSensorController, &lightSensorController, &positionTracker);
@@ -60,6 +74,9 @@ TrainManager trainManager(&positionAwareSensorController, &positionTracker, &ree
 // Setup track layout with sensor position relationships
 void setupTrackLayout() {
     Serial.println("Setting up track layout...");
+
+    const int SPEED_WEST_STATION = 3;
+    const int SPEED_WEST_TUNNEL = 3;
 
     // CURRENT LAYOUT: WEST_STATION <-> WEST_TUNNEL (bidirectional)
 
@@ -77,7 +94,7 @@ void setupTrackLayout() {
         reverseActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
             std::unique_ptr<SensorAction>(new ReverseAction(0)), 500
         )));
-        reverseActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(2, 0)));
+        reverseActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(SPEED_WEST_TUNNEL, 0)));
         westStation.reverseActions.push_back(std::unique_ptr<SequentialAction>(new SequentialAction(std::move(reverseActions))));
     }
     westStation.nextForward = SensorLocation::WEST_TUNNEL;
@@ -95,7 +112,7 @@ void setupTrackLayout() {
         forwardActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
             std::unique_ptr<SensorAction>(new ReverseAction(0)), 500
         )));
-        forwardActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(2, 0)));
+        forwardActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(SPEED_WEST_STATION, 0)));
         westTunnel.forwardActions.push_back(std::unique_ptr<SequentialAction>(new SequentialAction(std::move(forwardActions))));
     }
 
@@ -146,6 +163,13 @@ void setup() {
         reedSwitchSensorController.addSensor(&sensor);
     }
     
+    // Attach interrupts to sensor pins for more reliable detection
+    attachInterrupt(digitalPinToInterrupt(D12), sensorISR, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(D11), sensorISR, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(D10), sensorISR, CHANGE);
+    attachInterrupt(digitalPinToInterrupt(D9), sensorISR, CHANGE);
+    Serial.println("Sensor interrupts attached to pins D12, D11, D10, D9");
+    
     // Setup track layout
     setupTrackLayout();
     
@@ -179,17 +203,39 @@ void setup() {
 }
 
 void loop() {
+    // Check for sensor interrupt flag
+    if (sensorInterruptFlag) {
+        sensorInterruptFlag = false;
+        Serial.println("*** SENSOR INTERRUPT DETECTED - Forcing immediate sensor check ***");
+        // Force immediate sensor update
+        positionAwareSensorController.checkSensorsAndUpdatePosition();
+    }
+    
     // Update the train manager (handles all trains)
     trainManager.update();
     
     // Print status periodically
     static unsigned long lastStatusPrint = 0;
     unsigned long currentTime = millis();
-    if (currentTime - lastStatusPrint > 10000) { // Every 10 seconds
+    if (currentTime - lastStatusPrint > 5000) { // Every 5 seconds
         printCurrentPosition();
         lastStatusPrint = currentTime;
     }
+
+    // Debug: Periodically check raw pin states
+    static unsigned long lastPinCheck = 0;
+    if (currentTime - lastPinCheck > 2000) { // Every 2 seconds for more frequent monitoring
+        Serial.print("PIN STATE CHECK - D12: ");
+        Serial.print(digitalRead(D12) == LOW ? "ACTIVE" : "INACTIVE");
+        Serial.print(", D11: ");
+        Serial.print(digitalRead(D11) == LOW ? "ACTIVE" : "INACTIVE");
+        Serial.print(", D10: ");
+        Serial.print(digitalRead(D10) == LOW ? "ACTIVE" : "INACTIVE");
+        Serial.print(", D9: ");
+        Serial.println(digitalRead(D9) == LOW ? "ACTIVE" : "INACTIVE");
+        lastPinCheck = currentTime;
+    }
     
-    // Small delay to prevent overwhelming the system
-    delay(10);
+    // Reduced delay for more responsive sensor polling
+    delay(1);
 }

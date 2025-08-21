@@ -42,15 +42,12 @@ bool BluetoothController::isConnected() const {
         }
         
         // Get the connection state safely with additional validation
-        bool hubConnected = trainHub->isConnected();
+        int hubConnected = (int) trainHub->isConnected();
         
         // Validate the return value makes sense (should be 0 or 1)
-        // If we get garbage values like 145, treat as not connected
-        if (hubConnected != 0 && hubConnected != 1) {
-                return false;
-        }
-        
-        return hubConnected;
+        // Any result other than 1 is treated as false.
+
+        return (hubConnected == 1) ? true : false;
 }
 
 void BluetoothController::setMotorSpeed(byte port, int speed) {

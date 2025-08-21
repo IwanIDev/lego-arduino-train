@@ -58,32 +58,30 @@ bool TrainInstance::connect() {
     Serial.print("Attempting to connect train: ");
     Serial.println(hubName);
     
-    connected = bluetoothController->connect();
+    if (!bluetoothController->connect()) return false;
     
-    if (connected) {
-        // Wait a bit for the connection to stabilize
-        delay(100);
-        
-        // Verify the connection is actually stable
-        if (bluetoothController->isConnected()) {
-            Serial.print("Successfully connected train: ");
-            Serial.println(hubName);
-            connectionTimestamp = millis(); // Record when we connected
-            
-            // Set hub name if specified and we're connected
-            if (hubName.length() > 0) {
-                bluetoothController->setHubName(hubName.c_str());
-            }
-        } else {
-            // Connection was reported as successful but isn't stable
-            Serial.print("Connection unstable for train: ");
-            Serial.println(hubName);
-            connected = false;
-            firstCommandSent = false;
-        }
+    // Wait a bit for the connection to stabilize
+    delay(100);
+    
+    // Verify the connection is actually stable
+    if (!bluetoothController->isConnected()) {
+        // Connection was reported as successful but isn't stable
+        Serial.print("Connection unstable for train: ");
+        Serial.println(hubName);
+        connected = false;
+        firstCommandSent = false;
     }
+
+    Serial.print("Successfully connected train: ");
+    Serial.println(hubName);
+    connectionTimestamp = millis(); // Record when we connected
     
-    return connected;
+    // Set hub name if specified and we're connected
+    if (hubName.length() > 0) {
+        bluetoothController->setHubName(hubName.c_str());
+    }
+
+    return true;
 }
 
 void TrainInstance::update() {

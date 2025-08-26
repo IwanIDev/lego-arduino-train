@@ -373,6 +373,8 @@ void TrainManager::selectBestTrainForPosition(SensorLocation position) {
         if (positionChanged || directionChanged) {
             executePositionBasedActions(i, currentPosition, currentDirection);
         }
+
+        break; // Only one train should respond to a position trigger
     }
 }
 

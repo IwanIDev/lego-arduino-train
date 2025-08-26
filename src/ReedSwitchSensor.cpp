@@ -82,21 +82,6 @@ bool ReedSwitchSensor::detectPassingTrain() {
     bool stateChanged = isStateStable();
     bool currentReading = readPin();
     
-    // Debug: Print current reading state for monitoring
-    static unsigned long lastDebugPrint = 0;
-    unsigned long currentTime = millis();
-    if (currentTime - lastDebugPrint > 1000) { // Debug every 1 second
-        Serial.print("Sensor Pin ");
-        Serial.print(pin);
-        Serial.print(" - Raw reading: ");
-        Serial.print(currentReading ? "ACTIVE" : "INACTIVE");
-        Serial.print(", Current state: ");
-        Serial.print(currentState ? "ACTIVE" : "INACTIVE");
-        Serial.print(", Train detected: ");
-        Serial.println(trainDetected ? "YES" : "NO");
-        lastDebugPrint = currentTime;
-    }
-    
     // If the timeout hasn't been reached, we do not detect a train, irrespective of
     // if the reed switch is triggered or not.
     if (millis() - timeout <= timeoutThreshold) {

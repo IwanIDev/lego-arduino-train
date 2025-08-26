@@ -151,60 +151,6 @@ void setupTrackLayoutForTracker(PositionTracker& positionTracker) {
     positionTracker.addTrackSegment(eastTunnel);
 }
 
-// Legacy function maintained for compatibility
-void setupTrackLayout() {
-    // This function is now empty since individual trains handle their own track layout
-}
-
-void printCurrentPosition() {
-    Serial.println("=== Train Positions ===");
-    for (size_t i = 0; i < trainManager.getTrainCount(); i++) {
-        TrainInstance* train = trainManager.getTrain(i);
-        if (train && train->getPositionTracker()) {
-            PositionTracker* tracker = train->getPositionTracker();
-            Serial.print("Train ");
-            Serial.print(i);
-            Serial.print(" (");
-            Serial.print(train->getHubName());
-            Serial.print("): Position: ");
-            Serial.print(getPositionName(tracker->getCurrentPosition()));
-            Serial.print(" (Previous: ");
-            Serial.print(getPositionName(tracker->getPreviousPosition()));
-            Serial.print(", Direction: ");
-            Serial.print(tracker->getDirection() == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
-            Serial.println(")");
-        }
-    }
-    Serial.println("======================");
-}
-
-// Helper function to manually set position for a specific train (useful for testing)
-void setManualPosition(size_t trainIndex, SensorLocation position) {
-    TrainInstance* train = trainManager.getTrain(trainIndex);
-    if (train && train->getPositionTracker()) {
-        Serial.print("Manually setting train ");
-        Serial.print(trainIndex);
-        Serial.print(" position to: ");
-        Serial.println(static_cast<int>(position));
-        train->getPositionTracker()->updatePosition(position);
-        printCurrentPosition();
-    } else {
-        Serial.print("Invalid train index: ");
-        Serial.println(trainIndex);
-    }
-}
-
-// Helper function to get position name for debugging
-String getPositionName(SensorLocation location) {
-    switch (location) {
-        case SensorLocation::WEST_STATION: return "WEST_STATION";
-        case SensorLocation::WEST_TUNNEL: return "WEST_TUNNEL";
-        case SensorLocation::EAST_STATION: return "EAST_STATION";
-        case SensorLocation::EAST_TUNNEL: return "EAST_TUNNEL";
-        default: return "UNKNOWN";
-    }
-}
-
 void setup() {
     Serial.begin(115200);
     delay(1000);
@@ -214,17 +160,7 @@ void setup() {
     for (auto& sensor : reedSwitchSensors) {
         reedSwitchSensorController.addSensor(&sensor);
     }
-    
-    // Attach interrupts to sensor pins for more reliable detection
-    // attachInterrupt(digitalPinToInterrupt(D12), sensorISR, CHANGE);
-    // attachInterrupt(digitalPinToInterrupt(D11), sensorISR, CHANGE);
-    // attachInterrupt(digitalPinToInterrupt(D10), sensorISR, CHANGE);
-    // attachInterrupt(digitalPinToInterrupt(D9), sensorISR, CHANGE);
-    // Serial.println("Sensor interrupts attached to pins D12, D11, D10, D9");
-    
-    // Setup track layout
-    setupTrackLayout();
-    
+        
     // Add trains to the manager
     TrainConfig train1Config;
     train1Config.hubName = "Train1";
@@ -262,9 +198,6 @@ void setup() {
         Serial.println("Failed to initialize multi-train system");
     }
     
-    // Print initial status
-    printCurrentPosition();
-    
     Serial.println("\nSystem ready. Use serial commands to control trains.");
     Serial.println("Type 'help' for available commands.");
 }
@@ -272,29 +205,4 @@ void setup() {
 void loop() {
     // Update the train manager (handles all trains)
     trainManager.update();
-    
-    // Print status periodically
-    static unsigned long lastStatusPrint = 0;
-    unsigned long currentTime = millis();
-    if (currentTime - lastStatusPrint > 5000) { // Every 5 seconds
-        printCurrentPosition();
-        lastStatusPrint = currentTime;
-    }
-
-    // Debug: Periodically check raw pin states
-    static unsigned long lastPinCheck = 0;
-    if (currentTime - lastPinCheck > 2000) { // Every 2 seconds for more frequent monitoring
-        Serial.print("PIN STATE CHECK - D12: ");
-        Serial.print(digitalRead(D12) == LOW ? "ACTIVE" : "INACTIVE");
-        Serial.print(", D11: ");
-        Serial.print(digitalRead(D11) == LOW ? "ACTIVE" : "INACTIVE");
-        Serial.print(", D10: ");
-        Serial.print(digitalRead(D10) == LOW ? "ACTIVE" : "INACTIVE");
-        Serial.print(", D9: ");
-        Serial.println(digitalRead(D9) == LOW ? "ACTIVE" : "INACTIVE");
-        lastPinCheck = currentTime;
-    }
-    
-    // Reduced delay for more responsive sensor polling
-    delay(1);
 }

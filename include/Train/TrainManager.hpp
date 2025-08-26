@@ -23,13 +23,13 @@ struct TrainConfig {
     byte motorPort;
     int fastButtonPin;
     int slowButtonPin;
+    SensorLocation initialPosition;
 };
 
 class TrainManager {
 private:
     // Shared sensor infrastructure
     PositionAwareSensorController* positionAwareSensorController;
-    PositionTracker* positionTracker;
     ReedSwitchSensorController* reedSwitchSensorController;
     LightSensorController* lightSensorController;
     
@@ -52,7 +52,6 @@ private:
     
 public:
     TrainManager(PositionAwareSensorController* sensorController,
-                 PositionTracker* tracker,
                  ReedSwitchSensorController* reedController,
                  LightSensorController* lightController);
     
@@ -74,6 +73,12 @@ public:
     TrainInstance* getTrain(size_t trainIndex);
     size_t getTrainCount() const { return trains.size(); }
     
+    // Position tracking for all trains
+    std::vector<SensorLocation> getAllTrainPositions() const;
+    std::vector<TrainDirection> getAllTrainDirections() const;
+    PositionTracker* getTrainPositionTracker(size_t trainIndex);
+    PositionTracker* getTrainPositionTracker(const String& hubName);
+    
     // Status and debugging
     bool isInitialized() const { return initialized; }    
 private:
@@ -81,7 +86,7 @@ private:
     void handlePositionUpdate();
     void updateTrainConnections();
     void updateTrainControllers();
-    void executePositionBasedActions(SensorLocation position, TrainDirection direction);
+    void executePositionBasedActions(size_t trainIndex, SensorLocation position, TrainDirection direction);
     void selectBestTrainForPosition(SensorLocation position);
     bool isValidTrainIndex(size_t index) const;
     void debugPrintActiveActions();

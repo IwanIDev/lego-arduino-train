@@ -26,6 +26,7 @@ private:
     std::unique_ptr<InputController> inputController;
     std::unique_ptr<ActionController> actionController;
     std::unique_ptr<PositionSensorController> positionSensorController;
+    std::unique_ptr<PositionTracker> positionTracker;
     
     // Configuration
     TrainConfig config;
@@ -40,7 +41,7 @@ private:
     bool firstCommandSent;
     
 public:
-    TrainInstance(const TrainConfig& trainConfig, size_t id, PositionTracker* positionTracker);
+    TrainInstance(const TrainConfig& trainConfig, size_t id);
     ~TrainInstance();
     
     // Initialization
@@ -71,6 +72,7 @@ public:
     InputController* getInputController() const { return inputController.get(); }
     ActionController* getActionController() const { return actionController.get(); }
     PositionSensorController* getPositionSensorController() const { return positionSensorController.get(); }
+    PositionTracker* getPositionTracker() const { return positionTracker.get(); }
     
     // Debugging
     void printStatus() const;

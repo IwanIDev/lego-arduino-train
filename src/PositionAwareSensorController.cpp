@@ -2,13 +2,12 @@
 #include <Arduino.h>
 
 PositionAwareSensorController::PositionAwareSensorController(ReedSwitchSensorController* reedController, 
-                                                             LightSensorController* lightController,
-                                                             PositionTracker* tracker)
+                                                             LightSensorController* lightController)
     : reedSwitchController(reedController), lightSensorController(lightController), 
-      positionTracker(tracker), lastTriggeredLocation(SensorLocation::UNKNOWN), lastTriggerTime(0) {
+      lastTriggeredLocation(SensorLocation::UNKNOWN), lastTriggerTime(0) {
 }
 
-bool PositionAwareSensorController::checkSensorsAndUpdatePosition() {
+bool PositionAwareSensorController::checkSensors() {
     unsigned long currentTime = millis();
     SensorLocation newLocation = SensorLocation::UNKNOWN;
     bool sensorTriggered = false;
@@ -28,18 +27,12 @@ bool PositionAwareSensorController::checkSensorsAndUpdatePosition() {
         Serial.println(static_cast<int>(newLocation));
     }
     
-    // Update position if a sensor was triggered and enough time has passed (debounce)
+    // Update location if a sensor was triggered and enough time has passed (debounce)
     if (sensorTriggered && newLocation != SensorLocation::UNKNOWN && 
         (currentTime - lastTriggerTime) > DEBOUNCE_TIME) {
         
-        // Always update the position tracker - let it decide how to handle repeated positions
         lastTriggeredLocation = newLocation;
         lastTriggerTime = currentTime;
-        
-        // Update the position tracker
-        if (positionTracker) {
-            positionTracker->updatePosition(newLocation);
-        }
         
         Serial.print("Sensor trigger processed for location: ");
         Serial.println(static_cast<int>(newLocation));

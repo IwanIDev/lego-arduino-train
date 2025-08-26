@@ -18,6 +18,7 @@
 #include "PositionAwareSensorController.hpp"
 #include "PositionSensorController.hpp"
 #include "Train/TrainManager.hpp"
+#include "Train/TrainInstance.hpp"
 #include <memory>
 
 Lpf2Hub trainHub;
@@ -47,19 +48,15 @@ ReedSwitchSensor reedSwitchSensors[] = {
 };
 ReedSwitchSensorController reedSwitchSensorController;
 
-// Position tracking components
-PositionTracker positionTracker(SensorLocation::WEST_STATION); // Start at first sensor
-PositionAwareSensorController positionAwareSensorController(&reedSwitchSensorController, &lightSensorController, &positionTracker);
-
-// Position-based action controller
-PositionSensorController positionSensorController(positionTracker);
+// Position aware sensor controller (no longer needs a position tracker)
+PositionAwareSensorController positionAwareSensorController(&reedSwitchSensorController, &lightSensorController);
 
 // Train Manager
-TrainManager trainManager(&positionAwareSensorController, &positionTracker, &reedSwitchSensorController, &lightSensorController);
+TrainManager trainManager(&positionAwareSensorController, &reedSwitchSensorController, &lightSensorController);
 
-// Setup track layout with sensor position relationships
-void setupTrackLayout() {
-    Serial.println("Setting up track layout...");
+// Setup track layout with sensor position relationships for a specific position tracker
+void setupTrackLayoutForTracker(PositionTracker& positionTracker) {
+    Serial.println("Setting up track layout for position tracker...");
 
     const int SPEED_WEST_STATION = 3;
     const int SPEED_WEST_TUNNEL = 3;
@@ -107,25 +104,49 @@ void setupTrackLayout() {
     westTunnel.nextForward = SensorLocation::WEST_TUNNEL;
     westTunnel.nextReverse = SensorLocation::WEST_STATION;
     positionTracker.addTrackSegment(westTunnel);
+}
 
+// Legacy function maintained for compatibility
+void setupTrackLayout() {
+    // This function is now empty since individual trains handle their own track layout
 }
 
 void printCurrentPosition() {
-    Serial.print("Current Position: ");
-    Serial.print(getPositionName(positionTracker.getCurrentPosition()));
-    Serial.print(" (Previous: ");
-    Serial.print(getPositionName(positionTracker.getPreviousPosition()));
-    Serial.print(", PositionTracker Direction: ");
-    Serial.print(positionTracker.getDirection() == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
-    Serial.println();
+    Serial.println("=== Train Positions ===");
+    for (size_t i = 0; i < trainManager.getTrainCount(); i++) {
+        TrainInstance* train = trainManager.getTrain(i);
+        if (train && train->getPositionTracker()) {
+            PositionTracker* tracker = train->getPositionTracker();
+            Serial.print("Train ");
+            Serial.print(i);
+            Serial.print(" (");
+            Serial.print(train->getHubName());
+            Serial.print("): Position: ");
+            Serial.print(getPositionName(tracker->getCurrentPosition()));
+            Serial.print(" (Previous: ");
+            Serial.print(getPositionName(tracker->getPreviousPosition()));
+            Serial.print(", Direction: ");
+            Serial.print(tracker->getDirection() == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
+            Serial.println(")");
+        }
+    }
+    Serial.println("======================");
 }
 
-// Helper function to manually set position (useful for testing)
-void setManualPosition(SensorLocation position) {
-    Serial.print("Manually setting position to: ");
-    Serial.println(static_cast<int>(position));
-    positionTracker.updatePosition(position);
-    printCurrentPosition();
+// Helper function to manually set position for a specific train (useful for testing)
+void setManualPosition(size_t trainIndex, SensorLocation position) {
+    TrainInstance* train = trainManager.getTrain(trainIndex);
+    if (train && train->getPositionTracker()) {
+        Serial.print("Manually setting train ");
+        Serial.print(trainIndex);
+        Serial.print(" position to: ");
+        Serial.println(static_cast<int>(position));
+        train->getPositionTracker()->updatePosition(position);
+        printCurrentPosition();
+    } else {
+        Serial.print("Invalid train index: ");
+        Serial.println(trainIndex);
+    }
 }
 
 // Helper function to get position name for debugging
@@ -165,6 +186,7 @@ void setup() {
     train1Config.motorPort = MOTOR_PORT;
     train1Config.fastButtonPin = fastButton;
     train1Config.slowButtonPin = slowButton;
+    train1Config.initialPosition = SensorLocation::WEST_STATION;
     size_t train1Index = trainManager.addTrain(train1Config);
     
     TrainConfig train2Config;
@@ -172,7 +194,21 @@ void setup() {
     train2Config.motorPort = MOTOR_PORT;
     train2Config.fastButtonPin = fastButton;
     train2Config.slowButtonPin = slowButton;
+    train2Config.initialPosition = SensorLocation::EAST_STATION;
     size_t train2Index = trainManager.addTrain(train2Config);
+    
+    // Setup track layout for each train's position tracker
+    TrainInstance* train1 = trainManager.getTrain(train1Index);
+    if (train1 && train1->getPositionTracker()) {
+        setupTrackLayoutForTracker(*train1->getPositionTracker());
+        Serial.println("Track layout configured for Train1");
+    }
+    
+    TrainInstance* train2 = trainManager.getTrain(train2Index);
+    if (train2 && train2->getPositionTracker()) {
+        setupTrackLayoutForTracker(*train2->getPositionTracker());
+        Serial.println("Track layout configured for Train2");
+    }
     
     // Initialize the train manager
     if (trainManager.initialize()) {

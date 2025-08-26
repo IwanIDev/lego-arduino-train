@@ -1,7 +1,7 @@
 #include "Train/TrainInstance.hpp"
 #include <Arduino.h>
 
-TrainInstance::TrainInstance(const TrainConfig& trainConfig, size_t id, PositionTracker* positionTracker)
+TrainInstance::TrainInstance(const TrainConfig& trainConfig, size_t id)
     : config(trainConfig)
     , hubName(trainConfig.hubName)
     , instanceId(id)
@@ -14,6 +14,9 @@ TrainInstance::TrainInstance(const TrainConfig& trainConfig, size_t id, Position
     // Create the hub instance
     hub = std::unique_ptr<Lpf2Hub>(new Lpf2Hub());
     
+    // Create the position tracker for this train instance
+    positionTracker = std::unique_ptr<PositionTracker>(new PositionTracker(trainConfig.initialPosition));
+    
     // Create controllers with the hub
     bluetoothController = std::unique_ptr<BluetoothController>(new BluetoothController(hub.get()));
     trainController = std::unique_ptr<TrainController>(new TrainController(trainConfig.motorPort));
@@ -22,11 +25,9 @@ TrainInstance::TrainInstance(const TrainConfig& trainConfig, size_t id, Position
                                                       trainConfig.slowButtonPin));
     actionController = std::unique_ptr<ActionController>(new ActionController(trainController.get()));
     
-    // Create position sensor controller if position tracker is provided
-    if (positionTracker) {
-        positionSensorController = std::unique_ptr<PositionSensorController>(new PositionSensorController(*positionTracker));
-        actionController->setPositionController(positionSensorController.get());
-    }
+    // Create position sensor controller with this train's position tracker
+    positionSensorController = std::unique_ptr<PositionSensorController>(new PositionSensorController(*positionTracker));
+    actionController->setPositionController(positionSensorController.get());
     
     Serial.print("Created TrainInstance: ");
     Serial.print(hubName);

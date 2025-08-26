@@ -49,8 +49,8 @@ bool TrainInstance::initialize() {
 
 bool TrainInstance::connect() {
     unsigned long now = millis();
-    if (now - lastConnectionAttempt < 5000) {
-        // Only attempt connection every 5 seconds
+    if (now - lastConnectionAttempt < 500) {
+        // Only attempt connection every 500 ms
         return connected && bluetoothController->isConnected();
     }
 

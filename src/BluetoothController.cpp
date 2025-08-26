@@ -4,34 +4,57 @@
 
 // Constructor for BluetoothController
 BluetoothController::BluetoothController(Lpf2Hub* hub) 
-: trainHub(hub), initialized(false) 
+: trainHub(hub), initialized(false), firstConnectAttempt(true)
 {
 
 }
 
+// bool BluetoothController::connect() {
+//     if (!trainHub->isConnected() && !trainHub->isConnecting()) {
+//         Serial.println("Calling init...");
+//         trainHub->init(); // initalize the PoweredUpHub instance
+//     }
+
+//     if (trainHub->isConnected()) {
+//         Serial.println("Already connected");
+//         return true;
+//     }
+
+//     Serial.println("Attempting to connect to HUB...");
+//     trainHub->connectHub();
+
+//     if (!trainHub->isConnected()) {
+//         Serial.println("Failed to connect to HUB");
+//         return false;
+//     }
+
+//     Serial.println("Connected to HUB");
+//     initialized = true;
+
+//     return true;
+// }
+
 bool BluetoothController::connect() {
-    if (!trainHub->isConnected() && !trainHub->isConnecting()) {
-        Serial.println("Calling init...");
-        trainHub->init(); // initalize the PoweredUpHub instance
+    if (this->isFirstConnectAttempt()) {
+        Serial.println("First connection attempt");
+        trainHub->init();
+        this->setFirstConnectAttempt(false);
     }
 
-    if (trainHub->isConnecting()) {
-        // If we are already connected, we do not need to connect again.
-        Serial.println("Already connecting");
+    if (!trainHub->isConnecting()) {
+        Serial.println("Not currently connecting");
         return false;
     }
 
-    Serial.println("Attempting to connect to HUB...");
+    Serial.println("Attempting to connect to hub...");
     trainHub->connectHub();
 
-    if (!trainHub->isConnected()) {
-        Serial.println("Failed to connect to HUB");
+    if (!this->isConnected()) {
+        Serial.println("Failed to connect to hub");
         return false;
     }
 
-    Serial.println("Connected to HUB");
-    initialized = true;
-
+    Serial.println("Connected to hub");
     return true;
 }
 
@@ -116,4 +139,13 @@ String BluetoothController::getHubName() {
                 return String();
         }
         return trainHub->getHubName().c_str();
+}
+
+bool BluetoothController::isFirstConnectAttempt() {
+    return firstConnectAttempt;
+}
+
+bool BluetoothController::setFirstConnectAttempt(bool attempt) {
+    firstConnectAttempt = attempt;
+    return firstConnectAttempt;
 }

@@ -7,6 +7,10 @@ class BluetoothController {
 private:
   Lpf2Hub* trainHub;
   bool initialized;
+  bool firstConnectAttempt;
+
+  bool isFirstConnectAttempt();
+  bool setFirstConnectAttempt(bool attempt);
 
 public:
   BluetoothController(Lpf2Hub* hub);

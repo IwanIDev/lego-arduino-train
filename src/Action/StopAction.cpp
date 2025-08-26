@@ -5,7 +5,17 @@ StopAction::StopAction(int delay)
     : delayMs(delay) {}
 
 void StopAction::execute(TrainController& controller) {
+    Serial.print("StopAction: Executing with delayMs=");
+    Serial.print(delayMs);
+    Serial.print(", current state=");
+    Serial.println(controller.getState());
+    
     controller.setState(STOPPED);
+    controller.setSpeedMultiplier(0);
+    
+    Serial.print("StopAction: State set to STOPPED, final state=");
+    Serial.println(controller.getState());
+    
     if (delayMs > 0) {
         delay(delayMs);
     }

@@ -116,6 +116,12 @@ void LightSensor::executeAction(TrainController& controller, ActionController& a
         return;
     }
 
+    // Check if we already have sequential actions running to prevent duplicate executions
+    if (action->isSequentialAction() && actionController.hasActiveSequentialActions()) {
+        Serial.println("SequentialAction already active, skipping duplicate execution");
+        return;
+    }
+
     if (action->isDelayedAction()) {
         // For DelayedAction, create a fresh instance and add it to ActionController
         // We know it's a DelayedAction, so we can safely static_cast

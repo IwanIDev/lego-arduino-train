@@ -13,7 +13,7 @@ ReedSwitchSensor::ReedSwitchSensor(int pin, SensorLocation loc, std::unique_ptr<
       lastState(false),
       trainDetected(false),
       lastDebounceTime(0),
-      debounceDelay(50),
+      debounceDelay(25), // Reduced from 50ms to 25ms for faster response
       timeout(0),
       timeoutThreshold(0), // Default timeout threshold of 250 milliseconds
       location(loc),
@@ -29,7 +29,7 @@ ReedSwitchSensor::ReedSwitchSensor(int pin, SensorLocation loc)
       lastState(false),
       trainDetected(false),
       lastDebounceTime(0),
-      debounceDelay(50),
+      debounceDelay(25), // Reduced from 50ms to 25ms for faster response
       timeout(0),
       timeoutThreshold(0),
       location(loc),
@@ -139,6 +139,12 @@ void ReedSwitchSensor::reset() {
 void ReedSwitchSensor::executeAction(TrainController& controller, ActionController& actionController) {
     if (!action) {
         Serial.println("No action defined for ReedSwitchSensor - using position-based actions instead.");
+        return;
+    }
+
+    // Check if we already have sequential actions running to prevent duplicate executions
+    if (action->isSequentialAction() && actionController.hasActiveSequentialActions()) {
+        Serial.println("SequentialAction already active, skipping duplicate execution");
         return;
     }
 

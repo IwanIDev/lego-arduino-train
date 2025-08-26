@@ -22,8 +22,8 @@ private:
 
   float speedMultiplier; // Speed multiplier
   const float MIN_MULTIPLIER = 0.0f; // Minimum speed multiplier
-  const float MAX_MULTIPLIER = 10.0f; // Maximum speed multiplier
-  const float MULTIPLIER_STEP = 1.0f; // Step size for speed multiplier adjustment
+  const float MAX_MULTIPLIER = 1.0f; // Maximum speed multiplier
+  const float MULTIPLIER_STEP = 0.2f; // Step size for speed multiplier adjustment (gives 5 speed levels)
 
 public:
   bool setReverse(bool reverse) {
@@ -39,7 +39,10 @@ public:
   SPEED getState();
   bool hasStateChanged();
   void clearStateChanged();
-  
+
+  void setSpeedMultiplier(float multiplier);
+  float getSpeedMultiplier() const;
+
   int getSpeed(SPEED state);
   bool canUpdateSpeed();
   void updateSpeedTimer();
@@ -48,9 +51,6 @@ public:
 
   void incrementSpeed();
   void decrementSpeed();
-  float getSpeedMultiplier() const {
-    return speedMultiplier;
-  }
 };
 
 #endif // TRAINCONTROLLER_HPP

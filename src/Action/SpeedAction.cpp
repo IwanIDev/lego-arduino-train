@@ -19,6 +19,13 @@ SpeedAction::SpeedAction(int speedChange, int delayMs)
  * @param controller The train controller to operate on.
  */
 void SpeedAction::execute(TrainController& controller) {
+    Serial.print("SpeedAction: Starting execution with speedChange=");
+    Serial.print(speedChange);
+    Serial.print(", current multiplier=");
+    Serial.print(controller.getSpeedMultiplier());
+    Serial.print(", current state=");
+    Serial.println(controller.getState());
+    
     // 1. Apply speed change
     for (int i = 0; i < abs(speedChange); ++i) {
         if (speedChange > 0) {
@@ -31,9 +38,16 @@ void SpeedAction::execute(TrainController& controller) {
     // 2. Set train state based on speed change
     if (controller.getSpeedMultiplier() > 0) {
         controller.setState(SPEED::GO);
+        Serial.println("SpeedAction: Setting state to GO");
     } else {
         controller.setState(SPEED::STOPPED);
+        Serial.println("SpeedAction: Setting state to STOPPED");
     }
+
+    Serial.print("SpeedAction: Finished execution, final multiplier=");
+    Serial.print(controller.getSpeedMultiplier());
+    Serial.print(", final state=");
+    Serial.println(controller.getState());
 
     if (delayMs > 0) {
         delay(delayMs);

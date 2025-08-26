@@ -80,8 +80,14 @@ std::unique_ptr<SensorAction> SequentialAction::clone() const {
  */
 bool SequentialAction::update(TrainController& controller, ActionController& actionController) {
     if (!isExecuting) {
+        Serial.println("SequentialAction: update() - not executing, returning true");
         return true; // Already finished
     }
+    
+    Serial.print("SequentialAction: update() called, currentActionIndex=");
+    Serial.print(currentActionIndex);
+    Serial.print(", total actions=");
+    Serial.println(actions.size());
         
     while (currentActionIndex < actions.size()) {
         auto& action = actions[currentActionIndex];
@@ -94,6 +100,8 @@ bool SequentialAction::update(TrainController& controller, ActionController& act
 
         if (!action->isDelayedAction()) {
             // Execute immediate action and move to next
+            Serial.print("SequentialAction: Executing immediate action #");
+            Serial.println(currentActionIndex);
             action->execute(controller, actionController);
             currentActionIndex++;
             continue;
@@ -101,22 +109,33 @@ bool SequentialAction::update(TrainController& controller, ActionController& act
 
         if (!currentDelayedAction) {
             // Start the delayed action
+            Serial.print("SequentialAction: Starting delayed action #");
+            Serial.println(currentActionIndex);
             DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
             currentDelayedAction = delayedAction->createFresh();
         }
 
         // Update the delayed action
+        Serial.print("SequentialAction: Updating delayed action #");
+        Serial.println(currentActionIndex);
         if (!currentDelayedAction->update(controller, actionController)) {
             // Still waiting for delayed action to complete
+            Serial.println("SequentialAction: Delayed action still running, waiting...");
+            Serial.println("SequentialAction: update() returning FALSE (still active)");
             return false;
         }
         
         // Delayed action completed, move to next
+        Serial.print("SequentialAction: Delayed action #");
+        Serial.print(currentActionIndex);
+        Serial.println(" completed, moving to next");
         currentDelayedAction.reset();
         currentActionIndex++;
 
     }
     // All actions completed
+    Serial.println("SequentialAction: All actions completed");
+    Serial.println("SequentialAction: update() returning TRUE (finished)");
     isExecuting = false;
     currentActionIndex = 0;
     return true;

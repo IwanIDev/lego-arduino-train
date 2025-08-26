@@ -5,11 +5,11 @@
 #include "Sensor.hpp"
 #include "Action/DelayedAction.hpp"
 #include "Action/SensorAction.hpp"
+#include "Action/SequentialAction.hpp"
 #include <vector>
 #include <memory>
 
 // Forward declarations
-class SequentialAction;
 class PositionSensorController;
 
 class ActionController {

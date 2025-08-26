@@ -1,9 +1,16 @@
+#ifndef BLUETOOTHCONTROLLER_HPP
+#define BLUETOOTHCONTROLLER_HPP
+
 #include "Lpf2Hub.h"
 
 class BluetoothController {
 private:
   Lpf2Hub* trainHub;
   bool initialized;
+  bool firstConnectAttempt;
+
+  bool isFirstConnectAttempt();
+  bool setFirstConnectAttempt(bool attempt);
 
 public:
   BluetoothController(Lpf2Hub* hub);
@@ -16,3 +23,5 @@ public:
   String getHubAddress();
   String getHubName();
 };
+
+#endif // BLUETOOTHCONTROLLER_HPP

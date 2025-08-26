@@ -9,18 +9,16 @@ class PositionAwareSensorController {
 private:
     ReedSwitchSensorController* reedSwitchController;
     LightSensorController* lightSensorController;
-    PositionTracker* positionTracker;
     SensorLocation lastTriggeredLocation;
     unsigned long lastTriggerTime;
-    static const unsigned long DEBOUNCE_TIME = 200; // ms to prevent duplicate triggers
+    static const unsigned long DEBOUNCE_TIME = 100; // Reduced from 200ms to 100ms for faster response
     
 public:
     PositionAwareSensorController(ReedSwitchSensorController* reedController, 
-                                  LightSensorController* lightController,
-                                  PositionTracker* tracker);
+                                  LightSensorController* lightController);
     
-    // Check sensors and update position automatically
-    bool checkSensorsAndUpdatePosition();
+    // Check sensors for triggers
+    bool checkSensors();
     
     // Get the sensor that was triggered (for executing actions)
     Sensor* getTriggeredSensor() const;

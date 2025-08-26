@@ -47,11 +47,12 @@ void ActionController::addDelayedAction(std::unique_ptr<SensorAction> action, un
  * Add a sequential action to be managed.
  * @param action The sequential action to add
  */
-void ActionController::addSequentialAction(std::unique_ptr<SequentialAction> action) {
+void ActionController::addSequentialAction(std::unique_ptr<SequentialAction> action) {    
     if (action && trainController != nullptr) {
         // Execute the sequential action to initialize it, then add it for updating
         action->execute(*trainController, *this);
-        activeSequentialActions.push_back(std::move(action));
+        
+        activeSequentialActions.push_back(std::move(action));   
     }
 }
 
@@ -62,6 +63,14 @@ void ActionController::addSequentialAction(std::unique_ptr<SequentialAction> act
 void ActionController::update() {
     if (trainController == nullptr) {
         return;
+    }
+    
+    static unsigned long lastUpdateDebug = 0;
+    unsigned long currentTime = millis();
+    
+    // Debug output every 200ms to avoid spam
+    if (currentTime - lastUpdateDebug > 200) {
+        lastUpdateDebug = currentTime;
     }
     
     // Update position-based actions if available
@@ -79,13 +88,16 @@ void ActionController::update() {
     );
     
     // Update all sequential actions and remove completed ones
+    
     activeSequentialActions.erase(
         std::remove_if(activeSequentialActions.begin(), activeSequentialActions.end(),
             [this](std::unique_ptr<SequentialAction>& action) {
-                return action->update(*trainController, *this);
+                bool isFinished = action->update(*trainController, *this);
+                return isFinished;
             }),
         activeSequentialActions.end()
     );
+    
 }
 
 /**

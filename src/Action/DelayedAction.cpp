@@ -95,6 +95,7 @@ bool DelayedAction::update(TrainController& controller) {
  */
 bool DelayedAction::update(TrainController& controller, ActionController& actionController) {
     if (isCompleted) {
+        Serial.println("DelayedAction: Already completed");
         return true;
     }
     
@@ -102,18 +103,37 @@ bool DelayedAction::update(TrainController& controller, ActionController& action
         // Start the timer
         startTime = millis();
         isActive = true;
+        Serial.print("DelayedAction: Starting timer, delayTime=");
+        Serial.print(delayTime);
+        Serial.print("ms, startTime=");
+        Serial.println(startTime);
         return false;
     }
     
+    unsigned long currentTime = millis();
+    unsigned long elapsed = currentTime - startTime;
+    
     // Check if delay time has elapsed
-    if (millis() - startTime >= delayTime) {
+    if (elapsed >= delayTime) {
         // Execute the action with ActionController
+        Serial.print("DelayedAction: Delay completed (");
+        Serial.print(elapsed);
+        Serial.print("ms >= ");
+        Serial.print(delayTime);
+        Serial.println("ms), executing action");
+        
         if (action) {
             action->execute(controller, actionController);
         }
         isCompleted = true;
         return true;
     }
+    
+    Serial.print("DelayedAction: Still waiting, elapsed=");
+    Serial.print(elapsed);
+    Serial.print("ms / ");
+    Serial.print(delayTime);
+    Serial.println("ms");
     
     return false; // Still waiting
 }

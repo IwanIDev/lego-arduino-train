@@ -71,8 +71,11 @@ void setupTrackLayoutForTracker(PositionTracker& positionTracker) {
     // Sequential action for reverse direction: STOP (delay) -> REVERSE (delay) -> SPEED
     {
         std::vector<std::unique_ptr<SensorAction>> reverseActions;
+        reverseActions.push_back(std::unique_ptr<SensorAction>(
+            new SpeedAction(-1, 0)
+        ));
         reverseActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
-            std::unique_ptr<SensorAction>(new StopAction(0)), 500
+            std::unique_ptr<SensorAction>(new StopAction(0)), 1500
         )));
         reverseActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
             std::unique_ptr<SensorAction>(new ReverseAction(0)), 500
@@ -83,6 +86,27 @@ void setupTrackLayoutForTracker(PositionTracker& positionTracker) {
     westStation.nextForward = SensorLocation::WEST_TUNNEL;
     westStation.nextReverse = SensorLocation::WEST_TUNNEL;
     positionTracker.addTrackSegment(westStation);
+
+    // EAST_STATION
+    TrackSegment eastStation;
+    eastStation.location = SensorLocation::EAST_STATION;
+
+    // Create SequentialAction for reverse direction: Stop -> Reverse -> Speed
+    {
+        std::vector<std::unique_ptr<SensorAction>> reverseActions;
+        reverseActions.push_back(std::unique_ptr<SensorAction>(new StopAction(0)));
+        reverseActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
+            std::unique_ptr<SensorAction>(new ReverseAction(0)), 500
+        )));
+        reverseActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(SPEED_WEST_TUNNEL, 0)));
+        eastStation.reverseActions.push_back(std::unique_ptr<SequentialAction>(new SequentialAction(std::move(reverseActions))));
+    }
+
+    eastStation.forwardActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(0, 0)));
+
+    eastStation.nextForward = SensorLocation::EAST_TUNNEL;
+    eastStation.nextReverse = SensorLocation::EAST_TUNNEL;
+    positionTracker.addTrackSegment(eastStation);
 
     // WEST_TUNNEL
     TrackSegment westTunnel;
@@ -104,6 +128,27 @@ void setupTrackLayoutForTracker(PositionTracker& positionTracker) {
     westTunnel.nextForward = SensorLocation::WEST_TUNNEL;
     westTunnel.nextReverse = SensorLocation::WEST_STATION;
     positionTracker.addTrackSegment(westTunnel);
+
+    // EAST_TUNNEL
+    TrackSegment eastTunnel;
+    eastTunnel.location = SensorLocation::EAST_TUNNEL;
+
+    // Create SequentialAction for forward direction: Stop -> Reverse -> Speed
+    {
+        std::vector<std::unique_ptr<SensorAction>> forwardActions;
+        forwardActions.push_back(std::unique_ptr<SensorAction>(new StopAction(0)));
+        forwardActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
+            std::unique_ptr<SensorAction>(new ReverseAction(0)), 500
+        )));
+        forwardActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(SPEED_WEST_STATION, 0)));
+        eastTunnel.forwardActions.push_back(std::unique_ptr<SequentialAction>(new SequentialAction(std::move(forwardActions))));
+    }
+
+    eastTunnel.reverseActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(0, 0)));
+
+    eastTunnel.nextForward = SensorLocation::EAST_TUNNEL;
+    eastTunnel.nextReverse = SensorLocation::EAST_STATION;
+    positionTracker.addTrackSegment(eastTunnel);
 }
 
 // Legacy function maintained for compatibility

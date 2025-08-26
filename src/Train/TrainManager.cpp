@@ -341,32 +341,37 @@ void TrainManager::executePositionBasedActions(size_t trainIndex, SensorLocation
 }
 
 void TrainManager::selectBestTrainForPosition(SensorLocation position) {
-    // Strategy: Find the train closest to this position or the first connected train
-    // For simplicity, we'll use the first connected train for now
+    // Select the train that is in a position adjacent to the specified position.
+    // If none, ignore the request.
+
     for (size_t i = 0; i < trains.size(); i++) {
         auto& train = trains[i];
-        if (train->isConnected()) {
-            auto* positionTracker = train->getPositionTracker();
-            if (positionTracker) {
-                // Store previous position and direction to detect changes
-                SensorLocation previousPosition = positionTracker->getCurrentPosition();
-                TrainDirection previousDirection = positionTracker->getDirection();
-                
-                // Update this train's position
-                positionTracker->updatePosition(position);
-                
-                // Check if position or direction changed
-                SensorLocation currentPosition = positionTracker->getCurrentPosition();
-                TrainDirection currentDirection = positionTracker->getDirection();
-                bool positionChanged = (previousPosition != currentPosition);
-                bool directionChanged = (previousDirection != currentDirection);
-                
-                // Execute position-based actions if position changed OR direction changed
-                if (positionChanged || directionChanged) {
-                    executePositionBasedActions(i, currentPosition, currentDirection);
-                }
-            }
-            break; // Only apply to first connected train for now
+        if (!train->isConnected()) continue;
+
+        auto* positionTracker = train->getPositionTracker();
+        if (!positionTracker) continue;
+
+        // Store previous position and direction to detect changes
+        SensorLocation previousPosition = positionTracker->getCurrentPosition();
+        TrainDirection previousDirection = positionTracker->getDirection();
+        
+        if (positionTracker->getNextExpectedPosition() != position) {
+            // Not the right train for this position
+            continue;
+        }
+
+        // Update this train's position
+        positionTracker->updatePosition(position);
+        
+        // Check if position or direction changed
+        SensorLocation currentPosition = positionTracker->getCurrentPosition();
+        TrainDirection currentDirection = positionTracker->getDirection();
+        bool positionChanged = (previousPosition != currentPosition);
+        bool directionChanged = (previousDirection != currentDirection);
+        
+        // Execute position-based actions if position changed OR direction changed
+        if (positionChanged || directionChanged) {
+            executePositionBasedActions(i, currentPosition, currentDirection);
         }
     }
 }

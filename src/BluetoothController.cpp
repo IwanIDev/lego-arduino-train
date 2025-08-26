@@ -11,14 +11,17 @@ BluetoothController::BluetoothController(Lpf2Hub* hub)
 
 bool BluetoothController::connect() {
     if (!trainHub->isConnected() && !trainHub->isConnecting()) {
+        Serial.println("Calling init...");
         trainHub->init(); // initalize the PoweredUpHub instance
     }
 
-    if (!trainHub->isConnecting()) {
+    if (trainHub->isConnecting()) {
         // If we are already connected, we do not need to connect again.
-        return true;
+        Serial.println("Already connecting");
+        return false;
     }
 
+    Serial.println("Attempting to connect to HUB...");
     trainHub->connectHub();
 
     if (!trainHub->isConnected()) {
@@ -27,10 +30,7 @@ bool BluetoothController::connect() {
     }
 
     Serial.println("Connected to HUB");
-    Serial.print("Hub address: ");
-    Serial.println(this->getHubAddress().c_str());
-    Serial.print("Hub name: ");
-    Serial.println(this->getHubName().c_str());
+    initialized = true;
 
     return true;
 }

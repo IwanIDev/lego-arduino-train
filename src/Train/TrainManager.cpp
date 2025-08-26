@@ -219,6 +219,8 @@ void TrainManager::updateTrainConnections() {
             Serial.println(train->getHubName());
             
             bool connectionResult = train->connect();
+            Serial.print("Connection result: ");
+            Serial.println(connectionResult ? "Success" : "Failure");
             if (connectionResult) {
                 connectedTrains++;
                 if (connectedTrains >= MAX_CONCURRENT_CONNECTIONS) {

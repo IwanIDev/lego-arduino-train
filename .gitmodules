@@ -1,6 +1,6 @@
-[submodule "lib/legoino"]
-	path = lib/legoino
-	url = https://github.com/SFrijters/legoino.git
 [submodule "lib/NimBLE-Arduino"]
 	path = lib/NimBLE-Arduino
 	url = https://github.com/h2zero/NimBLE-Arduino.git
+[submodule "lib/legoino"]
+	path = lib/legoino
+	url = https://github.com/corneliusmunz/legoino.git

@@ -48,8 +48,12 @@ bool TrainInstance::initialize() {
 }
 
 bool TrainInstance::connect() {
-    lastConnectionAttempt = millis();
-    
+    unsigned long now = millis();
+    if (now - lastConnectionAttempt < 5000) {
+        // Only attempt connection every 5 seconds
+        return connected && bluetoothController->isConnected();
+    }
+
     if (bluetoothController->isConnected()) {
         connected = true;
         return true;
@@ -58,7 +62,11 @@ bool TrainInstance::connect() {
     Serial.print("Attempting to connect train: ");
     Serial.println(hubName);
     
-    if (!bluetoothController->connect()) return false;
+    if (!bluetoothController->connect()) {
+        Serial.print("Failed to connect train: ");
+        Serial.println(hubName);
+        return false;
+    }
     
     // Wait a bit for the connection to stabilize
     delay(100);
@@ -70,6 +78,7 @@ bool TrainInstance::connect() {
         Serial.println(hubName);
         connected = false;
         firstCommandSent = false;
+        return false;
     }
 
     Serial.print("Successfully connected train: ");

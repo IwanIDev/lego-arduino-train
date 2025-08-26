@@ -9,31 +9,6 @@ BluetoothController::BluetoothController(Lpf2Hub* hub)
 
 }
 
-// bool BluetoothController::connect() {
-//     if (!trainHub->isConnected() && !trainHub->isConnecting()) {
-//         Serial.println("Calling init...");
-//         trainHub->init(); // initalize the PoweredUpHub instance
-//     }
-
-//     if (trainHub->isConnected()) {
-//         Serial.println("Already connected");
-//         return true;
-//     }
-
-//     Serial.println("Attempting to connect to HUB...");
-//     trainHub->connectHub();
-
-//     if (!trainHub->isConnected()) {
-//         Serial.println("Failed to connect to HUB");
-//         return false;
-//     }
-
-//     Serial.println("Connected to HUB");
-//     initialized = true;
-
-//     return true;
-// }
-
 bool BluetoothController::connect() {
     if (this->isFirstConnectAttempt()) {
         Serial.println("First connection attempt");

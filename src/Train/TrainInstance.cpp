@@ -54,14 +54,17 @@ bool TrainInstance::connect() {
         return this->isConnected();
     }
 
-    if (bluetoothController->isConnected()) {
+    Serial.print("Attempting to connect train: ");
+    Serial.println(hubName);
+
+    if (bluetoothController->isConnected() && lastConnectionAttempt != 0) {
+        Serial.println("Already connected!");
         connected = true;
         return true;
     }
-    
-    Serial.print("Attempting to connect train: ");
-    Serial.println(hubName);
-    
+
+    lastConnectionAttempt = now;
+        
     if (!bluetoothController->connect()) {
         Serial.print("Failed to connect train: ");
         Serial.println(hubName);

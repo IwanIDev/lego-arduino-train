@@ -43,6 +43,7 @@ bool BluetoothController::connect() {
 
     if (!trainHub->isConnecting()) {
         Serial.println("Not currently connecting");
+        trainHub->init();
         return false;
     }
 

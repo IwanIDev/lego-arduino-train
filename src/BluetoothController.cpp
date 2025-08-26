@@ -59,18 +59,18 @@ bool BluetoothController::connect() {
 }
 
 bool BluetoothController::isConnected() const {
-        // Check if trainHub exists
-        if (!trainHub) {
-                return false;
-        }
-        
-        // Get the connection state safely with additional validation
-        int hubConnected = (int) trainHub->isConnected();
-        
-        // Validate the return value makes sense (should be 0 or 1)
-        // Any result other than 1 is treated as false.
+    // Check if trainHub exists
+    if (!trainHub) {
+        return false;
+    }
+    
+    // Get the connection state safely with additional validation
+    int hubConnected = (int) trainHub->isConnected();
+    
+    // Validate the return value makes sense (should be 0 or 1)
+    // Any result other than 1 is treated as false.
 
-        return (hubConnected == 1) ? true : false;
+    return (hubConnected == 1) ? true : false;
 }
 
 void BluetoothController::setMotorSpeed(byte port, int speed) {

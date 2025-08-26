@@ -204,7 +204,7 @@ void TrainManager::updateTrainConnections() {
     
     // If we have a single hub setup, only allow one train to connect
     // TODO: Make this configurable based on actual hardware setup
-    const int MAX_CONCURRENT_CONNECTIONS = 1;
+    const int MAX_CONCURRENT_CONNECTIONS = 2;
     
     if (connectedTrains >= MAX_CONCURRENT_CONNECTIONS) {
         // Skip connection attempts if we're at the limit

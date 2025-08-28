@@ -21,7 +21,7 @@ public:
     bool checkSensors();
     
     // Get the sensor that was triggered (for executing actions)
-    Sensor* getTriggeredSensor() const;
+    std::vector<Sensor*> getTriggeredSensor() const;
     
     // Get triggered location
     SensorLocation getTriggeredLocation() const { return lastTriggeredLocation; }

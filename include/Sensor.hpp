@@ -14,6 +14,7 @@ public:
     virtual bool isTrainDetected() const = 0;
     virtual void reset() = 0;
     virtual void executeAction(TrainController& controller, ActionController& actionController) = 0;
+    virtual SensorLocation getLocation() const = 0;
 };
 
 #endif // SENSOR_HPP

@@ -208,12 +208,16 @@ void TrainManager::handlePositionUpdate() {
     // Check for sensor triggers
     bool sensorTriggered = positionAwareSensorController->checkSensors();
     
-    if (sensorTriggered) {
-        SensorLocation triggeredLocation = positionAwareSensorController->getTriggeredLocation();
-        
-        if (triggeredLocation != SensorLocation::UNKNOWN) {
+    if (!sensorTriggered) return;
+
+    std::vector<Sensor*> triggeredSensors = positionAwareSensorController->getTriggeredSensor();
+
+    for (Sensor* sensor : triggeredSensors) {
+        if (!sensor) continue;
+        SensorLocation loc = sensor->getLocation();
+        if (loc != SensorLocation::UNKNOWN) {
             // Find the train that should respond to this sensor trigger
-            selectBestTrainForPosition(triggeredLocation);
+            selectBestTrainForPosition(loc);
         }
     }
 }

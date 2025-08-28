@@ -72,12 +72,24 @@ int TrainController::getSpeed(SPEED state) {
         Serial.print("DEBUG: speedMultiplier is 0, returning speed 0");
         return 0;
     }
-    
+
+    // Calculate battery voltage multiplier: 1.0 at 100%, increases inversely as voltage decreases
+    float batteryVoltageMultiplier = 1.0f;
+    if (batteryVoltage > 0) {
+        batteryVoltageMultiplier = 100.0f / batteryVoltage;
+        // Cap the maximum multiplier to prevent excessive speed when battery is very low
+        if (batteryVoltageMultiplier > 1.5f) {
+            batteryVoltageMultiplier = 1.5f;
+        }
+    }
+
     int calculatedSpeed = 0;
     // Calculate speed based on state and multiplier
     switch (state) {
         case GO: 
-            calculatedSpeed = (int)(50 * reverseMultiplier * speedMultiplier);
+            // Apply speed multiplier to base speed, then apply battery compensation
+            calculatedSpeed = (int)(30 * reverseMultiplier * speedMultiplier);
+            calculatedSpeed = (int)(calculatedSpeed * batteryVoltageMultiplier);
             break;
         case STOPPED: 
             calculatedSpeed = 0;

@@ -58,8 +58,8 @@ TrainManager trainManager(&positionAwareSensorController, &reedSwitchSensorContr
 void setupTrackLayoutForTracker(PositionTracker& positionTracker) {
     Serial.println("Setting up track layout for position tracker...");
 
-    const int SPEED_WEST_STATION = 3;
-    const int SPEED_WEST_TUNNEL = 3;
+    const int SPEED_WEST_STATION = 5;
+    const int SPEED_WEST_TUNNEL = 5;
 
     // CURRENT LAYOUT: WEST_STATION <-> WEST_TUNNEL (bidirectional)
 
@@ -72,7 +72,7 @@ void setupTrackLayoutForTracker(PositionTracker& positionTracker) {
     {
         std::vector<std::unique_ptr<SensorAction>> reverseActions;
         reverseActions.push_back(std::unique_ptr<SensorAction>(
-            new SpeedAction(-1, 0)
+            new SpeedAction(-((int)SPEED_WEST_STATION / 2), 0)
         ));
         reverseActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
             std::unique_ptr<SensorAction>(new StopAction(0)), 1500

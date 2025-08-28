@@ -19,7 +19,7 @@ TrainInstance::TrainInstance(const TrainConfig& trainConfig, size_t id)
     
     // Create controllers with the hub
     bluetoothController = std::unique_ptr<BluetoothController>(new BluetoothController(hub.get()));
-    trainController = std::unique_ptr<TrainController>(new TrainController(trainConfig.motorPort));
+    trainController = std::unique_ptr<TrainController>(new TrainController(trainConfig.motorPort, hub.get()));
     inputController = std::unique_ptr<InputController>(new InputController(trainController.get(), 
                                                       trainConfig.fastButtonPin, 
                                                       trainConfig.slowButtonPin));
@@ -105,6 +105,11 @@ void TrainInstance::update() {
     
     // Update action controller (handles delayed and sequential actions)
     actionController->update();
+    
+    // Update battery voltage if needed
+    if (trainController->shouldUpdateBatteryVoltage()) {
+        trainController->updateBatteryVoltage();
+    }
     
     // Update train controller state
     if (trainController->hasStateChanged()) {
@@ -226,6 +231,9 @@ void TrainInstance::printStatus() const {
         Serial.print(trainController->getState());
         Serial.print(", Reverse: ");
         Serial.print(trainController->getReverse() ? "ON" : "OFF");
+        Serial.print(", Battery: ");
+        Serial.print(trainController->getBatteryVoltage());
+        Serial.print("%");
     }
     
     if (actionController) {
@@ -245,6 +253,7 @@ String TrainInstance::getStatusString() const {
     if (trainController) {
         status += ", Speed: " + String(trainController->getState());
         status += ", Reverse: " + String(trainController->getReverse() ? "ON" : "OFF");
+        status += ", Battery: " + String(trainController->getBatteryVoltage()) + "%";
     }
     
     return status;

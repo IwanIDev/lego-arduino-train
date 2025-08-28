@@ -10,20 +10,29 @@ PositionAwareSensorController::PositionAwareSensorController(ReedSwitchSensorCon
 bool PositionAwareSensorController::checkSensors() {
     unsigned long currentTime = millis();
 
-    if (currentTime - lastTriggerTime > DEBOUNCE_TIME) {
+    if (currentTime - lastTriggerTime <= DEBOUNCE_TIME) {
         return false;
     }
 
     bool sensorTriggered = false;
     
-    std::vector<Sensor*> triggeredSensors = getTriggeredSensor();
-
-    for (Sensor* sensor : triggeredSensors) {
-        if (!sensor) continue;
-        sensorTriggered = true;
-        Serial.print("Sensor triggered at location: ");
-        Serial.println(static_cast<int>(sensor->getLocation()));
+    // Check sensors and update triggered sensors lists
+    if (reedSwitchController) {
+        bool reedTriggered = reedSwitchController->isTrainPassingOver();
+        if (reedTriggered) {
+            sensorTriggered = true;
+        }
     }
+    
+    if (lightSensorController) {
+        bool lightTriggered = lightSensorController->isTrainPassingOver();
+        if (lightTriggered) {
+            sensorTriggered = true;
+        }
+    }
+    
+    // Now get the triggered sensors for location tracking
+    std::vector<Sensor*> triggeredSensors = getTriggeredSensor();
 
     for (const Sensor* sensor : triggeredSensors) {
         if (!sensor) continue;
@@ -41,17 +50,20 @@ bool PositionAwareSensorController::checkSensors() {
 std::vector<Sensor*> PositionAwareSensorController::getTriggeredSensor() const {
     std::vector<Sensor*> triggeredSensors;
     
-    // Add triggered reed switch sensors
-    if (reedSwitchController && reedSwitchController->getTriggeredSensors().size() > 0) {
+    if (reedSwitchController) {
         const auto& reedSensors = reedSwitchController->getTriggeredSensors();
-        for (ReedSwitchSensor* reedSensor : reedSensors) {
-            triggeredSensors.push_back(static_cast<Sensor*>(reedSensor));
+        if (reedSensors.size() > 0) {
+            for (ReedSwitchSensor* reedSensor : reedSensors) {
+                triggeredSensors.push_back(static_cast<Sensor*>(reedSensor));
+            }
         }
     }
     
-    // Add triggered light sensor if any
-    if (lightSensorController && lightSensorController->getTriggeredSensor()) {
-        triggeredSensors.push_back(static_cast<Sensor*>(lightSensorController->getTriggeredSensor()));
+    // Add triggered light sensor if any - no need to call isTrainPassingOver() again as it was already called in checkSensors()
+    if (lightSensorController) {
+        if (lightSensorController->getTriggeredSensor()) {
+            triggeredSensors.push_back(static_cast<Sensor*>(lightSensorController->getTriggeredSensor()));
+        }
     }
     
     return triggeredSensors;

@@ -207,14 +207,17 @@ void TrainManager::handlePositionUpdate() {
     
     // Check for sensor triggers
     bool sensorTriggered = positionAwareSensorController->checkSensors();
-    
+
     if (!sensorTriggered) return;
 
     std::vector<Sensor*> triggeredSensors = positionAwareSensorController->getTriggeredSensor();
 
+    Serial.println("Triggered sensors: ");
     for (Sensor* sensor : triggeredSensors) {
         if (!sensor) continue;
         SensorLocation loc = sensor->getLocation();
+        Serial.print("Sensor triggered at ");
+        Serial.println(static_cast<int>(loc));
         if (loc != SensorLocation::UNKNOWN) {
             // Find the train that should respond to this sensor trigger
             selectBestTrainForPosition(loc);

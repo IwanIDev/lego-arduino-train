@@ -1,15 +1,35 @@
 #include "TrainController.hpp"
+#include "Lpf2Hub.h"
 #include <Arduino.h>
 
+// Global map to associate hubs with their TrainController instances
+std::map<Lpf2Hub*, TrainController*> hubToControllerMap;
+
 // Constructor
-TrainController::TrainController(byte motorPort)
+TrainController::TrainController(byte motorPort, Lpf2Hub* trainHub)
     : trainState(STOPPED),
         stateChanged(false),
         previousMillis(0),
         speedSwitchInterval(100), // 100ms default interval for speed switching
         port(motorPort),
-        speedMultiplier(0) // Initialize speedMultiplier
-{}
+        speedMultiplier(0), // Initialize speedMultiplier
+        hub(trainHub),
+        batteryVoltage(0),
+        lastBatteryUpdate(0)
+{
+    // Register this TrainController instance with its hub
+    if (hub) {
+        hubToControllerMap[hub] = this;
+    }
+}
+
+// Destructor
+TrainController::~TrainController() {
+    // Remove this TrainController instance from the map
+    if (hub) {
+        hubToControllerMap.erase(hub);
+    }
+}
 
 // Set the train state and mark as changed if different
 void TrainController::setState(SPEED newState) {    
@@ -52,12 +72,24 @@ int TrainController::getSpeed(SPEED state) {
         Serial.print("DEBUG: speedMultiplier is 0, returning speed 0");
         return 0;
     }
-    
+
+    // Calculate battery voltage multiplier: 1.0 at 100%, increases inversely as voltage decreases
+    float batteryVoltageMultiplier = 1.0f;
+    if (batteryVoltage > 0) {
+        batteryVoltageMultiplier = 100.0f / batteryVoltage;
+        // Cap the maximum multiplier to prevent excessive speed when battery is very low
+        if (batteryVoltageMultiplier > 1.5f) {
+            batteryVoltageMultiplier = 1.5f;
+        }
+    }
+
     int calculatedSpeed = 0;
     // Calculate speed based on state and multiplier
     switch (state) {
         case GO: 
-            calculatedSpeed = (int)(50 * reverseMultiplier * speedMultiplier);
+            // Apply speed multiplier to base speed, then apply battery compensation
+            calculatedSpeed = (int)(30 * reverseMultiplier * speedMultiplier);
+            calculatedSpeed = (int)(calculatedSpeed * batteryVoltageMultiplier);
             break;
         case STOPPED: 
             calculatedSpeed = 0;
@@ -168,4 +200,49 @@ void TrainController::setSpeedMultiplier(float multiplier) {
 
 float TrainController::getSpeedMultiplier() const {
     return speedMultiplier;
+}
+
+// Static callback function for battery voltage updates
+void TrainController::batteryVoltageCallback(void* hub, HubPropertyReference property, uint8_t* data) {
+    if (property == HubPropertyReference::BATTERY_VOLTAGE) {
+        // Use the hub's parseBatteryLevel method to properly extract the battery level
+        Lpf2Hub* lpf2Hub = static_cast<Lpf2Hub*>(hub);
+        if (lpf2Hub) {
+            uint8_t batteryLevel = lpf2Hub->parseBatteryLevel(data);
+            Serial.print("Battery voltage received: ");
+            Serial.print(batteryLevel);
+            Serial.println("%");
+            
+            // Find the corresponding TrainController instance for this hub
+            auto it = hubToControllerMap.find(lpf2Hub);
+            if (it != hubToControllerMap.end()) {
+                TrainController* controller = it->second;
+                if (controller) {
+                    controller->batteryVoltage = batteryLevel;
+                    controller->lastBatteryUpdate = millis();
+                    Serial.print("TrainController battery voltage updated: ");
+                    Serial.print(controller->batteryVoltage);
+                    Serial.println("%");
+                }
+            }
+        }
+    }
+}
+
+// Battery voltage methods
+uint8_t TrainController::getBatteryVoltage() const {
+    return batteryVoltage;
+}
+
+void TrainController::updateBatteryVoltage() {
+    if (hub && hub->isConnected()) {
+        // Request battery voltage update from the hub
+        // The callback will directly update this instance's batteryVoltage
+        hub->requestHubPropertyUpdate(HubPropertyReference::BATTERY_VOLTAGE, batteryVoltageCallback);
+        Serial.println("Requested battery voltage update from hub");
+    }
+}
+
+bool TrainController::shouldUpdateBatteryVoltage() const {
+    return (millis() - lastBatteryUpdate) >= BATTERY_UPDATE_INTERVAL;
 }

@@ -19,21 +19,24 @@ void ReedSwitchSensorController::addSensor(ReedSwitchSensor* sensor) {
 }
 
 bool ReedSwitchSensorController::isTrainPassingOver() {
+    lastTriggeredSensors.clear();
+    bool anyTriggered = false;
+
     for (int i = 0; i < sensorCount; i++) {
-            if (sensors[i] && sensors[i]->detectPassingTrain()) {
-                lastTriggeredSensor = sensors[i];
-                return true;
-            }
+        if (sensors[i] && sensors[i]->detectPassingTrain()) {
+            lastTriggeredSensors.push_back(sensors[i]);
+            anyTriggered = true;
         }
-        return false;
+    }
+    return anyTriggered;
 }
 
 // Returns the location of the last triggered sensor, or a default value if none was triggered
 SensorLocation ReedSwitchSensorController::getTriggeredSensorLocation() const {
-    ReedSwitchSensor* sensor = lastTriggeredSensor;
+    ReedSwitchSensor* sensor = lastTriggeredSensors[0];
     return sensor ? sensor->getLocation() : SensorLocation::UNKNOWN;
 }
 
-ReedSwitchSensor* ReedSwitchSensorController::getTriggeredSensor() const {
-    return lastTriggeredSensor;
+std::vector<ReedSwitchSensor*> ReedSwitchSensorController::getTriggeredSensors() const {
+    return lastTriggeredSensors;
 }

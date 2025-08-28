@@ -7,7 +7,7 @@ class ReedSwitchSensorController {
 private:
     ReedSwitchSensor* sensors[MAX_SENSORS]; // Array of ReedSwitchSensor pointers
     int sensorCount;
-    ReedSwitchSensor* lastTriggeredSensor;
+    std::vector<ReedSwitchSensor*> lastTriggeredSensors;
 
 public:
     ReedSwitchSensorController();
@@ -18,6 +18,6 @@ public:
 
     void addSensor(ReedSwitchSensor* sensor);
 
-    ReedSwitchSensor* getTriggeredSensor() const;
+    std::vector<ReedSwitchSensor*> getTriggeredSensors() const;
 };
 #endif // REEDSWITCHSENSORCONTROLLER_HPP

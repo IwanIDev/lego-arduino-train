@@ -348,24 +348,55 @@ void TrainManager::executePositionBasedActions(size_t trainIndex, SensorLocation
 }
 
 void TrainManager::selectBestTrainForPosition(SensorLocation position) {
-    // Select the train that is in a position adjacent to the specified position.
-    // If none, ignore the request.
+    // Select the train that can reach the specified position from their current location.
+    // Check both forward and reverse directions to handle bidirectional movement.
 
+    Serial.print("TrainManager: Looking for train that can reach position ");
+    Serial.println(static_cast<int>(position));
+    
     for (size_t i = 0; i < trains.size(); i++) {
         auto& train = trains[i];
-        if (!train->isConnected()) continue;
+        if (!train->isConnected()) {
+            Serial.print("Train ");
+            Serial.print(i);
+            Serial.println(" not connected, skipping");
+            continue;
+        }
 
         auto* positionTracker = train->getPositionTracker();
-        if (!positionTracker) continue;
+        if (!positionTracker) {
+            Serial.print("Train ");
+            Serial.print(i);
+            Serial.println(" has no position tracker, skipping");
+            continue;
+        }
 
         // Store previous position and direction to detect changes
         SensorLocation previousPosition = positionTracker->getCurrentPosition();
         TrainDirection previousDirection = positionTracker->getDirection();
         
-        if (positionTracker->getNextExpectedPosition() != position) {
-            // Not the right train for this position
+        Serial.print("Train ");
+        Serial.print(i);
+        Serial.print(" (");
+        Serial.print(train->getHubName());
+        Serial.print(") at position ");
+        Serial.print(static_cast<int>(previousPosition));
+        Serial.print(" direction ");
+        Serial.print(previousDirection == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
+        
+        // Check if this train can reach the triggered position
+        bool canReach = positionTracker->canReachPosition(position);
+        Serial.print(" canReach: ");
+        Serial.println(canReach ? "YES" : "NO");
+        
+        if (!canReach) {
+            // This train cannot reach the triggered position
             continue;
         }
+
+        Serial.print("TrainManager: Train ");
+        Serial.print(i);
+        Serial.println(" selected for position update");
 
         // Update this train's position
         positionTracker->updatePosition(position);
@@ -376,13 +407,34 @@ void TrainManager::selectBestTrainForPosition(SensorLocation position) {
         bool positionChanged = (previousPosition != currentPosition);
         bool directionChanged = (previousDirection != currentDirection);
         
-        // Execute position-based actions if position changed OR direction changed
-        if (positionChanged || directionChanged) {
+        // For same-sensor triggers (typically at endpoints), we should still execute actions
+        // if this position has actions defined for the current direction
+        bool sameSensorTrigger = (previousPosition == position && currentPosition == position);
+        bool hasActionsForCurrentDirection = false;
+        
+        if (sameSensorTrigger) {
+            // Check if this position has actions for the current direction
+            auto actions = positionTracker->getActionsForPosition(position, currentDirection);
+            hasActionsForCurrentDirection = !actions.empty();
+            
+            Serial.print("Same sensor trigger detected at position ");
+            Serial.print(static_cast<int>(position));
+            Serial.print(", has actions for current direction: ");
+            Serial.println(hasActionsForCurrentDirection ? "YES" : "NO");
+        }
+        
+        // Execute position-based actions if:
+        // 1. Position changed, OR
+        // 2. Direction changed, OR  
+        // 3. Same sensor triggered and has actions for current direction
+        if (positionChanged || directionChanged || (sameSensorTrigger && hasActionsForCurrentDirection)) {
             executePositionBasedActions(i, currentPosition, currentDirection);
         }
 
-        break; // Only one train should respond to a position trigger
+        return; // Only one train should respond to a position trigger
     }
+    // If we reach this point, no train is selected, so log the error and return.
+    Serial.println("TrainManager: No valid train found for position trigger.");
 }
 
 bool TrainManager::isValidTrainIndex(size_t index) const {

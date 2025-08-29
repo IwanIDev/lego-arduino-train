@@ -11,7 +11,7 @@ private:
     LightSensorController* lightSensorController;
     SensorLocation lastTriggeredLocation;
     unsigned long lastTriggerTime;
-    static const unsigned long DEBOUNCE_TIME = 100; // Reduced from 200ms to 100ms for faster response
+    static const unsigned long DEBOUNCE_TIME = 0;
     
 public:
     PositionAwareSensorController(ReedSwitchSensorController* reedController, 

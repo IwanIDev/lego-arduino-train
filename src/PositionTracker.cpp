@@ -2,7 +2,7 @@
 #include <Arduino.h>
 
 PositionTracker::PositionTracker(SensorLocation startPosition) 
-    : currentPosition(startPosition), previousPosition(startPosition), currentDirection(TrainDirection::FORWARD) {
+    : currentPosition(startPosition), previousPosition(startPosition), currentDirection(TrainDirection::FORWARD), directionManuallySet(false) {
 }
 
 void PositionTracker::updatePosition(SensorLocation newPosition) {
@@ -16,8 +16,15 @@ void PositionTracker::updatePosition(SensorLocation newPosition) {
         return;
     }
     
-    // Update direction based on position change and track layout
-    updateDirection(newPosition);
+    // Only update direction based on track layout if it wasn't manually set by ReverseAction
+    if (!directionManuallySet) {
+        // Update direction based on position change and track layout
+        updateDirection(newPosition);
+    } else {
+        // Direction was manually set, so reset the flag for next time
+        directionManuallySet = false;
+        Serial.println("PositionTracker: Keeping manually set direction, not updating based on track layout");
+    }
     
     previousPosition = currentPosition;
     currentPosition = newPosition;
@@ -105,4 +112,29 @@ SensorLocation PositionTracker::getNextExpectedPosition() const {
         }
     }
     return currentPosition; // Default to current if no track map found
+}
+
+SensorLocation PositionTracker::getNextExpectedPosition(TrainDirection direction) const {
+    for (const auto& segment : trackMap) {
+        if (segment.location == currentPosition) {
+            return (direction == TrainDirection::FORWARD) ? segment.nextForward : segment.nextReverse;
+        }
+    }
+    return currentPosition; // Default to current if no track map found
+}
+
+bool PositionTracker::canReachPosition(SensorLocation position) const {
+    // If the train is already at the triggered position, it should respond
+    // (this happens when reversing direction over the same sensor)
+    if (currentPosition == position) {
+        return true;
+    }
+    
+    // Otherwise, check if the position is reachable from current position
+    for (const auto& segment : trackMap) {
+        if (segment.location == currentPosition) {
+            return (segment.nextForward == position) || (segment.nextReverse == position);
+        }
+    }
+    return false; // Cannot reach if no track segment found
 }

@@ -23,6 +23,7 @@ private:
     SensorLocation currentPosition;
     SensorLocation previousPosition;
     TrainDirection currentDirection;
+    bool directionManuallySet; // Flag to track if direction was manually set (e.g., by ReverseAction)
     std::vector<TrackSegment> trackMap;
     
     // Helper method to update direction based on position change
@@ -35,11 +36,16 @@ public:
     SensorLocation getCurrentPosition() const { return currentPosition; }
     SensorLocation getPreviousPosition() const { return previousPosition; }
     TrainDirection getDirection() const { return currentDirection; }
-    void setDirection(TrainDirection direction) { currentDirection = direction; }
+    void setDirection(TrainDirection direction) { 
+        currentDirection = direction; 
+        directionManuallySet = true; // Mark as manually set
+    }
     
     void addTrackSegment(const TrackSegment& segment);
     std::vector<std::unique_ptr<SensorAction>> getActionsForPosition(SensorLocation position, TrainDirection direction);
     SensorLocation getNextExpectedPosition() const;
+    SensorLocation getNextExpectedPosition(TrainDirection direction) const;
+    bool canReachPosition(SensorLocation position) const;
 };
 
 #endif // POSITIONTRACKER_HPP

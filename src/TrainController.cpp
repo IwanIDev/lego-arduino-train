@@ -98,7 +98,12 @@ int TrainController::getSpeed(SPEED state) {
             calculatedSpeed = 0;
             break;
     }
-    
+
+    if (calculatedSpeed > MAX_SPEED) {
+        Serial.println("DEBUG: getSpeed() - speed capped at MAX_SPEED");
+        calculatedSpeed = MAX_SPEED;
+    }
+
     Serial.print("DEBUG: getSpeed() - state=");
     Serial.print(state);
     Serial.print(", multiplier=");

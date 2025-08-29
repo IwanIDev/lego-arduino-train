@@ -6,6 +6,7 @@
 
 #ifndef SPEED_ENUM_DEFINED
 #define SPEED_ENUM_DEFINED
+#define MAX_SPEED 50
 enum SPEED {
   STOPPED = 0,
   GO = 15

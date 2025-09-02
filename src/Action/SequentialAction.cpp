@@ -1,5 +1,6 @@
 #include "Action/SequentialAction.hpp"
 #include "Action/DelayedAction.hpp"
+#include "Action/WaitForPositionAction.hpp"
 #include "ActionController.hpp"
 #include <Arduino.h>
 #include "TrainController.hpp"
@@ -98,7 +99,7 @@ bool SequentialAction::update(TrainController& controller, ActionController& act
             continue;
         }
 
-        if (!action->isDelayedAction()) {
+        if (!action->isDelayedAction() && !action->isWaitForPositionAction()) {
             // Execute immediate action and move to next
             Serial.print("SequentialAction: Executing immediate action #");
             Serial.println(currentActionIndex);
@@ -107,30 +108,55 @@ bool SequentialAction::update(TrainController& controller, ActionController& act
             continue;
         }
 
-        if (!currentDelayedAction) {
-            // Start the delayed action
-            Serial.print("SequentialAction: Starting delayed action #");
+        if (action->isDelayedAction()) {
+            if (!currentDelayedAction) {
+                // Start the delayed action
+                Serial.print("SequentialAction: Starting delayed action #");
+                Serial.println(currentActionIndex);
+                DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
+                currentDelayedAction = delayedAction->createFresh();
+            }
+
+            // Update the delayed action
+            Serial.print("SequentialAction: Updating delayed action #");
             Serial.println(currentActionIndex);
-            DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
-            currentDelayedAction = delayedAction->createFresh();
+            if (!currentDelayedAction->update(controller, actionController)) {
+                // Still waiting for delayed action to complete
+                Serial.println("SequentialAction: Delayed action still running, waiting...");
+                Serial.println("SequentialAction: update() returning FALSE (still active)");
+                return false;
+            }
+            
+            // Delayed action completed, move to next
+            Serial.print("SequentialAction: Delayed action #");
+            Serial.print(currentActionIndex);
+            Serial.println(" completed, moving to next");
+            currentDelayedAction.reset();
+            currentActionIndex++;
+            continue;
         }
 
-        // Update the delayed action
-        Serial.print("SequentialAction: Updating delayed action #");
-        Serial.println(currentActionIndex);
-        if (!currentDelayedAction->update(controller, actionController)) {
-            // Still waiting for delayed action to complete
-            Serial.println("SequentialAction: Delayed action still running, waiting...");
-            Serial.println("SequentialAction: update() returning FALSE (still active)");
-            return false;
+        if (action->isWaitForPositionAction()) {
+            // Handle WaitForPositionAction with non-blocking update
+            Serial.print("SequentialAction: Updating WaitForPositionAction #");
+            Serial.println(currentActionIndex);
+            
+            // Try to cast to WaitForPositionAction to access update method
+            // Note: This requires including the WaitForPositionAction header
+            WaitForPositionAction* waitAction = static_cast<WaitForPositionAction*>(action.get());
+            if (!waitAction->update(controller, actionController)) {
+                // Still waiting for position to be reached
+                Serial.println("SequentialAction: WaitForPositionAction still waiting, returning false");
+                return false;
+            }
+            
+            // Position reached, move to next action
+            Serial.print("SequentialAction: WaitForPositionAction #");
+            Serial.print(currentActionIndex);
+            Serial.println(" completed, moving to next");
+            currentActionIndex++;
+            continue;
         }
-        
-        // Delayed action completed, move to next
-        Serial.print("SequentialAction: Delayed action #");
-        Serial.print(currentActionIndex);
-        Serial.println(" completed, moving to next");
-        currentDelayedAction.reset();
-        currentActionIndex++;
 
     }
     // All actions completed

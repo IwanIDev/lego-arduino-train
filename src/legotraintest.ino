@@ -11,6 +11,7 @@
 #include "Action/DelayedAction.hpp"
 #include "Action/SpeedAction.hpp"
 #include "Action/SequentialAction.hpp"
+#include "Action/WaitForPositionAction.hpp"
 #include "ActionController.hpp"
 #include "ReedSwitchSensor.hpp"
 #include "ReedSwitchSensorController.hpp"
@@ -55,7 +56,7 @@ PositionAwareSensorController positionAwareSensorController(&reedSwitchSensorCon
 TrainManager trainManager(&positionAwareSensorController, &reedSwitchSensorController, &lightSensorController);
 
 // Setup track layout with sensor position relationships for a specific position tracker
-void setupTrackLayoutForTracker(PositionTracker& positionTracker) {
+void setupTrackLayoutForTracker(PositionTracker& positionTracker, TrainInstance& instance1, TrainInstance& instance2) {
     Serial.println("Setting up track layout for position tracker...");
 
     const int SPEED_WEST_STATION = 5;
@@ -119,6 +120,7 @@ void setupTrackLayoutForTracker(PositionTracker& positionTracker) {
     {
         std::vector<std::unique_ptr<SensorAction>> forwardActions;
         forwardActions.push_back(std::unique_ptr<SensorAction>(new StopAction(0)));
+        forwardActions.push_back(std::unique_ptr<SensorAction>(new WaitForPositionAction(&instance2, SensorLocation::EAST_TUNNEL)));
         forwardActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
             std::unique_ptr<SensorAction>(new ReverseAction(0)), 500
         )));
@@ -140,6 +142,7 @@ void setupTrackLayoutForTracker(PositionTracker& positionTracker) {
     {
         std::vector<std::unique_ptr<SensorAction>> forwardActions;
         forwardActions.push_back(std::unique_ptr<SensorAction>(new StopAction(0)));
+        forwardActions.push_back(std::unique_ptr<SensorAction>(new WaitForPositionAction(&instance1, SensorLocation::WEST_TUNNEL)));
         forwardActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
             std::unique_ptr<SensorAction>(new ReverseAction(0)), 500
         )));
@@ -183,14 +186,14 @@ void setup() {
     
     // Setup track layout for each train's position tracker
     TrainInstance* train1 = trainManager.getTrain(train1Index);
+    TrainInstance* train2 = trainManager.getTrain(train2Index);
     if (train1 && train1->getPositionTracker()) {
-        setupTrackLayoutForTracker(*train1->getPositionTracker());
+        setupTrackLayoutForTracker(*train1->getPositionTracker(), *train1, *train2);
         Serial.println("Track layout configured for Train1");
     }
     
-    TrainInstance* train2 = trainManager.getTrain(train2Index);
     if (train2 && train2->getPositionTracker()) {
-        setupTrackLayoutForTracker(*train2->getPositionTracker());
+        setupTrackLayoutForTracker(*train2->getPositionTracker(), *train1, *train2);
         Serial.println("Track layout configured for Train2");
     }
     

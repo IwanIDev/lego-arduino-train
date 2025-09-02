@@ -9,6 +9,7 @@ private:
     TrainInstance* trainInstance;
     bool isActive;
     bool isCompleted;
+    unsigned long lastLogTime;
 
 public:
     WaitForPositionAction(TrainInstance* trainInstance, SensorLocation location);

@@ -10,9 +10,9 @@
  * @param location The target location to wait for.
  */
 WaitForPositionAction::WaitForPositionAction(TrainInstance* trainInstance, SensorLocation location)
-    : trainInstance(trainInstance), targetLocation(location), isActive(false), isCompleted(false)
+    : trainInstance(trainInstance), targetLocation(location), isActive(false), isCompleted(false), lastLogTime(0)
 {
-    
+    lastLogTime = 0;
 }
 
 /**
@@ -99,7 +99,6 @@ bool WaitForPositionAction::update(TrainController& controller) {
     }
     
     // Still waiting - optionally log progress
-    static unsigned long lastLogTime = 0;
     unsigned long currentTime = millis();
     if (currentTime - lastLogTime > 5000) { // Log every 5 seconds
         Serial.print("WaitForPositionAction: Still waiting for position ");

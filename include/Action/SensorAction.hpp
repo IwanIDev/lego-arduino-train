@@ -22,5 +22,6 @@ public:
     virtual std::unique_ptr<SensorAction> clone() const = 0; // Virtual clone method
     virtual bool isDelayedAction() const { return false; } // Override in DelayedAction
     virtual bool isSequentialAction() const { return false; } // Override in SequentialAction
+    virtual bool isWaitForPositionAction() const { return false; } // Override in WaitForPositionAction
 };
 #endif // SENSOR_ACTION_HPP

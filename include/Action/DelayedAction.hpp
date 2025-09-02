@@ -20,6 +20,9 @@ public:
     bool isDelayedAction() const override { return true; } // Identify as DelayedAction
     bool isNonBlockingAction() const override { return true; } // Identify as NonBlockingAction
     
+    // Helper method to get NonBlockingAction interface without RTTI
+    NonBlockingAction* asNonBlockingAction() override { return this; }
+    
     // NonBlockingAction interface implementation
     bool update(TrainController& controller, ActionController& actionController) override; // Non-blocking update with ActionController
     bool isFinished() const override;

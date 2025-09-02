@@ -107,8 +107,17 @@ bool SequentialAction::update(TrainController& controller, ActionController& act
                 Serial.print("SequentialAction: Starting non-blocking action #");
                 Serial.println(currentActionIndex);
                 
-                // Since we know it's a non-blocking action, cast to the appropriate type
-                currentNonBlockingAction = static_cast<NonBlockingAction*>(action.get());
+                currentNonBlockingAction = action->asNonBlockingAction();
+                
+                // Check if the action supports non-blocking interface
+                if (!currentNonBlockingAction) {
+                    Serial.print("SequentialAction: Error - Action #");
+                    Serial.print(currentActionIndex);
+                    Serial.println(" claims to be non-blocking but doesn't implement NonBlockingAction interface");
+                    // Skip this action and move to the next one
+                    currentActionIndex++;
+                    continue;
+                }
                 
                 // Reset the action to ensure it starts fresh
                 currentNonBlockingAction->reset();

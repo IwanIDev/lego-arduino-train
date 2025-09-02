@@ -34,6 +34,9 @@ public:
     bool isSequentialAction() const override { return true; } // Identify as SequentialAction
     bool isNonBlockingAction() const override { return true; } // Identify as NonBlockingAction
     
+    // Helper method to get NonBlockingAction interface without RTTI
+    NonBlockingAction* asNonBlockingAction() override { return this; }
+    
     // NonBlockingAction interface implementation
     bool update(TrainController& controller, ActionController& actionController) override;
     bool isFinished() const override;

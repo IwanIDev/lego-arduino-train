@@ -108,17 +108,7 @@ bool SequentialAction::update(TrainController& controller, ActionController& act
                 Serial.println(currentActionIndex);
                 
                 // Since we know it's a non-blocking action, cast to the appropriate type
-                if (action->isDelayedAction()) {
-                    currentNonBlockingAction = static_cast<DelayedAction*>(action.get());
-                } else if (action->isWaitForPositionAction()) {
-                    currentNonBlockingAction = static_cast<WaitForPositionAction*>(action.get());
-                } else if (action->isSequentialAction()) {
-                    currentNonBlockingAction = static_cast<SequentialAction*>(action.get());
-                } else {
-                    Serial.println("Error: Unknown non-blocking action type");
-                    currentActionIndex++;
-                    continue;
-                }
+                currentNonBlockingAction = static_cast<NonBlockingAction*>(action.get());
                 
                 // Reset the action to ensure it starts fresh
                 currentNonBlockingAction->reset();

@@ -1,6 +1,7 @@
 #include "Action/SequentialAction.hpp"
 #include "Action/DelayedAction.hpp"
 #include "Action/WaitForPositionAction.hpp"
+#include "Action/NonBlockingAction.hpp"
 #include "ActionController.hpp"
 #include <Arduino.h>
 #include "TrainController.hpp"
@@ -8,7 +9,7 @@
 /**
  * Constructor for SequentialAction.
  */
-SequentialAction::SequentialAction() : currentActionIndex(0), isExecuting(false)
+SequentialAction::SequentialAction() : currentActionIndex(0), currentNonBlockingAction(nullptr), isExecuting(false)
 {
     actions.reserve(10);  // Reserve space for 10 actions
 }
@@ -55,7 +56,7 @@ void SequentialAction::execute(TrainController& controller, ActionController& ac
         Serial.println("Starting SequentialAction execution");
         isExecuting = true;
         currentActionIndex = 0;
-        currentDelayedAction.reset();
+        currentNonBlockingAction = nullptr;
     }
     
     // Start the first update cycle - the ActionController will need to call update() 
@@ -99,7 +100,48 @@ bool SequentialAction::update(TrainController& controller, ActionController& act
             continue;
         }
 
-        if (!action->isDelayedAction() && !action->isWaitForPositionAction()) {
+        // Check if the action implements NonBlockingAction interface
+        if (action->isNonBlockingAction()) {
+            if (!currentNonBlockingAction) {
+                // Start the non-blocking action - we need to handle the specific types
+                Serial.print("SequentialAction: Starting non-blocking action #");
+                Serial.println(currentActionIndex);
+                
+                // Since we know it's a non-blocking action, cast to the appropriate type
+                if (action->isDelayedAction()) {
+                    currentNonBlockingAction = static_cast<DelayedAction*>(action.get());
+                } else if (action->isWaitForPositionAction()) {
+                    currentNonBlockingAction = static_cast<WaitForPositionAction*>(action.get());
+                } else if (action->isSequentialAction()) {
+                    currentNonBlockingAction = static_cast<SequentialAction*>(action.get());
+                } else {
+                    Serial.println("Error: Unknown non-blocking action type");
+                    currentActionIndex++;
+                    continue;
+                }
+                
+                // Reset the action to ensure it starts fresh
+                currentNonBlockingAction->reset();
+            }
+
+            // Update the non-blocking action
+            Serial.print("SequentialAction: Updating non-blocking action #");
+            Serial.println(currentActionIndex);
+            if (!currentNonBlockingAction->update(controller, actionController)) {
+                // Still waiting for non-blocking action to complete
+                Serial.println("SequentialAction: Non-blocking action still running, waiting...");
+                Serial.println("SequentialAction: update() returning FALSE (still active)");
+                return false;
+            }
+            
+            // Non-blocking action completed, move to next
+            Serial.print("SequentialAction: Non-blocking action #");
+            Serial.print(currentActionIndex);
+            Serial.println(" completed, moving to next");
+            currentNonBlockingAction = nullptr;
+            currentActionIndex++;
+            continue;
+        } else {
             // Execute immediate action and move to next
             Serial.print("SequentialAction: Executing immediate action #");
             Serial.println(currentActionIndex);
@@ -107,58 +149,8 @@ bool SequentialAction::update(TrainController& controller, ActionController& act
             currentActionIndex++;
             continue;
         }
-
-        if (action->isDelayedAction()) {
-            if (!currentDelayedAction) {
-                // Start the delayed action
-                Serial.print("SequentialAction: Starting delayed action #");
-                Serial.println(currentActionIndex);
-                DelayedAction* delayedAction = static_cast<DelayedAction*>(action.get());
-                currentDelayedAction = delayedAction->createFresh();
-            }
-
-            // Update the delayed action
-            Serial.print("SequentialAction: Updating delayed action #");
-            Serial.println(currentActionIndex);
-            if (!currentDelayedAction->update(controller, actionController)) {
-                // Still waiting for delayed action to complete
-                Serial.println("SequentialAction: Delayed action still running, waiting...");
-                Serial.println("SequentialAction: update() returning FALSE (still active)");
-                return false;
-            }
-            
-            // Delayed action completed, move to next
-            Serial.print("SequentialAction: Delayed action #");
-            Serial.print(currentActionIndex);
-            Serial.println(" completed, moving to next");
-            currentDelayedAction.reset();
-            currentActionIndex++;
-            continue;
-        }
-
-        if (action->isWaitForPositionAction()) {
-            // Handle WaitForPositionAction with non-blocking update
-            Serial.print("SequentialAction: Updating WaitForPositionAction #");
-            Serial.println(currentActionIndex);
-            
-            // Try to cast to WaitForPositionAction to access update method
-            // Note: This requires including the WaitForPositionAction header
-            WaitForPositionAction* waitAction = static_cast<WaitForPositionAction*>(action.get());
-            if (!waitAction->update(controller, actionController)) {
-                // Still waiting for position to be reached
-                Serial.println("SequentialAction: WaitForPositionAction still waiting, returning false");
-                return false;
-            }
-            
-            // Position reached, move to next action
-            Serial.print("SequentialAction: WaitForPositionAction #");
-            Serial.print(currentActionIndex);
-            Serial.println(" completed, moving to next");
-            currentActionIndex++;
-            continue;
-        }
-
     }
+    
     // All actions completed
     Serial.println("SequentialAction: All actions completed");
     Serial.println("SequentialAction: update() returning TRUE (finished)");
@@ -173,7 +165,7 @@ bool SequentialAction::update(TrainController& controller, ActionController& act
 void SequentialAction::reset() {
     isExecuting = false;
     currentActionIndex = 0;
-    currentDelayedAction.reset();
+    currentNonBlockingAction = nullptr;
 }
 
 /**

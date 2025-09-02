@@ -1,9 +1,10 @@
 #ifndef WAITFORPOSITIONACTION_HPP
 #define WAITFORPOSITIONACTION_HPP
 #include "Action/SensorAction.hpp"
+#include "Action/NonBlockingAction.hpp"
 #include "Train/TrainInstance.hpp"
 
-class WaitForPositionAction : public SensorAction {
+class WaitForPositionAction : public SensorAction, public NonBlockingAction {
 private:
     SensorLocation targetLocation;
     TrainInstance* trainInstance;
@@ -20,17 +21,21 @@ public:
     [[deprecated("Use update() for non-blocking execution")]]
     void execute(TrainController& controller, ActionController& actionController) override;
     
-    // Non-blocking execution methods
-    bool update(TrainController& controller);
-    bool update(TrainController& controller, ActionController& actionController);
-    
     // SensorAction interface
     std::unique_ptr<SensorAction> clone() const override;
     virtual bool isWaitForPositionAction() const { return true; } // Identify as WaitForPositionAction
+    bool isNonBlockingAction() const override { return true; } // Identify as NonBlockingAction
+    
+    // NonBlockingAction interface implementation
+    bool update(TrainController& controller, ActionController& actionController) override;
+    bool isFinished() const override;
+    void reset() override;
+    
+    // Legacy non-blocking execution method (deprecated, use NonBlockingAction interface instead)
+    bool update(TrainController& controller);
     
     // State management
-    bool isFinished() const;
-    void reset();
+    // (isFinished() and reset() methods now inherited from NonBlockingAction interface)
     
     // Factory method for creating fresh instances
     std::unique_ptr<WaitForPositionAction> createFresh() const;

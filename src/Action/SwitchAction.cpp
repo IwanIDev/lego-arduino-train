@@ -10,7 +10,7 @@
  * @param delayMs Delay in milliseconds before executing the action.
  * @param switchController Pointer to the SwitchController instance.
  */
-SwitchAction::SwitchAction(int switchId, SwitchPosition targetState, int delayMs, SwitchController* switchController)
+SwitchAction::SwitchAction(unsigned int switchId, SwitchPosition targetState, int delayMs, SwitchController* switchController)
     : switchId(switchId), targetState(targetState), delayMs(delayMs), switchController(switchController)
 {
     // Constructor implementation

@@ -13,7 +13,7 @@ private:
     SwitchController* switchController; // Pointer to the switch controller
 
 public:
-    SwitchAction(int switchId, SwitchPosition targetState, int delayMs, SwitchController* switchController);
+    SwitchAction(unsigned int switchId, SwitchPosition targetState, int delayMs, SwitchController* switchController);
     void execute(TrainController& controller) override;
     std::unique_ptr<SensorAction> clone() const override;
 };

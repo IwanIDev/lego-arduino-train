@@ -10,7 +10,7 @@ SwitchController::SwitchController() : nextAvailableId(1) {
 * @param relayPin The pin number where the relay is connected.
 * @param state The desired state of the relay (true for one direction, false for the other).
 */
-void SwitchController::controlRelay(int relayPin, SwitchPosition state) {
+void SwitchController::controlRelay(unsigned int relayPin, SwitchPosition state) {
     // Control the relay - HIGH typically closes the relay, LOW opens it
     // This assumes active-high relay control
     digitalWrite(relayPin, state == SwitchPosition::STRAIGHT ? HIGH : LOW);
@@ -21,7 +21,7 @@ void SwitchController::controlRelay(int relayPin, SwitchPosition state) {
  * @param switchId The ID of the switch to control.
  * @param state The desired state of the switch (true for one direction, false for the other).
  */
-void SwitchController::setSwitchState(int switchId, SwitchPosition state) {
+void SwitchController::setSwitchState(unsigned int switchId, SwitchPosition state) {
     auto it = switches.find(switchId);
     if (it != switches.end()) {
         it->second.state = state;
@@ -34,7 +34,7 @@ void SwitchController::setSwitchState(int switchId, SwitchPosition state) {
  * @param switchId The ID of the switch to query.
  * @return The current state of the switch (true for one direction, false for the other).
  */
-SwitchPosition SwitchController::getSwitchState(int switchId) const {
+SwitchPosition SwitchController::getSwitchState(unsigned int switchId) const {
     auto it = switches.find(switchId);
     if (it == switches.end()) return SwitchPosition::STRAIGHT; // Default state if switch doesn't exist
     return it->second.state;
@@ -44,7 +44,7 @@ SwitchPosition SwitchController::getSwitchState(int switchId) const {
  * Toggles the state of the specified switch.
  * @param switchId The ID of the switch to toggle.
  */
-void SwitchController::toggleSwitch(int switchId) {
+void SwitchController::toggleSwitch(unsigned int switchId) {
     auto it = switches.find(switchId);
     if (it != switches.end()) {
         SwitchPosition newState = (it->second.state == SwitchPosition::STRAIGHT) ? SwitchPosition::DIVERGED : SwitchPosition::STRAIGHT;
@@ -60,7 +60,7 @@ void SwitchController::toggleSwitch(int switchId) {
  * @param initialState The initial state of the switch (default is false).
  * @return The ID of the added switch.
  */
-int SwitchController::addSwitch(int id, int relayPin, SwitchPosition initialState) {
+int SwitchController::addSwitch(unsigned int id, unsigned int relayPin, SwitchPosition initialState) {
     // Initialize the relay pin as output
     pinMode(relayPin, OUTPUT);
     
@@ -85,7 +85,7 @@ int SwitchController::addSwitch(int id, int relayPin, SwitchPosition initialStat
  * @param initialState The initial state of the switch (default is false).
  * @return The ID of the added switch.
  */
-int SwitchController::addSwitch(int relayPin, SwitchPosition initialState) {
+int SwitchController::addSwitch(unsigned int relayPin, SwitchPosition initialState) {
     // Generate a unique ID
     int generatedId = nextAvailableId;
     
@@ -101,6 +101,6 @@ int SwitchController::addSwitch(int relayPin, SwitchPosition initialState) {
     return addSwitch(generatedId, relayPin, initialState);
 }
 
-bool SwitchController::switchExists(int switchId) const {
+bool SwitchController::switchExists(unsigned int switchId) const {
     return switches.find(switchId) != switches.end();
 }

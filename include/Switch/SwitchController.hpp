@@ -17,18 +17,18 @@ struct Switch {
 
 class SwitchController {
 private:
-    std::map<int, Switch> switches;
+    std::map<unsigned int, Switch> switches;
     int nextAvailableId;
-    void controlRelay(int relayPin, SwitchPosition state);
+    void controlRelay(unsigned int relayPin, SwitchPosition state);
     
 public:
     SwitchController();
-    void setSwitchState(int switchId, SwitchPosition state);
-    SwitchPosition getSwitchState(int switchId) const;
-    void toggleSwitch(int switchId);
-    int addSwitch(int id, int relayPin, SwitchPosition initialState = SwitchPosition::STRAIGHT);
-    int addSwitch(int relayPin, SwitchPosition initialState = SwitchPosition::STRAIGHT);
-    bool switchExists(int switchId) const;
+    void setSwitchState(unsigned int switchId, SwitchPosition state);
+    SwitchPosition getSwitchState(unsigned int switchId) const;
+    void toggleSwitch(unsigned int switchId);
+    int addSwitch(unsigned int id, unsigned int relayPin, SwitchPosition initialState = SwitchPosition::STRAIGHT);
+    int addSwitch(unsigned int relayPin, SwitchPosition initialState = SwitchPosition::STRAIGHT);
+    bool switchExists(unsigned int switchId) const;
 };
 
 #endif // SWITCHCONTROLLER_HPP

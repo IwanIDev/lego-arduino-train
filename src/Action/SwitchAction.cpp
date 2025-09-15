@@ -10,7 +10,7 @@
  * @param delayMs Delay in milliseconds before executing the action.
  * @param switchController Pointer to the SwitchController instance.
  */
-SwitchAction::SwitchAction(int switchId, bool targetState, int delayMs, SwitchController* switchController)
+SwitchAction::SwitchAction(int switchId, SwitchPosition targetState, int delayMs, SwitchController* switchController)
     : switchId(switchId), targetState(targetState), delayMs(delayMs), switchController(switchController)
 {
     // Constructor implementation
@@ -45,7 +45,7 @@ void SwitchAction::execute(TrainController& controller) {
     Serial.print("SwitchAction executed: Switch ID ");
     Serial.print(switchId);
     Serial.print(" set to state ");
-    Serial.println(targetState ? "TRUE" : "FALSE");
+    Serial.println(targetState == SwitchPosition::STRAIGHT ? "STRAIGHT" : "DIVERGED");
 }
 
 /**

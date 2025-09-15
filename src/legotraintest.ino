@@ -20,6 +20,7 @@
 #include "PositionSensorController.hpp"
 #include "Train/TrainManager.hpp"
 #include "Train/TrainInstance.hpp"
+#include "Switch/SwitchController.hpp"
 #include <memory>
 
 Lpf2Hub trainHub;
@@ -54,6 +55,9 @@ PositionAwareSensorController positionAwareSensorController(&reedSwitchSensorCon
 
 // Train Manager
 TrainManager trainManager(&positionAwareSensorController, &reedSwitchSensorController, &lightSensorController);
+
+// Switch controller for managing track switches
+SwitchController switchController;
 
 // Setup track layout with sensor position relationships for a specific position tracker
 void setupTrackLayoutForTracker(PositionTracker& positionTracker, TrainInstance& instance1, TrainInstance& instance2) {

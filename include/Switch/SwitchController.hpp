@@ -2,10 +2,10 @@
 #define SWITCHCONTROLLER_HPP
 
 #include <map>
-
+#include <Arduino.h>
 struct Switch {
-    int id;
-    int relayPin;
+    unsigned int id;
+    unsigned int relayPin;
     bool state;  // true = one direction, false = other direction
 };
 

@@ -147,11 +147,11 @@ void setupAutomatedActions() {
   
   // Create sequential action for tunnel entry (Train 1)
   std::vector<ActionConfig> tunnelActions1;
-  tunnelActions1.push_back(ActionConfig(ActionType::SPEED)); // Slow down
+  tunnelActions1.push_back(ActionConfig(TrainActionType::SPEED)); // Slow down
   tunnelActions1.back().speed = 0;
   tunnelActions1.back().targetSpeed = 20;
   
-  tunnelActions1.push_back(ActionConfig(ActionType::SWITCH)); // Set switches
+  tunnelActions1.push_back(ActionConfig(TrainActionType::SWITCH)); // Set switches
   tunnelActions1.back().switchId = switch1Id;
   tunnelActions1.back().switchPosition = SwitchPositions::DIVERGED;
   
@@ -159,13 +159,13 @@ void setupAutomatedActions() {
   
   // Train 2 actions: Different behavior pattern
   std::vector<ActionConfig> stationActions2;
-  stationActions2.push_back(ActionConfig(ActionType::STOP));
+  stationActions2.push_back(ActionConfig(TrainActionType::STOP));
   stationActions2.back().speed = 0;
   
   // Add delay before restart
-  ActionConfig delayedRestart(ActionType::DELAY);
+  ActionConfig delayedRestart(TrainActionType::DELAY);
   delayedRestart.delayMs = 2000;
-  delayedRestart.delayedAction = std::make_unique<ActionConfig>(ActionType::SPEED);
+  delayedRestart.delayedAction = std::make_unique<ActionConfig>(TrainActionType::SPEED);
   delayedRestart.delayedAction->targetSpeed = 25;
   stationActions2.push_back(std::move(delayedRestart));
   

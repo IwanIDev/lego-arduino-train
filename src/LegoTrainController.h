@@ -31,7 +31,7 @@
 #include "Actions/SwitchAction.h"
 
 // Enum for action types to simplify API
-enum class ActionType {
+enum class TrainActionType {
     STOP,
     REVERSE,
     SPEED,
@@ -41,7 +41,7 @@ enum class ActionType {
 
 // Simplified action configuration struct
 struct ActionConfig {
-    ActionType type;
+    TrainActionType type;
     int speed = 0;
     int targetSpeed = 0;
     int switchId = 0;
@@ -49,7 +49,7 @@ struct ActionConfig {
     int delayMs = 0;
     std::unique_ptr<ActionConfig> delayedAction = nullptr;
     
-    ActionConfig(ActionType t) : type(t) {}
+    ActionConfig(TrainActionType t) : type(t) {}
 };
 
 // Sensor location constants for easier use

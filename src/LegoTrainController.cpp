@@ -134,19 +134,19 @@ void LegoTrainController::addSequentialAction(int location, size_t trainIndex, c
         
         for (const auto& config : actionConfigs) {
             switch (config.type) {
-                case ActionType::STOP:
+                case TrainActionType::STOP:
                     actions.push_back(std::unique_ptr<SensorAction>(new StopAction(config.speed)));
                     break;
-                case ActionType::REVERSE:
+                case TrainActionType::REVERSE:
                     actions.push_back(std::unique_ptr<SensorAction>(new ReverseAction(config.speed)));
                     break;
-                case ActionType::SPEED:
+                case TrainActionType::SPEED:
                     actions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(config.targetSpeed, config.speed)));
                     break;
-                case ActionType::SWITCH:
+                case TrainActionType::SWITCH:
                     actions.push_back(std::unique_ptr<SensorAction>(new SwitchAction(config.switchId, static_cast<SwitchPosition>(config.switchPosition), config.speed, &switchController)));
                     break;
-                case ActionType::DELAY:
+                case TrainActionType::DELAY:
                     // For delayed actions, we need the nested action
                     if (config.delayedAction) {
                         auto nestedAction = createActionFromConfig(*config.delayedAction);
@@ -165,13 +165,13 @@ void LegoTrainController::addSequentialAction(int location, size_t trainIndex, c
 
 std::unique_ptr<SensorAction> LegoTrainController::createActionFromConfig(const ActionConfig& config) {
     switch (config.type) {
-        case ActionType::STOP:
+        case TrainActionType::STOP:
             return std::unique_ptr<SensorAction>(new StopAction(config.speed));
-        case ActionType::REVERSE:
+        case TrainActionType::REVERSE:
             return std::unique_ptr<SensorAction>(new ReverseAction(config.speed));
-        case ActionType::SPEED:
+        case TrainActionType::SPEED:
             return std::unique_ptr<SensorAction>(new SpeedAction(config.targetSpeed, config.speed));
-        case ActionType::SWITCH:
+        case TrainActionType::SWITCH:
             return std::unique_ptr<SensorAction>(new SwitchAction(config.switchId, static_cast<SwitchPosition>(config.switchPosition), config.speed, &switchController));
         default:
             return nullptr;

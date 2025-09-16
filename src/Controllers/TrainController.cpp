@@ -188,6 +188,8 @@ void TrainController::decrementSpeed() {
 }
 
 void TrainController::setSpeedMultiplier(float multiplier) {
+    float oldMultiplier = speedMultiplier;
+    
     if (multiplier < MIN_MULTIPLIER) {
         speedMultiplier = MIN_MULTIPLIER;
     } else if (multiplier > MAX_MULTIPLIER) {
@@ -196,10 +198,13 @@ void TrainController::setSpeedMultiplier(float multiplier) {
         speedMultiplier = multiplier;
     }
 
-    if (speedMultiplier <= 0) {
-        setState(STOPPED);
-    } else {
-        setState(GO);
+    // Only update state if the multiplier actually changed
+    if (oldMultiplier != speedMultiplier) {
+        if (speedMultiplier <= 0) {
+            setState(STOPPED);
+        } else {
+            setState(GO);
+        }
     }
 }
 
@@ -254,15 +259,28 @@ bool TrainController::shouldUpdateBatteryVoltage() const {
 
 // New API methods for better library interface
 void TrainController::setSpeed(int speed) {
+    // Check if the speed actually changed to avoid redundant updates
+    int currentSpeed = getCurrentSpeed();
+    if (currentSpeed == speed) {
+        // Speed hasn't changed, no need to update
+        return;
+    }
+    
     // Convert speed (-100 to 100) to appropriate state and multiplier
     if (speed == 0) {
+        speedMultiplier = 0.0f;
         setState(STOPPED);
-        setSpeedMultiplier(0.0f);
     } else {
-        setState(GO);
         float multiplier = abs(speed) / 100.0f;
-        setSpeedMultiplier(multiplier);
-        setReverse(speed < 0);
+        speedMultiplier = multiplier;
+        bool newReverse = (speed < 0);
+        
+        // Only update reverse state if it changed
+        if (isReverse != newReverse) {
+            setReverse(newReverse);
+        }
+        
+        setState(GO);
     }
 }
 

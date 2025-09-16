@@ -15,16 +15,11 @@
 #include <memory>
 #include <map>
 
+// Include TrainConfig definition
+#include "TrainConfig.h"
+
 // Forward declaration
 class TrainInstance;
-
-struct TrainConfig {
-    String hubName;
-    byte motorPort;
-    int fastButtonPin;
-    int slowButtonPin;
-    SensorLocation initialPosition;
-};
 
 class TrainManager {
 private:

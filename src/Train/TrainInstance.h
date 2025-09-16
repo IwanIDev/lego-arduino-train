@@ -15,11 +15,11 @@
 #include <memory>
 #include <map>
 
+// Include TrainConfig definition
+#include "TrainConfig.h"
+
 // Forward declaration to avoid circular dependency
 class TrainManager;
-
-// TrainConfig struct (if not already defined elsewhere)
-struct TrainConfig;
 
 // TrainInstance class - represents a single train with all its controllers
 class TrainInstance {

@@ -1,4 +1,4 @@
-#include "PositionSensorController.hpp"
+#include "PositionSensorController.h"
 #include <Arduino.h>
 
 PositionSensorController::PositionSensorController(PositionTracker& tracker) 

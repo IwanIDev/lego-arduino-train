@@ -1,4 +1,4 @@
-#include "PositionAwareSensorController.hpp"
+#include "PositionAwareSensorController.h"
 #include <Arduino.h>
 
 PositionAwareSensorController::PositionAwareSensorController(ReedSwitchSensorController* reedController, 

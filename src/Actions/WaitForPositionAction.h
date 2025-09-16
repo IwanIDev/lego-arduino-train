@@ -37,6 +37,13 @@ public:
     // Additional accessors
     SensorLocation getTargetLocation() const { return targetLocation; }
     TrainInstance* getTrainInstance() const { return trainInstance; }
+    
+private:
+    // Helper method for internal update logic
+    bool updateInternal(TrainController& controller);
+    
+    // Create fresh instance helper
+    std::unique_ptr<WaitForPositionAction> createFresh() const;
 };
 
 #endif // WAIT_FOR_POSITION_ACTION_H

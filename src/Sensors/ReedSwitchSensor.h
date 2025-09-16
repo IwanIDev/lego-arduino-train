@@ -25,7 +25,6 @@ private:
     bool isStateStable(); // Check if the state is stable after debouncing
 public:
     ReedSwitchSensor(int pin, SensorLocation loc, std::unique_ptr<SensorAction> sensorAction = nullptr);
-    ReedSwitchSensor(int pin, SensorLocation loc); // Constructor without action for position-based system
     bool detectPassingTrain() override; // Main detection method
     bool isTrainDetected() const override; // Check if train is currently detected
     void reset() override; // Reset the sensor state

@@ -29,7 +29,8 @@ void WaitForPositionAction::execute(TrainController& controller) {
     isCompleted = false;
     
     // Block until train reaches target position
-    while (!update(controller)) {
+    // Note: In blocking mode, we don't have an ActionController, so pass nullptr
+    while (!updateInternal(controller)) {
         // Small delay to prevent busy waiting
         delay(10);
     }
@@ -57,11 +58,11 @@ void WaitForPositionAction::execute(TrainController& controller, ActionControlle
 }
 
 /**
- * Non-blocking update method.
+ * Internal update method (helper for both blocking and non-blocking modes).
  * @param controller The train controller to operate on.
  * @return true if the train has reached the target position, false if still waiting
  */
-bool WaitForPositionAction::update(TrainController& controller) {
+bool WaitForPositionAction::updateInternal(TrainController& controller) {
     if (isCompleted) {
         return true;
     }
@@ -119,8 +120,8 @@ bool WaitForPositionAction::update(TrainController& controller) {
  */
 bool WaitForPositionAction::update(TrainController& controller, ActionController& actionController) {
     // For this action, the ActionController doesn't change the behavior
-    // We delegate to the simpler update method
-    return update(controller);
+    // We delegate to the internal update method
+    return updateInternal(controller);
 }
 
 /**

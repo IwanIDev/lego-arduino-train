@@ -49,6 +49,7 @@ bool LegoTrainController::addLightSensor(int pin, int threshold, int location) {
 }
 
 bool LegoTrainController::addReedSwitchSensor(int pin, int location) {
+    // Constructor will use default nullptr for action (position-based system)
     ReedSwitchSensor* sensor = new ReedSwitchSensor(pin, static_cast<SensorLocation>(location));
     reedSwitchSensorController.addSensor(sensor);
     return true;

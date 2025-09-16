@@ -22,22 +22,6 @@ ReedSwitchSensor::ReedSwitchSensor(int pin, SensorLocation loc, std::unique_ptr<
     pinMode(pin, INPUT_PULLUP); // Set the pin as input with pull-up resistor
 }
 
-// Constructor without action for position-based system
-ReedSwitchSensor::ReedSwitchSensor(int pin, SensorLocation loc)
-    : pin(pin),
-      currentState(false),
-      lastState(false),
-      trainDetected(false),
-      lastDebounceTime(0),
-      debounceDelay(25), // Reduced from 50ms to 25ms for faster response
-      timeout(0),
-      timeoutThreshold(0),
-      location(loc),
-      action(nullptr) // No action - actions will be handled by position-based system
-{
-    pinMode(pin, INPUT_PULLUP); // Set the pin as input with pull-up resistor
-}
-
 /**
  * Reads the current state of the reed switch pin.
  * @return True if the switch is activated (LOW due to pull-up), false otherwise.

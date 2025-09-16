@@ -1,4 +1,4 @@
-#include "Switch/SwitchController.hpp"
+#include "../Switch/SwitchController.h"
 #include <Arduino.h>
 
 SwitchController::SwitchController() : nextAvailableId(1) {

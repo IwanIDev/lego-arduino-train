@@ -1,5 +1,5 @@
-#include "Train/TrainManager.hpp"
-#include "Train/TrainInstance.hpp"
+#include "TrainManager.h"
+#include "TrainInstance.h"
 #include <Arduino.h>
 
 // TrainManager Implementation

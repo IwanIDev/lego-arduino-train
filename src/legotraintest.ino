@@ -12,6 +12,7 @@
 #include "Action/SpeedAction.hpp"
 #include "Action/SequentialAction.hpp"
 #include "Action/WaitForPositionAction.hpp"
+#include "Action/SwitchAction.hpp"
 #include "ActionController.hpp"
 #include "ReedSwitchSensor.hpp"
 #include "ReedSwitchSensorController.hpp"
@@ -58,106 +59,52 @@ TrainManager trainManager(&positionAwareSensorController, &reedSwitchSensorContr
 
 // Switch controller for managing track switches
 SwitchController switchController;
+unsigned int switchRelayPins[] = {D5, D6}; // Example relay pins for switches
+unsigned int switchIds[sizeof(switchRelayPins) / sizeof(switchRelayPins[0])] = {1, 2};
 
 // Setup track layout with sensor position relationships for a specific position tracker
-void setupTrackLayoutForTracker(PositionTracker& positionTracker, TrainInstance& instance1, TrainInstance& instance2) {
-    Serial.println("Setting up track layout for position tracker...");
-
-    const int SPEED_WEST_STATION = 5;
-    const int SPEED_WEST_TUNNEL = 5;
-
-    // CURRENT LAYOUT: Two separate bidirectional loops:
-    // Loop 1: WEST_STATION ↔ WEST_TUNNEL 
-    // Loop 2: EAST_STATION ↔ EAST_TUNNEL
-
+void setupTrackLayoutForTracker(PositionTracker& positionTracker, TrainInstance& instance) {
+    Serial.println("Setting up track layout...");
+    // Define track segments based on the physical layout
     // WEST_STATION
     TrackSegment westStation;
     westStation.location = SensorLocation::WEST_STATION;
-    // No forward actions - train just passes through when going forward
-    
-    // Sequential action for reverse direction: STOP (delay) -> REVERSE (delay) -> SPEED
-    // This executes when train arrives at station going in reverse direction
-    {
-        std::vector<std::unique_ptr<SensorAction>> reverseActions;
-        reverseActions.push_back(std::unique_ptr<SensorAction>(
-            new SpeedAction(-((int)SPEED_WEST_STATION / 2), 0)
-        ));
-        reverseActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
-            std::unique_ptr<SensorAction>(new StopAction(0)), 1500
-        )));
-        reverseActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
-            std::unique_ptr<SensorAction>(new ReverseAction(0)), 500
-        )));
-        reverseActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(SPEED_WEST_TUNNEL, 0)));
-        westStation.reverseActions.push_back(std::unique_ptr<SequentialAction>(new SequentialAction(std::move(reverseActions))));
-    }
     westStation.nextForward = SensorLocation::WEST_TUNNEL;
     westStation.nextReverse = SensorLocation::WEST_TUNNEL;
     positionTracker.addTrackSegment(westStation);
 
-    // EAST_STATION
-    TrackSegment eastStation;
-    eastStation.location = SensorLocation::EAST_STATION;
-    // No forward actions - train just passes through when going forward
-
-    // Create SequentialAction for reverse direction: Stop -> Reverse -> Speed
-    // This executes when train arrives at station going in reverse direction
-    {
-        std::vector<std::unique_ptr<SensorAction>> reverseActions;
-        reverseActions.push_back(std::unique_ptr<SensorAction>(new StopAction(0)));
-        reverseActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
-            std::unique_ptr<SensorAction>(new ReverseAction(0)), 500
-        )));
-        reverseActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(SPEED_WEST_TUNNEL, 0)));
-        eastStation.reverseActions.push_back(std::unique_ptr<SequentialAction>(new SequentialAction(std::move(reverseActions))));
-    }
-
-    eastStation.nextForward = SensorLocation::EAST_TUNNEL;
-    eastStation.nextReverse = SensorLocation::EAST_TUNNEL;
-    positionTracker.addTrackSegment(eastStation);
-
     // WEST_TUNNEL
     TrackSegment westTunnel;
     westTunnel.location = SensorLocation::WEST_TUNNEL;
-    
-    // Create SequentialAction for forward direction: Stop -> Reverse -> Speed
-    {
-        std::vector<std::unique_ptr<SensorAction>> forwardActions;
-        forwardActions.push_back(std::unique_ptr<SensorAction>(new StopAction(0)));
-        forwardActions.push_back(std::unique_ptr<SensorAction>(new WaitForPositionAction(&instance2, SensorLocation::EAST_TUNNEL)));
-        forwardActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
-            std::unique_ptr<SensorAction>(new ReverseAction(0)), 500
-        )));
-        forwardActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(SPEED_WEST_STATION, 0)));
-        westTunnel.forwardActions.push_back(std::unique_ptr<SequentialAction>(new SequentialAction(std::move(forwardActions))));
-    }
-
-    westTunnel.reverseActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(0, 0)));
-
     westTunnel.nextForward = SensorLocation::WEST_STATION;
-    westTunnel.nextReverse = SensorLocation::WEST_STATION;
+    westTunnel.nextReverse = SensorLocation::EAST_TUNNEL;
+
+    // Forward Action at WEST_TUNNEL: STOP -> SWITCH -> REVERSE -> SPEED
+    {
+        std::vector<std::unique_ptr<SensorAction>> actions;
+        actions.push_back(std::unique_ptr<SensorAction>(new StopAction(0)));
+        actions.push_back(std::unique_ptr<SensorAction>(new SwitchAction(switchIds[0], SwitchPosition::DIVERGED, 0, &switchController)));
+        actions.push_back(std::unique_ptr<SensorAction>(new SwitchAction(switchIds[1], SwitchPosition::DIVERGED, 0, &switchController)));
+        actions.push_back(std::unique_ptr<SensorAction>(new ReverseAction(0)));
+        actions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(std::unique_ptr<SensorAction>(new SpeedAction(5, 0)), 500)));
+        westTunnel.forwardActions.push_back(std::unique_ptr<SensorAction>(new SequentialAction(std::move(actions))));
+    }
     positionTracker.addTrackSegment(westTunnel);
 
     // EAST_TUNNEL
     TrackSegment eastTunnel;
     eastTunnel.location = SensorLocation::EAST_TUNNEL;
-
-    // Create SequentialAction for forward direction: Stop -> Reverse -> Speed
-    {
-        std::vector<std::unique_ptr<SensorAction>> forwardActions;
-        forwardActions.push_back(std::unique_ptr<SensorAction>(new StopAction(0)));
-        forwardActions.push_back(std::unique_ptr<SensorAction>(new WaitForPositionAction(&instance1, SensorLocation::WEST_TUNNEL)));
-        forwardActions.push_back(std::unique_ptr<SensorAction>(new DelayedAction(
-            std::unique_ptr<SensorAction>(new ReverseAction(0)), 500
-        )));
-        forwardActions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(SPEED_WEST_STATION, 0)));
-        eastTunnel.forwardActions.push_back(std::unique_ptr<SequentialAction>(new SequentialAction(std::move(forwardActions))));
-    }
-
-    eastTunnel.reverseActions.push_back(std::unique_ptr<SpeedAction>(new SpeedAction(0, 0)));
-
-    eastTunnel.nextForward = SensorLocation::EAST_STATION;
+    eastTunnel.nextForward = SensorLocation::WEST_TUNNEL;
     eastTunnel.nextReverse = SensorLocation::EAST_STATION;
+
+    // Reverse Action at EAST_TUNNEL: STOP -> REVERSE -> SPEED
+    {
+        std::vector<std::unique_ptr<SensorAction>> actions;
+        actions.push_back(std::unique_ptr<SensorAction>(new StopAction(0)));
+        actions.push_back(std::unique_ptr<SensorAction>(new ReverseAction(0)));
+        actions.push_back(std::unique_ptr<SensorAction>(new SpeedAction(5, 0)));
+        eastTunnel.reverseActions.push_back(std::unique_ptr<SensorAction>(new SequentialAction(std::move(actions))));
+    }
     positionTracker.addTrackSegment(eastTunnel);
 }
 
@@ -170,6 +117,14 @@ void setup() {
     for (auto& sensor : reedSwitchSensors) {
         reedSwitchSensorController.addSensor(&sensor);
     }
+
+    // Setup switches
+    for (size_t i = 0; i < sizeof(switchRelayPins) / sizeof(switchRelayPins[0]); ++i) {
+        int switchId = switchController.addSwitch(switchRelayPins[i], SwitchPosition::STRAIGHT);
+        switchIds[i] = switchId; // Store the generated switch ID
+        Serial.print("Added switch with ID: ");
+        Serial.println(switchId);
+    }
         
     // Add trains to the manager
     TrainConfig train1Config;
@@ -180,27 +135,13 @@ void setup() {
     train1Config.initialPosition = SensorLocation::WEST_STATION;
     size_t train1Index = trainManager.addTrain(train1Config);
     
-    TrainConfig train2Config;
-    train2Config.hubName = "Train2";
-    train2Config.motorPort = MOTOR_PORT;
-    train2Config.fastButtonPin = fastButton;
-    train2Config.slowButtonPin = slowButton;
-    train2Config.initialPosition = SensorLocation::EAST_STATION;
-    size_t train2Index = trainManager.addTrain(train2Config);
-    
     // Setup track layout for each train's position tracker
     TrainInstance* train1 = trainManager.getTrain(train1Index);
-    TrainInstance* train2 = trainManager.getTrain(train2Index);
     if (train1 && train1->getPositionTracker()) {
-        setupTrackLayoutForTracker(*train1->getPositionTracker(), *train1, *train2);
+        setupTrackLayoutForTracker(*train1->getPositionTracker(), *train1);
         Serial.println("Track layout configured for Train1");
     }
-    
-    if (train2 && train2->getPositionTracker()) {
-        setupTrackLayoutForTracker(*train2->getPositionTracker(), *train1, *train2);
-        Serial.println("Track layout configured for Train2");
-    }
-    
+
     // Initialize the train manager
     if (trainManager.initialize()) {
         Serial.println("Multi-train system initialized successfully");

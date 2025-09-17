@@ -138,3 +138,45 @@ bool PositionTracker::canReachPosition(SensorLocation position) const {
     }
     return false; // Cannot reach if no track segment found
 }
+
+void PositionTracker::addForwardAction(SensorLocation position, std::unique_ptr<SensorAction> action) {
+    for (auto& segment : trackMap) {
+        if (segment.location == position) {
+            segment.forwardActions.push_back(std::move(action));
+            Serial.print("Added forward action for position: ");
+            Serial.println(position.getName().c_str());
+            return;
+        }
+    }
+    // If no existing segment found, create a new one
+    TrackSegment newSegment;
+    newSegment.location = position;
+    newSegment.forwardActions.push_back(std::move(action));
+    newSegment.nextForward = position; // Default to same position
+    newSegment.nextReverse = position; // Default to same position
+    trackMap.push_back(std::move(newSegment));
+    
+    Serial.print("Created new track segment with forward action for position: ");
+    Serial.println(position.getName().c_str());
+}
+
+void PositionTracker::addReverseAction(SensorLocation position, std::unique_ptr<SensorAction> action) {
+    for (auto& segment : trackMap) {
+        if (segment.location == position) {
+            segment.reverseActions.push_back(std::move(action));
+            Serial.print("Added reverse action for position: ");
+            Serial.println(position.getName().c_str());
+            return;
+        }
+    }
+    // If no existing segment found, create a new one
+    TrackSegment newSegment;
+    newSegment.location = position;
+    newSegment.reverseActions.push_back(std::move(action));
+    newSegment.nextForward = position; // Default to same position
+    newSegment.nextReverse = position; // Default to same position
+    trackMap.push_back(std::move(newSegment));
+    
+    Serial.print("Created new track segment with reverse action for position: ");
+    Serial.println(position.getName().c_str());
+}

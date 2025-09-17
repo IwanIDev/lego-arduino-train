@@ -18,6 +18,8 @@
 #include "Sensors/PositionAwareSensorController.h"
 #include "Sensors/PositionSensorController.h"
 #include "Position/PositionTracker.h"
+#include "Position/SensorLocation.h"
+#include "Position/SensorLocation.h"
 #include "Train/TrainManager.h"
 #include "Train/TrainInstance.h"
 #include "Switch/SwitchController.h"
@@ -52,13 +54,8 @@ struct ActionConfig {
     ActionConfig(TrainActionType t) : type(t) {}
 };
 
-// Sensor location constants for easier use
-namespace SensorLocations {
-    const SensorLocation WEST_STATION = SensorLocation::createWestStation();
-    const SensorLocation WEST_TUNNEL = SensorLocation::createWestTunnel();
-    const SensorLocation EAST_STATION = SensorLocation::createEastStation();
-    const SensorLocation EAST_TUNNEL = SensorLocation::createEastTunnel();
-}
+// Note: No predefined sensor locations - create your own SensorLocation objects
+// Example: SensorLocation myStation("MY_STATION", 1);
 
 // Switch position constants
 namespace SwitchPositions {
@@ -116,7 +113,7 @@ public:
      * @param initialPosition Initial sensor location
      * @return Index of the added train
      */
-    size_t addTrain(const String& hubName, byte motorPort, int initialPosition = SensorLocations::WEST_STATION);
+    size_t addTrain(const String& hubName, byte motorPort, const SensorLocation& initialPosition);
     
     /**
      * Add a train with full configuration
@@ -137,18 +134,18 @@ public:
      * Add a light sensor
      * @param pin Analog pin number
      * @param threshold Light threshold (0-100)
-     * @param location Sensor location constant
+     * @param location Sensor location
      * @return true if added successfully
      */
-    bool addLightSensor(int pin, int threshold, int location);
+    bool addLightSensor(int pin, int threshold, const SensorLocation& location);
     
     /**
      * Add a reed switch sensor
      * @param pin Digital pin number
-     * @param location Sensor location constant
+     * @param location Sensor location
      * @return true if added successfully
      */
-    bool addReedSwitchSensor(int pin, int location);
+    bool addReedSwitchSensor(int pin, const SensorLocation& location);
     
     // ===== Switch Management =====
     
@@ -201,7 +198,7 @@ public:
      * @param nextReverse Next location when moving in reverse
      * @param trainIndex Train index (default: 0)
      */
-    void addTrackSegment(int location, int nextForward, int nextReverse, size_t trainIndex = 0);
+    void addTrackSegment(const SensorLocation& location, const SensorLocation& nextForward, const SensorLocation& nextReverse, size_t trainIndex = 0);
     
     // ===== Action System =====
     
@@ -211,7 +208,7 @@ public:
      * @param trainIndex Train index
      * @param speed Speed when stopping (usually 0)
      */
-    void addStopAction(int location, size_t trainIndex = 0, int speed = 0);
+    void addStopAction(const SensorLocation& location, size_t trainIndex = 0, int speed = 0);
     
     /**
      * Add a reverse action at a sensor location
@@ -219,7 +216,7 @@ public:
      * @param trainIndex Train index
      * @param speed Speed when reversing (usually 0)
      */
-    void addReverseAction(int location, size_t trainIndex = 0, int speed = 0);
+    void addReverseAction(const SensorLocation& location, size_t trainIndex = 0, int speed = 0);
     
     /**
      * Add a speed change action at a sensor location
@@ -228,7 +225,7 @@ public:
      * @param speed Current speed during action
      * @param targetSpeed New speed to set
      */
-    void addSpeedAction(int location, size_t trainIndex, int speed, int targetSpeed);
+    void addSpeedAction(const SensorLocation& location, size_t trainIndex, int speed, int targetSpeed);
     
     /**
      * Add a switch operation action at a sensor location
@@ -238,7 +235,7 @@ public:
      * @param position Switch position (STRAIGHT or DIVERGED)
      * @param speed Speed during switch operation
      */
-    void addSwitchAction(int location, size_t trainIndex, int switchId, int position, int speed = 0);
+    void addSwitchAction(const SensorLocation& location, size_t trainIndex, int switchId, int position, int speed = 0);
     
     /**
      * Add a sequence of actions at a sensor location
@@ -246,7 +243,7 @@ public:
      * @param trainIndex Train index
      * @param actionConfigs Vector of action configurations
      */
-    void addSequentialAction(int location, size_t trainIndex, const std::vector<ActionConfig>& actionConfigs);
+    void addSequentialAction(const SensorLocation& location, size_t trainIndex, const std::vector<ActionConfig>& actionConfigs);
     
     // ===== Status and Debugging =====
     

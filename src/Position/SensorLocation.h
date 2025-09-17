@@ -20,9 +20,9 @@ public:
      * @brief Construct a new Sensor Location with a name and optional ID
      * 
      * @param locationName Name identifier for this location
-     * @param locationId Unique numeric identifier (default: -1 for auto-assign)
+     * @param locationId Unique numeric identifier
      */
-    SensorLocation(const std::string& locationName, int locationId = -1)
+    SensorLocation(const std::string& locationName, int locationId)
         : name(locationName), id(locationId) {}
     
     /**

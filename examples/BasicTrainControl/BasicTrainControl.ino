@@ -29,6 +29,10 @@ const byte MOTOR_PORT = (byte)PoweredUpHubPort::B;
 const int SENSOR_PIN_1 = D9;  // Reed switch at station 1
 const int SENSOR_PIN_2 = D10; // Reed switch at station 2
 
+// Create custom sensor locations
+SensorLocation westStation("WEST_STATION", 1);
+SensorLocation eastStation("EAST_STATION", 2);
+
 // Variables for manual control
 unsigned long lastUpdate = 0;
 const unsigned long UPDATE_INTERVAL = 100; // Update every 100ms
@@ -45,14 +49,18 @@ void setup() {
     return;
   }
   
-  // Add a train to the system
-  size_t trainIndex = trainController.addTrain(TRAIN_HUB_NAME, MOTOR_PORT, SensorLocations::WEST_STATION);
+  // Add a train to the system with custom starting location
+  size_t trainIndex = trainController.addTrain(TRAIN_HUB_NAME, MOTOR_PORT, westStation);
   Serial.print("Added train with index: ");
   Serial.println(trainIndex);
   
-  // Add reed switch sensors (optional)
-  trainController.addReedSwitchSensor(SENSOR_PIN_1, SensorLocations::WEST_STATION);
-  trainController.addReedSwitchSensor(SENSOR_PIN_2, SensorLocations::EAST_STATION);
+  // Add reed switch sensors using custom locations
+  trainController.addReedSwitchSensor(SENSOR_PIN_1, westStation);
+  trainController.addReedSwitchSensor(SENSOR_PIN_2, eastStation);
+  
+  // You can create additional custom sensor locations as needed:
+  // SensorLocation customStation("MY_CUSTOM_STATION", 50);
+  // trainController.addReedSwitchSensor(D11, customStation);
   
   // Enable debug output
   trainController.enableDebug(true);

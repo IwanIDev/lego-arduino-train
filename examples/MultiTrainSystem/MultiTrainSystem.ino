@@ -37,6 +37,12 @@ const int EAST_TUNNEL_SENSOR = D12;
 const int SWITCH_1_PIN = D5;
 const int SWITCH_2_PIN = D6;
 
+// Create custom sensor locations for the track layout
+SensorLocation westStation("WEST_STATION", 1);
+SensorLocation westTunnel("WEST_TUNNEL", 2);
+SensorLocation eastStation("EAST_STATION", 3);
+SensorLocation eastTunnel("EAST_TUNNEL", 4);
+
 // Train indices
 size_t train1Index;
 size_t train2Index;
@@ -57,20 +63,26 @@ void setup() {
     return;
   }
   
-  // Add trains to the system
-  train1Index = trainController.addTrain(TRAIN1_HUB_NAME, MOTOR_PORT, SensorLocations::WEST_STATION);
-  train2Index = trainController.addTrain(TRAIN2_HUB_NAME, MOTOR_PORT, SensorLocations::EAST_STATION);
+  // Add trains to the system using custom sensor locations
+  train1Index = trainController.addTrain(TRAIN1_HUB_NAME, MOTOR_PORT, westStation);
+  train2Index = trainController.addTrain(TRAIN2_HUB_NAME, MOTOR_PORT, eastStation);
   
   Serial.print("Added Train 1 with index: ");
   Serial.println(train1Index);
   Serial.print("Added Train 2 with index: ");
   Serial.println(train2Index);
   
-  // Add reed switch sensors
-  trainController.addReedSwitchSensor(WEST_STATION_SENSOR, SensorLocations::WEST_STATION);
-  trainController.addReedSwitchSensor(WEST_TUNNEL_SENSOR, SensorLocations::WEST_TUNNEL);
-  trainController.addReedSwitchSensor(EAST_STATION_SENSOR, SensorLocations::EAST_STATION);
-  trainController.addReedSwitchSensor(EAST_TUNNEL_SENSOR, SensorLocations::EAST_TUNNEL);
+  // Add reed switch sensors using custom sensor locations
+  trainController.addReedSwitchSensor(WEST_STATION_SENSOR, westStation);
+  trainController.addReedSwitchSensor(WEST_TUNNEL_SENSOR, westTunnel);
+  trainController.addReedSwitchSensor(EAST_STATION_SENSOR, eastStation);
+  trainController.addReedSwitchSensor(EAST_TUNNEL_SENSOR, eastTunnel);
+  
+  // Example: Add custom sensor locations for more complex layouts
+  // SensorLocation bridgeEntry("BRIDGE_ENTRANCE", 100);
+  // SensorLocation junctionPoint("MAIN_JUNCTION", 101);  
+  // trainController.addReedSwitchSensor(D13, bridgeEntry);
+  // trainController.addReedSwitchSensor(D14, junctionPoint);
   
   // Add track switches
   switch1Id = trainController.addSwitch(SWITCH_1_PIN, SwitchPositions::STRAIGHT);
@@ -96,54 +108,54 @@ void setup() {
 
 void setupTrackLayoutTrain1() {
   // Define track segments for Train 1
-  trainController.addTrackSegment(SensorLocations::WEST_STATION, 
-                                 SensorLocations::WEST_TUNNEL, 
-                                 SensorLocations::WEST_TUNNEL, 
+  trainController.addTrackSegment(westStation, 
+                                 westTunnel, 
+                                 westTunnel, 
                                  train1Index);
   
-  trainController.addTrackSegment(SensorLocations::WEST_TUNNEL, 
-                                 SensorLocations::EAST_TUNNEL, 
-                                 SensorLocations::WEST_STATION, 
+  trainController.addTrackSegment(westTunnel, 
+                                 eastTunnel, 
+                                 westStation, 
                                  train1Index);
   
-  trainController.addTrackSegment(SensorLocations::EAST_TUNNEL, 
-                                 SensorLocations::EAST_STATION, 
-                                 SensorLocations::WEST_TUNNEL, 
+  trainController.addTrackSegment(eastTunnel, 
+                                 eastStation, 
+                                 westTunnel, 
                                  train1Index);
   
-  trainController.addTrackSegment(SensorLocations::EAST_STATION, 
-                                 SensorLocations::EAST_TUNNEL, 
-                                 SensorLocations::EAST_TUNNEL, 
+  trainController.addTrackSegment(eastStation, 
+                                 eastTunnel, 
+                                 eastTunnel, 
                                  train1Index);
 }
 
 void setupTrackLayoutTrain2() {
   // Define track segments for Train 2 (opposite direction)
-  trainController.addTrackSegment(SensorLocations::EAST_STATION, 
-                                 SensorLocations::EAST_TUNNEL, 
-                                 SensorLocations::EAST_TUNNEL, 
+  trainController.addTrackSegment(eastStation, 
+                                 eastTunnel, 
+                                 eastTunnel, 
                                  train2Index);
   
-  trainController.addTrackSegment(SensorLocations::EAST_TUNNEL, 
-                                 SensorLocations::WEST_TUNNEL, 
-                                 SensorLocations::EAST_STATION, 
+  trainController.addTrackSegment(eastTunnel, 
+                                 westTunnel, 
+                                 eastStation, 
                                  train2Index);
   
-  trainController.addTrackSegment(SensorLocations::WEST_TUNNEL, 
-                                 SensorLocations::WEST_STATION, 
-                                 SensorLocations::EAST_TUNNEL, 
+  trainController.addTrackSegment(westTunnel, 
+                                 westStation, 
+                                 eastTunnel, 
                                  train2Index);
   
-  trainController.addTrackSegment(SensorLocations::WEST_STATION, 
-                                 SensorLocations::WEST_TUNNEL, 
-                                 SensorLocations::WEST_TUNNEL, 
+  trainController.addTrackSegment(westStation, 
+                                 westTunnel, 
+                                 westTunnel, 
                                  train2Index);
 }
 
 void setupAutomatedActions() {
   // Train 1 actions: Stop at stations, slow through tunnels
-  trainController.addStopAction(SensorLocations::WEST_STATION, train1Index, 0);
-  trainController.addStopAction(SensorLocations::EAST_STATION, train1Index, 0);
+  trainController.addStopAction(westStation, train1Index, 0);
+  trainController.addStopAction(eastStation, train1Index, 0);
   
   // Create sequential action for tunnel entry (Train 1)
   std::vector<ActionConfig> tunnelActions1;
@@ -155,7 +167,7 @@ void setupAutomatedActions() {
   tunnelActions1.back().switchId = switch1Id;
   tunnelActions1.back().switchPosition = SwitchPositions::DIVERGED;
   
-  trainController.addSequentialAction(SensorLocations::WEST_TUNNEL, train1Index, tunnelActions1);
+  trainController.addSequentialAction(westTunnel, train1Index, tunnelActions1);
   
   // Train 2 actions: Different behavior pattern
   std::vector<ActionConfig> stationActions2;
@@ -165,12 +177,12 @@ void setupAutomatedActions() {
   // Add delay before restart
   ActionConfig delayedRestart(TrainActionType::DELAY);
   delayedRestart.delayMs = 2000;
-  delayedRestart.delayedAction = std::make_unique<ActionConfig>(TrainActionType::SPEED);
+  delayedRestart.delayedAction = std::unique_ptr<ActionConfig>(new ActionConfig(TrainActionType::SPEED));
   delayedRestart.delayedAction->targetSpeed = 25;
   stationActions2.push_back(std::move(delayedRestart));
   
-  trainController.addSequentialAction(SensorLocations::WEST_STATION, train2Index, stationActions2);
-  trainController.addSequentialAction(SensorLocations::EAST_STATION, train2Index, stationActions2);
+  trainController.addSequentialAction(westStation, train2Index, stationActions2);
+  trainController.addSequentialAction(eastStation, train2Index, stationActions2);
 }
 
 void loop() {
@@ -219,3 +231,41 @@ void handleSerialCommands() {
     }
   }
 }
+
+/*
+ * CUSTOM SENSOR LOCATION EXAMPLES
+ * 
+ * Here are examples of how to create and use custom sensor locations
+ * for more complex track layouts:
+ * 
+ * // Create custom locations with descriptive names and unique IDs
+ * SensorLocation mainJunction("MAIN_JUNCTION", 100);
+ * SensorLocation bridgeEntrance("BRIDGE_ENTRANCE", 101);  
+ * SensorLocation tunnelExit("TUNNEL_EXIT", 102);
+ * SensorLocation maintenanceYard("MAINTENANCE_YARD", 200);
+ * SensorLocation loadingDock("LOADING_DOCK", 201);
+ * 
+ * // Add sensors at these custom locations
+ * trainController.addReedSwitchSensor(D13, mainJunction);
+ * trainController.addLightSensor(A2, 30, bridgeEntrance);
+ * trainController.addReedSwitchSensor(D14, tunnelExit);
+ * 
+ * // Use custom locations in track layout
+ * trainController.addTrackSegment(mainJunction, bridgeEntrance, tunnelExit, train1Index);
+ * trainController.addTrackSegment(tunnelExit, maintenanceYard, loadingDock, train2Index);
+ * 
+ * // Add train starting at custom location
+ * size_t maintenanceTrain = trainController.addTrain("MaintenanceTrain", 
+ *                                                   PoweredUpHubPort::B, 
+ *                                                   maintenanceYard);
+ * 
+ * // Create automated actions for custom locations
+ * std::vector<ActionConfig> maintenanceActions;
+ * maintenanceActions.push_back(ActionConfig(TrainActionType::STOP));
+ * maintenanceActions.push_back(ActionConfig(TrainActionType::REVERSE));
+ * trainController.addSequentialAction(loadingDock, maintenanceTrain, maintenanceActions);
+ * 
+ * This flexibility allows you to create complex layouts with meaningful
+ * location names and organize your track system however makes sense
+ * for your specific LEGO train setup.
+ */

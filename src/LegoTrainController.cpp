@@ -27,11 +27,11 @@ bool LegoTrainController::begin() {
     }
 }
 
-size_t LegoTrainController::addTrain(const String& hubName, byte motorPort, int initialPosition) {
+size_t LegoTrainController::addTrain(const String& hubName, byte motorPort, const SensorLocation& initialPosition) {
     TrainConfig config;
     config.hubName = hubName;
     config.motorPort = motorPort;
-    config.initialPosition = static_cast<SensorLocation>(initialPosition);
+    config.initialPosition = initialPosition;
     config.fastButtonPin = -1; // No button by default
     config.slowButtonPin = -1; // No button by default
     
@@ -42,15 +42,15 @@ size_t LegoTrainController::addTrain(const TrainConfig& config) {
     return trainManager.addTrain(config);
 }
 
-bool LegoTrainController::addLightSensor(int pin, int threshold, int location) {
-    LightSensor* sensor = new LightSensor(pin, threshold, static_cast<SensorLocation>(location));
+bool LegoTrainController::addLightSensor(int pin, int threshold, const SensorLocation& location) {
+    LightSensor* sensor = new LightSensor(pin, threshold, location);
     lightSensorController.addSensor(sensor);
     return true;
 }
 
-bool LegoTrainController::addReedSwitchSensor(int pin, int location) {
+bool LegoTrainController::addReedSwitchSensor(int pin, const SensorLocation& location) {
     // Constructor will use default nullptr for action (position-based system)
-    ReedSwitchSensor* sensor = new ReedSwitchSensor(pin, static_cast<SensorLocation>(location));
+    ReedSwitchSensor* sensor = new ReedSwitchSensor(pin, location);
     reedSwitchSensorController.addSensor(sensor);
     return true;
 }
@@ -85,50 +85,50 @@ bool LegoTrainController::operateSwitch(int switchId, int position) {
     return switchController.operateSwitch(switchId, static_cast<SwitchPosition>(position));
 }
 
-void LegoTrainController::addTrackSegment(int location, int nextForward, int nextReverse, size_t trainIndex) {
+void LegoTrainController::addTrackSegment(const SensorLocation& location, const SensorLocation& nextForward, const SensorLocation& nextReverse, size_t trainIndex) {
     TrainInstance* train = trainManager.getTrain(trainIndex);
     if (train && train->getPositionTracker()) {
         TrackSegment segment;
-        segment.location = static_cast<SensorLocation>(location);
-        segment.nextForward = static_cast<SensorLocation>(nextForward);
-        segment.nextReverse = static_cast<SensorLocation>(nextReverse);
+        segment.location = location;
+        segment.nextForward = nextForward;
+        segment.nextReverse = nextReverse;
         train->getPositionTracker()->addTrackSegment(segment);
     }
 }
 
-void LegoTrainController::addStopAction(int location, size_t trainIndex, int speed) {
+void LegoTrainController::addStopAction(const SensorLocation& location, size_t trainIndex, int speed) {
     TrainInstance* train = trainManager.getTrain(trainIndex);
     if (train && train->getPositionTracker()) {
         auto action = std::unique_ptr<SensorAction>(new StopAction(speed));
-        train->getPositionTracker()->addForwardAction(static_cast<SensorLocation>(location), std::move(action));
+        train->getPositionTracker()->addForwardAction(location, std::move(action));
     }
 }
 
-void LegoTrainController::addReverseAction(int location, size_t trainIndex, int speed) {
+void LegoTrainController::addReverseAction(const SensorLocation& location, size_t trainIndex, int speed) {
     TrainInstance* train = trainManager.getTrain(trainIndex);
     if (train && train->getPositionTracker()) {
         auto action = std::unique_ptr<SensorAction>(new ReverseAction(speed));
-        train->getPositionTracker()->addForwardAction(static_cast<SensorLocation>(location), std::move(action));
+        train->getPositionTracker()->addForwardAction(location, std::move(action));
     }
 }
 
-void LegoTrainController::addSpeedAction(int location, size_t trainIndex, int speed, int targetSpeed) {
+void LegoTrainController::addSpeedAction(const SensorLocation& location, size_t trainIndex, int speed, int targetSpeed) {
     TrainInstance* train = trainManager.getTrain(trainIndex);
     if (train && train->getPositionTracker()) {
         auto action = std::unique_ptr<SensorAction>(new SpeedAction(targetSpeed, speed));
-        train->getPositionTracker()->addForwardAction(static_cast<SensorLocation>(location), std::move(action));
+        train->getPositionTracker()->addForwardAction(location, std::move(action));
     }
 }
 
-void LegoTrainController::addSwitchAction(int location, size_t trainIndex, int switchId, int position, int speed) {
+void LegoTrainController::addSwitchAction(const SensorLocation& location, size_t trainIndex, int switchId, int position, int speed) {
     TrainInstance* train = trainManager.getTrain(trainIndex);
     if (train && train->getPositionTracker()) {
         auto action = std::unique_ptr<SensorAction>(new SwitchAction(switchId, static_cast<SwitchPosition>(position), speed, &switchController));
-        train->getPositionTracker()->addForwardAction(static_cast<SensorLocation>(location), std::move(action));
+        train->getPositionTracker()->addForwardAction(location, std::move(action));
     }
 }
 
-void LegoTrainController::addSequentialAction(int location, size_t trainIndex, const std::vector<ActionConfig>& actionConfigs) {
+void LegoTrainController::addSequentialAction(const SensorLocation& location, size_t trainIndex, const std::vector<ActionConfig>& actionConfigs) {
     TrainInstance* train = trainManager.getTrain(trainIndex);
     if (train && train->getPositionTracker()) {
         std::vector<std::unique_ptr<SensorAction>> actions;
@@ -160,7 +160,7 @@ void LegoTrainController::addSequentialAction(int location, size_t trainIndex, c
         }
         
         auto sequentialAction = std::unique_ptr<SensorAction>(new SequentialAction(std::move(actions)));
-        train->getPositionTracker()->addForwardAction(static_cast<SensorLocation>(location), std::move(sequentialAction));
+        train->getPositionTracker()->addForwardAction(location, std::move(sequentialAction));
     }
 }
 

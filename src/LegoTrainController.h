@@ -19,7 +19,6 @@
 #include "Sensors/PositionSensorController.h"
 #include "Position/PositionTracker.h"
 #include "Position/SensorLocation.h"
-#include "Position/SensorLocation.h"
 #include "Train/TrainManager.h"
 #include "Train/TrainInstance.h"
 #include "Switch/SwitchController.h"

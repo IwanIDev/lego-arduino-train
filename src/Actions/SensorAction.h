@@ -1,19 +1,12 @@
 #ifndef SENSOR_ACTION_H
 #define SENSOR_ACTION_H
 #include "../Controllers/TrainController.h"
+#include "../Position/SensorLocation.h"
 #include <memory>
 
 // Forward declaration to avoid circular dependency
 class ActionController;
 class NonBlockingAction;
-
-enum class SensorLocation {
-    WEST_STATION,
-    WEST_TUNNEL,
-    EAST_STATION,
-    EAST_TUNNEL,
-    UNKNOWN
-};
 
 class SensorAction {
 public:

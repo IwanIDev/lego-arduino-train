@@ -2,6 +2,7 @@
 #define POSITION_TRACKER_H
 
 #include "../Actions/SensorAction.h"
+#include "SensorLocation.h"
 #include <vector>
 #include <memory>
 

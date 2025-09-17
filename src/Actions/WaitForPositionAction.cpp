@@ -71,7 +71,7 @@ bool WaitForPositionAction::updateInternal(TrainController& controller) {
         // Mark as active and start monitoring
         isActive = true;
         Serial.print("WaitForPositionAction: Starting to wait for position ");
-        Serial.println(static_cast<int>(targetLocation));
+        Serial.println(targetLocation.getName().c_str());
         return false;
     }
     
@@ -94,7 +94,7 @@ bool WaitForPositionAction::updateInternal(TrainController& controller) {
     
     if (currentPosition == targetLocation) {
         Serial.print("WaitForPositionAction: Train reached target position ");
-        Serial.println(static_cast<int>(targetLocation));
+        Serial.println(targetLocation.getName().c_str());
         isCompleted = true;
         return true;
     }
@@ -103,9 +103,9 @@ bool WaitForPositionAction::updateInternal(TrainController& controller) {
     unsigned long currentTime = millis();
     if (currentTime - lastLogTime > 5000) { // Log every 5 seconds
         Serial.print("WaitForPositionAction: Still waiting for position ");
-        Serial.print(static_cast<int>(targetLocation));
+        Serial.print(targetLocation.getName().c_str());
         Serial.print(", current position: ");
-        Serial.println(static_cast<int>(currentPosition));
+        Serial.println(currentPosition.getName().c_str());
         lastLogTime = currentTime;
     }
     
@@ -139,7 +139,7 @@ void WaitForPositionAction::reset() {
     isActive = false;
     isCompleted = false;
     Serial.print("WaitForPositionAction: Reset to wait for position ");
-    Serial.println(static_cast<int>(targetLocation));
+    Serial.println(targetLocation.getName().c_str());
 }
 
 /**

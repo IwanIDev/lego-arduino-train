@@ -4,7 +4,7 @@
 PositionAwareSensorController::PositionAwareSensorController(ReedSwitchSensorController* reedController, 
                                                              LightSensorController* lightController)
     : reedSwitchController(reedController), lightSensorController(lightController), 
-      lastTriggeredLocation(SensorLocation::UNKNOWN), lastTriggerTime(0) {
+      lastTriggeredLocation(SensorLocation::createUnknown()), lastTriggerTime(0) {
 }
 
 bool PositionAwareSensorController::checkSensors() {
@@ -37,7 +37,7 @@ bool PositionAwareSensorController::checkSensors() {
     for (const Sensor* sensor : triggeredSensors) {
         if (!sensor) continue;
         SensorLocation loc = sensor->getLocation();
-        if (loc != SensorLocation::UNKNOWN) {
+        if (!loc.isUnknown()) {
             lastTriggeredLocation = loc;
         }
         lastTriggeredLocation = loc;

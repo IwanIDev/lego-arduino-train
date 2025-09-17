@@ -182,7 +182,7 @@ std::unique_ptr<SensorAction> LegoTrainController::createActionFromConfig(const 
 int LegoTrainController::getTrainPosition(size_t trainIndex) {
     TrainInstance* train = trainManager.getTrain(trainIndex);
     if (train && train->getPositionTracker()) {
-        return static_cast<int>(train->getPositionTracker()->getCurrentPosition());
+        return train->getPositionTracker()->getCurrentPosition().getId();
     }
     return -1;
 }

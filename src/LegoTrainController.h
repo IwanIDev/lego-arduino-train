@@ -54,10 +54,10 @@ struct ActionConfig {
 
 // Sensor location constants for easier use
 namespace SensorLocations {
-    const int WEST_STATION = static_cast<int>(SensorLocation::WEST_STATION);
-    const int WEST_TUNNEL = static_cast<int>(SensorLocation::WEST_TUNNEL);
-    const int EAST_STATION = static_cast<int>(SensorLocation::EAST_STATION);
-    const int EAST_TUNNEL = static_cast<int>(SensorLocation::EAST_TUNNEL);
+    const SensorLocation WEST_STATION = SensorLocation::createWestStation();
+    const SensorLocation WEST_TUNNEL = SensorLocation::createWestTunnel();
+    const SensorLocation EAST_STATION = SensorLocation::createEastStation();
+    const SensorLocation EAST_TUNNEL = SensorLocation::createEastTunnel();
 }
 
 // Switch position constants

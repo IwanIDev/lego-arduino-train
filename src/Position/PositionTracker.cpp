@@ -10,7 +10,7 @@ void PositionTracker::updatePosition(SensorLocation newPosition) {
         // Same position triggered again - this often happens when reversing over the same sensor
         // Don't update direction based on sensor movement in this case, trust the current direction
         Serial.print("Same sensor triggered again at position: ");
-        Serial.print(static_cast<int>(currentPosition));
+        Serial.print(currentPosition.getName().c_str());
         Serial.print(", keeping current direction: ");
         Serial.println(currentDirection == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
         return;
@@ -30,9 +30,9 @@ void PositionTracker::updatePosition(SensorLocation newPosition) {
     currentPosition = newPosition;
     
     Serial.print("Train moved from ");
-    Serial.print(static_cast<int>(previousPosition));
+    Serial.print(previousPosition.getName().c_str());
     Serial.print(" to ");
-    Serial.print(static_cast<int>(currentPosition));
+    Serial.print(currentPosition.getName().c_str());
     Serial.print(" direction: ");
     Serial.println(currentDirection == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
 }
@@ -56,9 +56,9 @@ void PositionTracker::updateDirection(SensorLocation newPosition) {
     }
     // Unexpected movement, log to serial
     Serial.print("Unexpected movement from ");
-    Serial.print(static_cast<int>(currentPosition));
+    Serial.print(currentPosition.getName().c_str());
     Serial.print(" to ");
-    Serial.print(static_cast<int>(newPosition));
+    Serial.print(newPosition.getName().c_str());
     Serial.println(" detected.");
 }
 
@@ -102,7 +102,7 @@ void PositionTracker::addTrackSegment(const TrackSegment& segment) {
     }
     
     Serial.print("Added track segment for position: ");
-    Serial.println(static_cast<int>(segment.location));
+    Serial.println(segment.location.getName().c_str());
 }
 
 SensorLocation PositionTracker::getNextExpectedPosition() const {

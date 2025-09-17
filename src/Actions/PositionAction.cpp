@@ -28,7 +28,7 @@ void PositionAction::execute(TrainController& controller) {
     
     if (wrappedAction) {
         Serial.print("PositionAction: Executing wrapped action at position ");
-        Serial.println(static_cast<int>(targetPosition));
+        Serial.println(targetPosition.getName().c_str());
         wrappedAction->execute(controller);
         hasExecuted = true;
     } else {
@@ -44,7 +44,7 @@ void PositionAction::execute(TrainController& controller, ActionController& acti
     
     if (wrappedAction) {
         Serial.print("PositionAction: Executing wrapped action at position ");
-        Serial.println(static_cast<int>(targetPosition));
+        Serial.println(targetPosition.getName().c_str());
         wrappedAction->execute(controller, actionController);
         hasExecuted = true;
     } else {

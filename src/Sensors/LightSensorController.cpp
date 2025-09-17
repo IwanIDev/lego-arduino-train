@@ -31,7 +31,7 @@ bool LightSensorController::isTrainPassingOver() {
 // Returns the location of the last triggered sensor, or a default value if none was triggered
 SensorLocation LightSensorController::getTriggeredSensorLocation() const {
     return lastTriggeredSensor ? lastTriggeredSensor->getLocation() 
-                               : SensorLocation::UNKNOWN;
+                               : SensorLocation::createUnknown();
 }
 
 LightSensor* LightSensorController::getTriggeredSensor() const {

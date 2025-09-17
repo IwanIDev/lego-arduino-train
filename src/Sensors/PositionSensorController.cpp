@@ -8,7 +8,7 @@ PositionSensorController::PositionSensorController(PositionTracker& tracker)
 void PositionSensorController::addPositionAction(std::unique_ptr<PositionAction> action) {
     if (action) {
         Serial.print("PositionSensorController: Added position action for position ");
-        Serial.println(static_cast<int>(action->getTargetPosition()));
+        Serial.println(action->getTargetPosition().getName().c_str());
         positionActions.push_back(std::move(action));
     }
 }
@@ -32,7 +32,7 @@ void PositionSensorController::checkAndExecuteActions(TrainController& trainCont
         }
 
         Serial.print("PositionSensorController: Executing action for position ");
-        Serial.println(static_cast<int>(action->getTargetPosition()));
+        Serial.println(action->getTargetPosition().getName().c_str());
         action->execute(trainController, actionController);
     }
 }

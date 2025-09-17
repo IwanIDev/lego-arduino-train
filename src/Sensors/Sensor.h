@@ -3,6 +3,7 @@
 
 #include "../Controllers/TrainController.h"
 #include "../Actions/SensorAction.h"
+#include "../Position/SensorLocation.h"
 #include <memory>
 
 class ActionController; // Forward declaration

@@ -165,7 +165,7 @@ std::vector<SensorLocation> TrainManager::getAllTrainPositions() const {
         if (train->getPositionTracker()) {
             positions.push_back(train->getPositionTracker()->getCurrentPosition());
         } else {
-            positions.push_back(SensorLocation::UNKNOWN);
+            positions.push_back(SensorLocation::createUnknown());
         }
     }
     return positions;
@@ -217,8 +217,8 @@ void TrainManager::handlePositionUpdate() {
         if (!sensor) continue;
         SensorLocation loc = sensor->getLocation();
         Serial.print("Sensor triggered at ");
-        Serial.println(static_cast<int>(loc));
-        if (loc != SensorLocation::UNKNOWN) {
+        Serial.println(loc.getName().c_str());
+        if (!loc.isUnknown()) {
             // Find the train that should respond to this sensor trigger
             selectBestTrainForPosition(loc);
         }
@@ -352,7 +352,7 @@ void TrainManager::selectBestTrainForPosition(SensorLocation position) {
     // Check both forward and reverse directions to handle bidirectional movement.
 
     Serial.print("TrainManager: Looking for train that can reach position ");
-    Serial.println(static_cast<int>(position));
+    Serial.println(position.getName().c_str());
     
     for (size_t i = 0; i < trains.size(); i++) {
         auto& train = trains[i];
@@ -380,7 +380,7 @@ void TrainManager::selectBestTrainForPosition(SensorLocation position) {
         Serial.print(" (");
         Serial.print(train->getHubName());
         Serial.print(") at position ");
-        Serial.print(static_cast<int>(previousPosition));
+        Serial.print(previousPosition.getName().c_str());
         Serial.print(" direction ");
         Serial.print(previousDirection == TrainDirection::FORWARD ? "FORWARD" : "REVERSE");
         
@@ -418,7 +418,7 @@ void TrainManager::selectBestTrainForPosition(SensorLocation position) {
             hasActionsForCurrentDirection = !actions.empty();
             
             Serial.print("Same sensor trigger detected at position ");
-            Serial.print(static_cast<int>(position));
+            Serial.print(position.getName().c_str());
             Serial.print(", has actions for current direction: ");
             Serial.println(hasActionsForCurrentDirection ? "YES" : "NO");
         }

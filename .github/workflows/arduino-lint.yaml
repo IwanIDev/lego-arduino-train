@@ -1,3 +1,4 @@
+name: Arduino Linter
 on: [push, pull_request]
 jobs:
   lint:

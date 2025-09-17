@@ -37,17 +37,18 @@ const int LIGHT_SENSOR_THRESHOLD = 20; // Percentage threshold for light level d
 const int LIGHT_SENSOR_TIMEOUT_THRESHOLD = 500;
 
 LightSensor sensors[] = {
-    // LightSensor(A0, LIGHT_SENSOR_THRESHOLD, SensorLocation::STATION_STOP, std::unique_ptr<StopAction>(new StopAction(100))),
-    // LightSensor(A1, LIGHT_SENSOR_THRESHOLD, SensorLocation::DIRECTION_CHANGE, std::unique_ptr<ReverseAction>(new ReverseAction(0))),
-    // LightSensor(A2, LIGHT_SENSOR_THRESHOLD, SensorLocation::SPEED_REDUCE)
+    // Examples using custom sensor locations:
+    // LightSensor(A0, LIGHT_SENSOR_THRESHOLD, SensorLocation("STATION_STOP", 10), std::unique_ptr<StopAction>(new StopAction(100))),
+    // LightSensor(A1, LIGHT_SENSOR_THRESHOLD, SensorLocation("DIRECTION_CHANGE", 11), std::unique_ptr<ReverseAction>(new ReverseAction(0))),
+    // LightSensor(A2, LIGHT_SENSOR_THRESHOLD, SensorLocation("SPEED_REDUCE", 12))
 };
 LightSensorController lightSensorController;
 ReedSwitchSensor reedSwitchSensors[] = {
     // Reed switch sensors without actions - actions will be handled by position-based system
-    ReedSwitchSensor(D12, SensorLocation::WEST_STATION),
-    ReedSwitchSensor(D11, SensorLocation::WEST_TUNNEL),
-    ReedSwitchSensor(D10, SensorLocation::EAST_STATION),
-    ReedSwitchSensor(D9, SensorLocation::EAST_TUNNEL),
+    ReedSwitchSensor(D12, SensorLocation::createWestStation()),
+    ReedSwitchSensor(D11, SensorLocation::createWestTunnel()),
+    ReedSwitchSensor(D10, SensorLocation::createEastStation()),
+    ReedSwitchSensor(D9, SensorLocation::createEastTunnel()),
 };
 ReedSwitchSensorController reedSwitchSensorController;
 
@@ -68,16 +69,16 @@ void setupTrackLayoutForTracker(PositionTracker& positionTracker, TrainInstance&
     // Define track segments based on the physical layout
     // WEST_STATION
     TrackSegment westStation;
-    westStation.location = SensorLocation::WEST_STATION;
-    westStation.nextForward = SensorLocation::WEST_TUNNEL;
-    westStation.nextReverse = SensorLocation::WEST_TUNNEL;
+    westStation.location = SensorLocation::createWestStation();
+    westStation.nextForward = SensorLocation::createWestTunnel();
+    westStation.nextReverse = SensorLocation::createWestTunnel();
     positionTracker.addTrackSegment(westStation);
 
     // WEST_TUNNEL
     TrackSegment westTunnel;
-    westTunnel.location = SensorLocation::WEST_TUNNEL;
-    westTunnel.nextForward = SensorLocation::WEST_STATION;
-    westTunnel.nextReverse = SensorLocation::EAST_TUNNEL;
+    westTunnel.location = SensorLocation::createWestTunnel();
+    westTunnel.nextForward = SensorLocation::createWestStation();
+    westTunnel.nextReverse = SensorLocation::createEastTunnel();
 
     // Forward Action at WEST_TUNNEL: STOP -> SWITCH -> REVERSE -> SPEED
     {
@@ -93,9 +94,9 @@ void setupTrackLayoutForTracker(PositionTracker& positionTracker, TrainInstance&
 
     // EAST_TUNNEL
     TrackSegment eastTunnel;
-    eastTunnel.location = SensorLocation::EAST_TUNNEL;
-    eastTunnel.nextForward = SensorLocation::WEST_TUNNEL;
-    eastTunnel.nextReverse = SensorLocation::EAST_STATION;
+    eastTunnel.location = SensorLocation::createEastTunnel();
+    eastTunnel.nextForward = SensorLocation::createWestTunnel();
+    eastTunnel.nextReverse = SensorLocation::createEastStation();
 
     // Reverse Action at EAST_TUNNEL: STOP -> REVERSE -> SPEED
     {
@@ -132,7 +133,7 @@ void setup() {
     train1Config.motorPort = MOTOR_PORT;
     train1Config.fastButtonPin = fastButton;
     train1Config.slowButtonPin = slowButton;
-    train1Config.initialPosition = SensorLocation::WEST_STATION;
+    train1Config.initialPosition = SensorLocation::createWestStation();
     size_t train1Index = trainManager.addTrain(train1Config);
     
     // Setup track layout for each train's position tracker

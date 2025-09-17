@@ -1,0 +1,100 @@
+#######################################
+# Syntax Coloring Map For LEGO Train Controller
+#######################################
+
+#######################################
+# Library Class (KEYWORD1)
+#######################################
+
+LegoTrainController	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+
+begin	KEYWORD2
+update	KEYWORD2
+addTrain	KEYWORD2
+addLightSensor	KEYWORD2
+addReedSwitchSensor	KEYWORD2
+addSwitch	KEYWORD2
+operateSwitch	KEYWORD2
+setTrainSpeed	KEYWORD2
+stopTrain	KEYWORD2
+reverseTrain	KEYWORD2
+addTrackSegment	KEYWORD2
+addStopAction	KEYWORD2
+addReverseAction	KEYWORD2
+addSpeedAction	KEYWORD2
+addSwitchAction	KEYWORD2
+addSequentialAction	KEYWORD2
+getTrainPosition	KEYWORD2
+getTrainSpeed	KEYWORD2
+isTrainConnected	KEYWORD2
+getTrainCount	KEYWORD2
+enableDebug	KEYWORD2
+printStatus	KEYWORD2
+
+# Controller Classes
+TrainController	KEYWORD1
+BluetoothController	KEYWORD1
+InputController	KEYWORD1
+ActionController	KEYWORD1
+LightSensorController	KEYWORD1
+ReedSwitchSensorController	KEYWORD1
+PositionAwareSensorController	KEYWORD1
+PositionSensorController	KEYWORD1
+SwitchController	KEYWORD1
+TrainManager	KEYWORD1
+TrainInstance	KEYWORD1
+PositionTracker	KEYWORD1
+
+# Sensor Classes
+Sensor	KEYWORD1
+LightSensor	KEYWORD1
+ReedSwitchSensor	KEYWORD1
+
+# Action Classes
+SensorAction	KEYWORD1
+StopAction	KEYWORD1
+ReverseAction	KEYWORD1
+SpeedAction	KEYWORD1
+DelayedAction	KEYWORD1
+SequentialAction	KEYWORD1
+SwitchAction	KEYWORD1
+WaitForPositionAction	KEYWORD1
+NonBlockingAction	KEYWORD1
+
+#######################################
+# Instances (KEYWORD2)
+#######################################
+
+#######################################
+# Constants (LITERAL1)
+#######################################
+
+# Sensor Locations
+WEST_STATION	LITERAL1
+WEST_TUNNEL	LITERAL1
+EAST_STATION	LITERAL1
+EAST_TUNNEL	LITERAL1
+UNKNOWN	LITERAL1
+
+# Switch Positions
+STRAIGHT	LITERAL1
+DIVERGED	LITERAL1
+
+# Action Types
+STOP	LITERAL1
+REVERSE	LITERAL1
+SPEED	LITERAL1
+SWITCH	LITERAL1
+DELAY	LITERAL1
+
+# Train Directions
+FORWARD	LITERAL1
+
+# Speed Constants
+STOPPED	LITERAL1
+GO	LITERAL1
+MAX_SPEED	LITERAL1

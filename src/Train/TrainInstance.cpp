@@ -1,4 +1,5 @@
-#include "Train/TrainInstance.hpp"
+#include "../Train/TrainInstance.h"
+#include "../Train/TrainManager.h"
 #include <Arduino.h>
 
 TrainInstance::TrainInstance(const TrainConfig& trainConfig, size_t id)

@@ -1,4 +1,4 @@
-#include "Switch/SwitchController.hpp"
+#include "../Switch/SwitchController.h"
 #include <Arduino.h>
 
 SwitchController::SwitchController() : nextAvailableId(1) {
@@ -103,4 +103,16 @@ int SwitchController::addSwitch(unsigned int relayPin, SwitchPosition initialSta
 
 bool SwitchController::switchExists(unsigned int switchId) const {
     return switches.find(switchId) != switches.end();
+}
+
+/**
+ * Operates the specified switch to the desired position.
+ * @param switchId The ID of the switch to operate.
+ * @param position The desired position of the switch (true for one direction, false for the other).
+ * @return true if the operation was successful, false if the switch does not exist.
+ */
+bool SwitchController::operateSwitch(unsigned int switchId, SwitchPosition position) {
+    if (!switchExists(switchId)) return false;
+    setSwitchState(switchId, position);
+    return true;
 }

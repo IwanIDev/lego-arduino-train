@@ -120,7 +120,7 @@ void LegoTrainController::addReverseAction(const SensorLocation& location, size_
     }
 }
 
-void LegoTrainController::addSpeedAction(const SensorLocation& location, size_t trainIndex, const bool reverse, int speed, int targetSpeed) {
+void LegoTrainController::addSpeedAction(const SensorLocation& location, size_t trainIndex, int targetSpeed, bool reverse, int speed) {
     TrainInstance* train = trainManager.getTrain(trainIndex);
     if (train && train->getPositionTracker()) {
         auto action = std::unique_ptr<SensorAction>(new SpeedAction(targetSpeed, speed));
@@ -132,7 +132,7 @@ void LegoTrainController::addSpeedAction(const SensorLocation& location, size_t 
     }
 }
 
-void LegoTrainController::addSwitchAction(const SensorLocation& location, size_t trainIndex, const bool reverse, int switchId, int position, int speed) {
+void LegoTrainController::addSwitchAction(const SensorLocation& location, size_t trainIndex, int switchId, int position, bool reverse, int speed) {
     TrainInstance* train = trainManager.getTrain(trainIndex);
     if (train && train->getPositionTracker()) {
         auto action = std::unique_ptr<SensorAction>(new SwitchAction(switchId, static_cast<SwitchPosition>(position), speed, &switchController));
@@ -144,7 +144,7 @@ void LegoTrainController::addSwitchAction(const SensorLocation& location, size_t
     }
 }
 
-void LegoTrainController::addSequentialAction(const SensorLocation& location, size_t trainIndex, const bool reverse, const std::vector<ActionConfig>& actionConfigs) {
+void LegoTrainController::addSequentialAction(const SensorLocation& location, size_t trainIndex, const std::vector<ActionConfig>& actionConfigs, bool reverse) {
     TrainInstance* train = trainManager.getTrain(trainIndex);
     if (train && train->getPositionTracker()) {
         std::vector<std::unique_ptr<SensorAction>> actions;

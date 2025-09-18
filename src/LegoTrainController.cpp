@@ -101,7 +101,6 @@ void LegoTrainController::addStopAction(const SensorLocation& location, const bo
     if (train && train->getPositionTracker()) {
         auto action = std::unique_ptr<SensorAction>(new StopAction(speed));
         if (reverse) {
-
             train->getPositionTracker()->addReverseAction(location, std::move(action));
         } else {
             train->getPositionTracker()->addForwardAction(location, std::move(action));

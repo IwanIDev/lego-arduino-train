@@ -208,7 +208,7 @@ public:
      * @param trainIndex Train index
      * @param speed Speed when stopping (usually 0)
      */
-    void addStopAction(const SensorLocation& location, const bool reverse = false, size_t trainIndex = 0, int speed = 0);
+    void addStopAction(const SensorLocation& location, const bool reverse = false, size_t trainIndex, int speed = 0);
     
     /**
      * Add a reverse action at a sensor location
@@ -217,7 +217,7 @@ public:
      * @param trainIndex Train index
      * @param speed Speed when reversing (usually 0)
      */
-    void addReverseAction(const SensorLocation& location, const bool reverse = false, size_t trainIndex = 0, int speed = 0);
+    void addReverseAction(const SensorLocation& location, const bool reverse = false, size_t trainIndex, int speed = 0);
 
     /**
      * Add a speed change action at a sensor location
@@ -227,7 +227,7 @@ public:
      * @param speed Current speed during action
      * @param targetSpeed New speed to set
      */
-    void addSpeedAction(const SensorLocation& location, const bool reverse = false, size_t trainIndex = 0, int speed = 0, int targetSpeed = 0);
+    void addSpeedAction(const SensorLocation& location, const bool reverse = false, size_t trainIndex, int speed = 0, int targetSpeed);
     
     /**
      * Add a switch operation action at a sensor location
@@ -238,7 +238,7 @@ public:
      * @param position Switch position (STRAIGHT or DIVERGED)
      * @param speed Speed during switch operation
      */
-    void addSwitchAction(const SensorLocation& location, const bool reverse = false, size_t trainIndex = 0, int switchId = 0, int position = 0, int speed = 0);
+    void addSwitchAction(const SensorLocation& location, const bool reverse = false, size_t trainIndex, int switchId, int position, int speed = 0);
     
     /**
      * Add a sequence of actions at a sensor location
@@ -247,7 +247,7 @@ public:
      * @param trainIndex Train index
      * @param actionConfigs Vector of action configurations
      */
-    void addSequentialAction(const SensorLocation& location, const bool reverse = false, size_t trainIndex = 0, const std::vector<ActionConfig>& actionConfigs);
+    void addSequentialAction(const SensorLocation& location, const bool reverse = false, size_t trainIndex, const std::vector<ActionConfig>& actionConfigs);
     
     // ===== Status and Debugging =====
     

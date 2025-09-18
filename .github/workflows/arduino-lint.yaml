@@ -11,7 +11,7 @@ jobs:
           fetch-depth: 0
       - uses: arduino/arduino-lint-action@v2
         with:
-          library-manager: submit
+          library-manager: update
           compliance: strict
           project-type: library
           verbose: true

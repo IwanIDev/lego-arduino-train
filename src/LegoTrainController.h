@@ -223,31 +223,31 @@ public:
      * Add a speed change action at a sensor location
      * @param location Sensor location
      * @param trainIndex Train index
+     * @param targetSpeed New speed to set
      * @param reverse true if reverse direction, false if forwards
      * @param speed Current speed during action
-     * @param targetSpeed New speed to set
      */
-    void addSpeedAction(const SensorLocation& location, size_t trainIndex, const bool reverse = false, int speed = 0, int targetSpeed);
+    void addSpeedAction(const SensorLocation& location, size_t trainIndex, int targetSpeed, const bool reverse = false, int speed = 0);
     
     /**
      * Add a switch operation action at a sensor location
      * @param location Sensor location
      * @param trainIndex Train index
-     * @param reverse true if reverse direction, false if forwards
      * @param switchId Switch ID
      * @param position Switch position (STRAIGHT or DIVERGED)
+     * @param reverse true if reverse direction, false if forwards
      * @param speed Speed during switch operation
      */
-    void addSwitchAction(const SensorLocation& location, size_t trainIndex, const bool reverse = false, int switchId, int position, int speed = 0);
+    void addSwitchAction(const SensorLocation& location, size_t trainIndex, int switchId, int position, const bool reverse = false, int speed = 0);
     
     /**
      * Add a sequence of actions at a sensor location
      * @param location Sensor location
      * @param trainIndex Train index
-     * @param reverse true if reverse direction, false if forwards
      * @param actionConfigs Vector of action configurations
+     * @param reverse true if reverse direction, false if forwards
      */
-    void addSequentialAction(const SensorLocation& location, size_t trainIndex, const bool reverse = false, const std::vector<ActionConfig>& actionConfigs);
+    void addSequentialAction(const SensorLocation& location, size_t trainIndex, const std::vector<ActionConfig>& actionConfigs, const bool reverse = false);
     
     // ===== Status and Debugging =====
     

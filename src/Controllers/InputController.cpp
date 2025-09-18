@@ -46,8 +46,9 @@ void InputController::setBackwardState(SPEED oldState) {
 }
 
 void InputController::handleButtonInput(SPEED oldState) {
-    const int forwardButtonState = digitalRead(forwardButton);
-    const int backwardButtonState = digitalRead(backwardButton);
+    // Read button states, treating unconfigured pins as not pressed
+    const int forwardButtonState = (forwardButton >= 0) ? digitalRead(forwardButton) : HIGH;
+    const int backwardButtonState = (backwardButton >= 0) ? digitalRead(backwardButton) : HIGH;
 
     // Buttons are active LOW.
     // Default to false if pin not configured.

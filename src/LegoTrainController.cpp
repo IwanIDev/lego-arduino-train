@@ -96,39 +96,55 @@ void LegoTrainController::addTrackSegment(const SensorLocation& location, const 
     }
 }
 
-void LegoTrainController::addStopAction(const SensorLocation& location, size_t trainIndex, int speed) {
+void LegoTrainController::addStopAction(const SensorLocation& location, size_t trainIndex, const bool reverse, int speed) {
     TrainInstance* train = trainManager.getTrain(trainIndex);
     if (train && train->getPositionTracker()) {
         auto action = std::unique_ptr<SensorAction>(new StopAction(speed));
-        train->getPositionTracker()->addForwardAction(location, std::move(action));
+        if (reverse) {
+            train->getPositionTracker()->addReverseAction(location, std::move(action));
+        } else {
+            train->getPositionTracker()->addForwardAction(location, std::move(action));
+        }
     }
 }
 
-void LegoTrainController::addReverseAction(const SensorLocation& location, size_t trainIndex, int speed) {
+void LegoTrainController::addReverseAction(const SensorLocation& location, size_t trainIndex, const bool reverse, int speed) {
     TrainInstance* train = trainManager.getTrain(trainIndex);
     if (train && train->getPositionTracker()) {
         auto action = std::unique_ptr<SensorAction>(new ReverseAction(speed));
-        train->getPositionTracker()->addForwardAction(location, std::move(action));
+        if (reverse) {
+            train->getPositionTracker()->addReverseAction(location, std::move(action));
+        } else {
+            train->getPositionTracker()->addForwardAction(location, std::move(action));
+        }
     }
 }
 
-void LegoTrainController::addSpeedAction(const SensorLocation& location, size_t trainIndex, int speed, int targetSpeed) {
+void LegoTrainController::addSpeedAction(const SensorLocation& location, size_t trainIndex, const bool reverse, int speed, int targetSpeed) {
     TrainInstance* train = trainManager.getTrain(trainIndex);
     if (train && train->getPositionTracker()) {
         auto action = std::unique_ptr<SensorAction>(new SpeedAction(targetSpeed, speed));
-        train->getPositionTracker()->addForwardAction(location, std::move(action));
+        if (reverse) {
+            train->getPositionTracker()->addReverseAction(location, std::move(action));
+        } else {
+            train->getPositionTracker()->addForwardAction(location, std::move(action));
+        }
     }
 }
 
-void LegoTrainController::addSwitchAction(const SensorLocation& location, size_t trainIndex, int switchId, int position, int speed) {
+void LegoTrainController::addSwitchAction(const SensorLocation& location, size_t trainIndex, const bool reverse, int switchId, int position, int speed) {
     TrainInstance* train = trainManager.getTrain(trainIndex);
     if (train && train->getPositionTracker()) {
         auto action = std::unique_ptr<SensorAction>(new SwitchAction(switchId, static_cast<SwitchPosition>(position), speed, &switchController));
-        train->getPositionTracker()->addForwardAction(location, std::move(action));
+        if (reverse) {
+            train->getPositionTracker()->addReverseAction(location, std::move(action));
+        } else {
+            train->getPositionTracker()->addForwardAction(location, std::move(action));
+        }
     }
 }
 
-void LegoTrainController::addSequentialAction(const SensorLocation& location, size_t trainIndex, const std::vector<ActionConfig>& actionConfigs) {
+void LegoTrainController::addSequentialAction(const SensorLocation& location, size_t trainIndex, const bool reverse, const std::vector<ActionConfig>& actionConfigs) {
     TrainInstance* train = trainManager.getTrain(trainIndex);
     if (train && train->getPositionTracker()) {
         std::vector<std::unique_ptr<SensorAction>> actions;
@@ -160,7 +176,11 @@ void LegoTrainController::addSequentialAction(const SensorLocation& location, si
         }
         
         auto sequentialAction = std::unique_ptr<SensorAction>(new SequentialAction(std::move(actions)));
-        train->getPositionTracker()->addForwardAction(location, std::move(sequentialAction));
+        if (reverse) {
+            train->getPositionTracker()->addReverseAction(location, std::move(sequentialAction));
+        } else {
+            train->getPositionTracker()->addForwardAction(location, std::move(sequentialAction));
+        }
     }
 }
 

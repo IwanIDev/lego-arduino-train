@@ -205,44 +205,49 @@ public:
      * Add a stop action at a sensor location
      * @param location Sensor location
      * @param trainIndex Train index
+     * @param reverse true if reverse direction, false if forwards
      * @param speed Speed when stopping (usually 0)
      */
-    void addStopAction(const SensorLocation& location, size_t trainIndex = 0, int speed = 0);
+    void addStopAction(const SensorLocation& location, size_t trainIndex, const bool reverse = false, int speed = 0);
     
     /**
      * Add a reverse action at a sensor location
      * @param location Sensor location
      * @param trainIndex Train index
+     * @param reverse true if reverse direction, false if forwards
      * @param speed Speed when reversing (usually 0)
      */
-    void addReverseAction(const SensorLocation& location, size_t trainIndex = 0, int speed = 0);
-    
+    void addReverseAction(const SensorLocation& location, size_t trainIndex, const bool reverse = false, int speed = 0);
+
     /**
      * Add a speed change action at a sensor location
      * @param location Sensor location
      * @param trainIndex Train index
+     * @param reverse true if reverse direction, false if forwards
      * @param speed Current speed during action
      * @param targetSpeed New speed to set
      */
-    void addSpeedAction(const SensorLocation& location, size_t trainIndex, int speed, int targetSpeed);
+    void addSpeedAction(const SensorLocation& location, size_t trainIndex, const bool reverse = false, int speed = 0, int targetSpeed);
     
     /**
      * Add a switch operation action at a sensor location
      * @param location Sensor location
      * @param trainIndex Train index
+     * @param reverse true if reverse direction, false if forwards
      * @param switchId Switch ID
      * @param position Switch position (STRAIGHT or DIVERGED)
      * @param speed Speed during switch operation
      */
-    void addSwitchAction(const SensorLocation& location, size_t trainIndex, int switchId, int position, int speed = 0);
+    void addSwitchAction(const SensorLocation& location, size_t trainIndex, const bool reverse = false, int switchId, int position, int speed = 0);
     
     /**
      * Add a sequence of actions at a sensor location
      * @param location Sensor location
      * @param trainIndex Train index
+     * @param reverse true if reverse direction, false if forwards
      * @param actionConfigs Vector of action configurations
      */
-    void addSequentialAction(const SensorLocation& location, size_t trainIndex, const std::vector<ActionConfig>& actionConfigs);
+    void addSequentialAction(const SensorLocation& location, size_t trainIndex, const bool reverse = false, const std::vector<ActionConfig>& actionConfigs);
     
     // ===== Status and Debugging =====
     

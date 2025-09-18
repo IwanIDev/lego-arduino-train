@@ -5,8 +5,8 @@
 InputController::InputController(TrainController* controller, int forwardButtonPin, int backwardButtonPin)
 : trainController(controller), forwardButton(forwardButtonPin), backwardButton(backwardButtonPin), lastButtonPressTime(0)
 {
-    pinMode(forwardButton, INPUT_PULLUP);
-    pinMode(backwardButton, INPUT_PULLUP);
+    if (forwardButton >= 0) pinMode(forwardButton, INPUT_PULLUP);
+    if (backwardButton >= 0) pinMode(backwardButton, INPUT_PULLUP);
 }
 
 void InputController::setForwardState(SPEED oldState) {
@@ -49,8 +49,10 @@ void InputController::handleButtonInput(SPEED oldState) {
     const int forwardButtonState = digitalRead(forwardButton);
     const int backwardButtonState = digitalRead(backwardButton);
 
-    const bool isForwardButtonPressed = (forwardButtonState == LOW);
-    const bool isBackwardButtonPressed = (backwardButtonState == LOW);
+    // Buttons are active LOW.
+    // Default to false if pin not configured.
+    const bool isForwardButtonPressed = (forwardButton >= 0) ? (forwardButtonState == LOW) : false;
+    const bool isBackwardButtonPressed = (backwardButton >= 0) ? (backwardButtonState == LOW) : false;
 
     unsigned long currentTime = millis();
     if (currentTime - lastButtonPressTime < DEBOUNCE_DELAY) {

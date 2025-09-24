@@ -236,15 +236,6 @@ std::unique_ptr<SensorAction> LegoTrainController::createActionFromConfig(const 
         case TrainActionType::SWITCH:
             return std::unique_ptr<SensorAction>(new SwitchAction(config.switchId, static_cast<SwitchPosition>(config.switchPosition), config.speed, &switchController));
         case TrainActionType::CONDITIONAL_POSITION:
-            if (config.trueAction && config.falseAction) {
-                auto trueAct = createActionFromConfig(*config.trueAction);
-                auto falseAct = createActionFromConfig(*config.falseAction);
-                if (trueAct && falseAct) {
-                    // Note: We can't create this action here because we need the PositionTracker
-                    // This case is handled specially in the respective add methods
-                    return nullptr;
-                }
-            }
             return nullptr;
         default:
             return nullptr;

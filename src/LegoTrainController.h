@@ -50,11 +50,7 @@ struct ActionConfig {
     int switchId = 0;
     int switchPosition = 0;
     int delayMs = 0;
-    SensorLocation conditionPosition = SensorLocation("", 0); // For conditional position actions
     std::unique_ptr<ActionConfig> delayedAction = nullptr;
-    std::unique_ptr<ActionConfig> trueAction = nullptr; // Action to execute if condition is true
-    std::unique_ptr<ActionConfig> falseAction = nullptr; // Action to execute if condition is false
-    
     ActionConfig(TrainActionType t) : type(t) {}
 };
 

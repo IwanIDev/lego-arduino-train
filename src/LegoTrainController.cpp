@@ -172,18 +172,6 @@ void LegoTrainController::addSequentialAction(const SensorLocation& location, si
                         }
                     }
                     break;
-                case TrainActionType::CONDITIONAL_POSITION:
-                    // Conditional position actions need special handling since they require position tracker
-                    if (config.trueAction && config.falseAction) {
-                        auto trueAction = createActionFromConfig(*config.trueAction);
-                        auto falseAction = createActionFromConfig(*config.falseAction);
-                        if (trueAction && falseAction) {
-                            actions.push_back(std::unique_ptr<SensorAction>(
-                                new ConditionalPositionAction(config.conditionPosition, std::move(trueAction), std::move(falseAction), train->getPositionTracker())
-                            ));
-                        }
-                    }
-                    break;
             }
         }
         
@@ -196,32 +184,34 @@ void LegoTrainController::addSequentialAction(const SensorLocation& location, si
     }
 }
 
-void LegoTrainController::addConditionalPositionAction(
-    const SensorLocation& location, 
-    size_t trainIndex,
-    const SensorLocation& conditionPosition,
-    const ActionConfig& trueActionConfig,
-    const ActionConfig& falseActionConfig,
-    const bool reverse) {
+void LegoTrainController::addConditionalPositionAction(const SensorLocation& location, size_t trainIndex, const SensorLocation& conditionPosition, std::unique_ptr<SensorAction> trueAction, std::unique_ptr<SensorAction> falseAction, const bool reverse) {
         
     TrainInstance* train = trainManager.getTrain(trainIndex);
-    if (train && train->getPositionTracker()) {
-        // Create the true and false actions from the configs
-        auto trueAction = createActionFromConfig(trueActionConfig);
-        auto falseAction = createActionFromConfig(falseActionConfig);
-        
-        if (trueAction && falseAction) {
-            // Create the conditional action with access to the position tracker
-            auto conditionalAction = std::unique_ptr<SensorAction>(
-                new ConditionalPositionAction(conditionPosition, std::move(trueAction), std::move(falseAction), train->getPositionTracker())
-            );
-            
-            if (reverse) {
-                train->getPositionTracker()->addReverseAction(location, std::move(conditionalAction));
-            } else {
-                train->getPositionTracker()->addForwardAction(location, std::move(conditionalAction));
-            }
-        }
+
+    if (!train) {
+        Serial.println("addConditionalPositionAction: Invalid train index");
+        return;
+    }
+
+    if (!train->getPositionTracker()) {
+        Serial.println("addConditionalPositionAction: Train has no position tracker");
+        return;
+    }
+
+    if (!trueAction || !falseAction) {
+        Serial.println("addConditionalPositionAction: TrueAction or FalseAction is null");
+        return;
+    }
+
+    // Create the conditional action with the provided actions
+    auto conditionalAction = std::unique_ptr<SensorAction>(
+        new ConditionalPositionAction(conditionPosition, std::move(trueAction), std::move(falseAction), train->getPositionTracker())
+    );
+    
+    if (reverse) {
+        train->getPositionTracker()->addReverseAction(location, std::move(conditionalAction));
+    } else {
+        train->getPositionTracker()->addForwardAction(location, std::move(conditionalAction));
     }
 }
 
@@ -264,6 +254,10 @@ bool LegoTrainController::isTrainConnected(size_t trainIndex) {
         return train->getBluetoothController()->isConnected();
     }
     return false;
+}
+
+SwitchController& LegoTrainController::getSwitchController() {
+    return switchController;
 }
 
 size_t LegoTrainController::getTrainCount() {

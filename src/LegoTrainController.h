@@ -256,16 +256,16 @@ public:
      * @param location Sensor location where this action triggers
      * @param trainIndex Train index
      * @param conditionPosition Previous position to check for
-     * @param trueActionConfig Action to execute if previous position matches conditionPosition
-     * @param falseActionConfig Action to execute if previous position doesn't match
+     * @param trueAction Action to execute if previous position matches conditionPosition
+     * @param falseAction Action to execute if previous position doesn't match
      * @param reverse true if reverse direction, false if forwards
      */
     void addConditionalPositionAction(
         const SensorLocation& location, 
         size_t trainIndex,
         const SensorLocation& conditionPosition,
-        const ActionConfig& trueActionConfig,
-        const ActionConfig& falseActionConfig,
+        std::unique_ptr<SensorAction> trueAction,
+        std::unique_ptr<SensorAction> falseAction,
         const bool reverse = false
     );
     
@@ -291,6 +291,12 @@ public:
      * @return true if connected
      */
     bool isTrainConnected(size_t trainIndex);
+    
+    /**
+     * Get reference to the switch controller
+     * @return Reference to SwitchController
+     */
+    SwitchController& getSwitchController();
     
     /**
      * Enable or disable debug output

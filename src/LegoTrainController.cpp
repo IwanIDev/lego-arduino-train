@@ -172,6 +172,18 @@ void LegoTrainController::addSequentialAction(const SensorLocation& location, si
                         }
                     }
                     break;
+                case TrainActionType::CONDITIONAL_POSITION:
+                    // Conditional position actions need special handling since they require position tracker
+                    if (config.trueAction && config.falseAction) {
+                        auto trueAction = createActionFromConfig(*config.trueAction);
+                        auto falseAction = createActionFromConfig(*config.falseAction);
+                        if (trueAction && falseAction) {
+                            actions.push_back(std::unique_ptr<SensorAction>(
+                                new ConditionalPositionAction(config.conditionPosition, std::move(trueAction), std::move(falseAction), train->getPositionTracker())
+                            ));
+                        }
+                    }
+                    break;
             }
         }
         
@@ -180,6 +192,35 @@ void LegoTrainController::addSequentialAction(const SensorLocation& location, si
             train->getPositionTracker()->addReverseAction(location, std::move(sequentialAction));
         } else {
             train->getPositionTracker()->addForwardAction(location, std::move(sequentialAction));
+        }
+    }
+}
+
+void LegoTrainController::addConditionalPositionAction(
+    const SensorLocation& location, 
+    size_t trainIndex,
+    const SensorLocation& conditionPosition,
+    const ActionConfig& trueActionConfig,
+    const ActionConfig& falseActionConfig,
+    const bool reverse) {
+        
+    TrainInstance* train = trainManager.getTrain(trainIndex);
+    if (train && train->getPositionTracker()) {
+        // Create the true and false actions from the configs
+        auto trueAction = createActionFromConfig(trueActionConfig);
+        auto falseAction = createActionFromConfig(falseActionConfig);
+        
+        if (trueAction && falseAction) {
+            // Create the conditional action with access to the position tracker
+            auto conditionalAction = std::unique_ptr<SensorAction>(
+                new ConditionalPositionAction(conditionPosition, std::move(trueAction), std::move(falseAction), train->getPositionTracker())
+            );
+            
+            if (reverse) {
+                train->getPositionTracker()->addReverseAction(location, std::move(conditionalAction));
+            } else {
+                train->getPositionTracker()->addForwardAction(location, std::move(conditionalAction));
+            }
         }
     }
 }
@@ -194,6 +235,17 @@ std::unique_ptr<SensorAction> LegoTrainController::createActionFromConfig(const 
             return std::unique_ptr<SensorAction>(new SpeedAction(config.targetSpeed, config.speed));
         case TrainActionType::SWITCH:
             return std::unique_ptr<SensorAction>(new SwitchAction(config.switchId, static_cast<SwitchPosition>(config.switchPosition), config.speed, &switchController));
+        case TrainActionType::CONDITIONAL_POSITION:
+            if (config.trueAction && config.falseAction) {
+                auto trueAct = createActionFromConfig(*config.trueAction);
+                auto falseAct = createActionFromConfig(*config.falseAction);
+                if (trueAct && falseAct) {
+                    // Note: We can't create this action here because we need the PositionTracker
+                    // This case is handled specially in the respective add methods
+                    return nullptr;
+                }
+            }
+            return nullptr;
         default:
             return nullptr;
     }

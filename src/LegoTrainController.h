@@ -30,6 +30,7 @@
 #include "Actions/SequentialAction.h"
 #include "Actions/WaitForPositionAction.h"
 #include "Actions/SwitchAction.h"
+#include "Actions/ConditionalPositionAction.h"
 
 // Enum for action types to simplify API
 enum class TrainActionType {
@@ -37,7 +38,8 @@ enum class TrainActionType {
     REVERSE,
     SPEED,
     SWITCH,
-    DELAY
+    DELAY,
+    CONDITIONAL_POSITION
 };
 
 // Simplified action configuration struct
@@ -48,7 +50,10 @@ struct ActionConfig {
     int switchId = 0;
     int switchPosition = 0;
     int delayMs = 0;
+    SensorLocation conditionPosition = SensorLocation("", 0); // For conditional position actions
     std::unique_ptr<ActionConfig> delayedAction = nullptr;
+    std::unique_ptr<ActionConfig> trueAction = nullptr; // Action to execute if condition is true
+    std::unique_ptr<ActionConfig> falseAction = nullptr; // Action to execute if condition is false
     
     ActionConfig(TrainActionType t) : type(t) {}
 };
@@ -248,6 +253,25 @@ public:
      * @param reverse true if reverse direction, false if forwards
      */
     void addSequentialAction(const SensorLocation& location, size_t trainIndex, const std::vector<ActionConfig>& actionConfigs, const bool reverse = false);
+
+    /**
+     * Add a conditional position action at a sensor location
+     * This action checks the train's previous position and executes different actions based on the result
+     * @param location Sensor location where this action triggers
+     * @param trainIndex Train index
+     * @param conditionPosition Previous position to check for
+     * @param trueActionConfig Action to execute if previous position matches conditionPosition
+     * @param falseActionConfig Action to execute if previous position doesn't match
+     * @param reverse true if reverse direction, false if forwards
+     */
+    void addConditionalPositionAction(
+        const SensorLocation& location, 
+        size_t trainIndex,
+        const SensorLocation& conditionPosition,
+        const ActionConfig& trueActionConfig,
+        const ActionConfig& falseActionConfig,
+        const bool reverse = false
+    );
     
     // ===== Status and Debugging =====
     

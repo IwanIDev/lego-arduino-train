@@ -15,13 +15,10 @@ ConditionalPositionAction::ConditionalPositionAction(
 }
 
 void ConditionalPositionAction::execute(TrainController& controller) {
+    // Deprecated method without ActionController, cannot access position info
     Serial.println("ConditionalPositionAction: Using deprecated execute method without ActionController");
-    
-    // In the simple version without ActionController, we can't access position information reliably
-    // So we'll execute the true action by default as a fallback
-    if (trueAction) {
-        trueAction->execute(controller);
-    }
+    Serial.println("ConditionalPositionAction: No position tracking available in deprecated execute method. Action not executed.");
+    return;
 }
 
 void ConditionalPositionAction::execute(TrainController& controller, ActionController& actionController) {

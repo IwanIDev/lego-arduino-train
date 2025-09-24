@@ -30,6 +30,7 @@
 #include "Actions/SequentialAction.h"
 #include "Actions/WaitForPositionAction.h"
 #include "Actions/SwitchAction.h"
+#include "Actions/ConditionalPositionAction.h"
 
 // Enum for action types to simplify API
 enum class TrainActionType {
@@ -37,7 +38,8 @@ enum class TrainActionType {
     REVERSE,
     SPEED,
     SWITCH,
-    DELAY
+    DELAY,
+    CONDITIONAL_POSITION
 };
 
 // Simplified action configuration struct
@@ -49,7 +51,6 @@ struct ActionConfig {
     int switchPosition = 0;
     int delayMs = 0;
     std::unique_ptr<ActionConfig> delayedAction = nullptr;
-    
     ActionConfig(TrainActionType t) : type(t) {}
 };
 
@@ -248,6 +249,25 @@ public:
      * @param reverse true if reverse direction, false if forwards
      */
     void addSequentialAction(const SensorLocation& location, size_t trainIndex, const std::vector<ActionConfig>& actionConfigs, const bool reverse = false);
+
+    /**
+     * Add a conditional position action at a sensor location
+     * This action checks the train's previous position and executes different actions based on the result
+     * @param location Sensor location where this action triggers
+     * @param trainIndex Train index
+     * @param conditionPosition Previous position to check for
+     * @param trueAction Action to execute if previous position matches conditionPosition
+     * @param falseAction Action to execute if previous position doesn't match
+     * @param reverse true if reverse direction, false if forwards
+     */
+    void addConditionalPositionAction(
+        const SensorLocation& location, 
+        size_t trainIndex,
+        const SensorLocation& conditionPosition,
+        std::unique_ptr<SensorAction> trueAction,
+        std::unique_ptr<SensorAction> falseAction,
+        const bool reverse = false
+    );
     
     // ===== Status and Debugging =====
     
@@ -271,6 +291,12 @@ public:
      * @return true if connected
      */
     bool isTrainConnected(size_t trainIndex);
+    
+    /**
+     * Get reference to the switch controller
+     * @return Reference to SwitchController
+     */
+    SwitchController& getSwitchController();
     
     /**
      * Enable or disable debug output

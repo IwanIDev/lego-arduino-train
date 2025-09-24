@@ -184,6 +184,37 @@ void LegoTrainController::addSequentialAction(const SensorLocation& location, si
     }
 }
 
+void LegoTrainController::addConditionalPositionAction(const SensorLocation& location, size_t trainIndex, const SensorLocation& conditionPosition, std::unique_ptr<SensorAction> trueAction, std::unique_ptr<SensorAction> falseAction, const bool reverse) {
+        
+    TrainInstance* train = trainManager.getTrain(trainIndex);
+
+    if (!train) {
+        Serial.println("addConditionalPositionAction: Invalid train index");
+        return;
+    }
+
+    if (!train->getPositionTracker()) {
+        Serial.println("addConditionalPositionAction: Train has no position tracker");
+        return;
+    }
+
+    if (!trueAction || !falseAction) {
+        Serial.println("addConditionalPositionAction: TrueAction or FalseAction is null");
+        return;
+    }
+
+    // Create the conditional action with the provided actions
+    auto conditionalAction = std::unique_ptr<SensorAction>(
+        new ConditionalPositionAction(conditionPosition, std::move(trueAction), std::move(falseAction), train->getPositionTracker())
+    );
+    
+    if (reverse) {
+        train->getPositionTracker()->addReverseAction(location, std::move(conditionalAction));
+    } else {
+        train->getPositionTracker()->addForwardAction(location, std::move(conditionalAction));
+    }
+}
+
 std::unique_ptr<SensorAction> LegoTrainController::createActionFromConfig(const ActionConfig& config) {
     switch (config.type) {
         case TrainActionType::STOP:
@@ -194,6 +225,8 @@ std::unique_ptr<SensorAction> LegoTrainController::createActionFromConfig(const 
             return std::unique_ptr<SensorAction>(new SpeedAction(config.targetSpeed, config.speed));
         case TrainActionType::SWITCH:
             return std::unique_ptr<SensorAction>(new SwitchAction(config.switchId, static_cast<SwitchPosition>(config.switchPosition), config.speed, &switchController));
+        case TrainActionType::CONDITIONAL_POSITION:
+            return nullptr;
         default:
             return nullptr;
     }
@@ -221,6 +254,10 @@ bool LegoTrainController::isTrainConnected(size_t trainIndex) {
         return train->getBluetoothController()->isConnected();
     }
     return false;
+}
+
+SwitchController& LegoTrainController::getSwitchController() {
+    return switchController;
 }
 
 size_t LegoTrainController::getTrainCount() {
